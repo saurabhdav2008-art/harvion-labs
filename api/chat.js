@@ -7,15 +7,15 @@ export default async function handler(req) {
 
     try {
         const rawBody = await req.json();
-        const apiKey = process.env.GEMINI_API_KEY; // Groq key yahan aayegi
+        const apiKey = process.env.GEMINI_API_KEY; // Groq key yahan use ho rahi hai
 
-        // Groq API ke mutabik format conversion
+        // 1. Frontend ke Gemini format ko Groq format mein badlo
         const messages = rawBody.contents ? rawBody.contents.map(c => ({
             role: c.role === 'model' ? 'assistant' : 'user',
             content: c.parts[0].text
         })) : (rawBody.messages || []);
 
-        // Groq Official API Endpoint (Llama 3 8b model - Free & Ultra Fast)
+        // 2. Groq API ko call karo
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -31,11 +31,48 @@ export default async function handler(req) {
 
         if (!response.ok) {
             const err = await response.text();
-            console.error("🚨 Groq Error:", err);
             return new Response(err, { status: response.status });
         }
 
-        return new Response(response.body, {
+        // 3. 🔥 MAGIC: Groq ke stream ko wapas Gemini format mein convert karo live!
+        const encoder = new TextEncoder();
+        const decoder = new TextDecoder();
+        
+        const transformStream = new TransformStream({
+            transform(chunk, controller) {
+                const text = decoder.decode(chunk);
+                const lines = text.split('\n');
+                
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed || trimmed === 'data: [DONE]') continue;
+                    
+                    if (trimmed.startsWith('data: ')) {
+                        try {
+                            const jsonStr = trimmed.slice(6);
+                            const parsed = JSON.parse(jsonStr);
+                            const content = parsed.choices?.[0]?.delta?.content;
+                            
+                            if (content) {
+                                // Yeh frontend ko bilkul Gemini jaisa dikhega
+                                const geminiChunk = {
+                                    candidates: [{
+                                        content: {
+                                            parts: [{ text: content }]
+                                        }
+                                    }]
+                                };
+                                controller.enqueue(encoder.encode(JSON.stringify(geminiChunk) + '\n'));
+                            }
+                        } catch (e) {
+                            // Malformed lines ko skip karo
+                        }
+                    }
+                }
+            }
+        });
+
+        return new Response(response.body.pipeThrough(transformStream), {
             headers: { 'Content-Type': 'text/event-stream' }
         });
 

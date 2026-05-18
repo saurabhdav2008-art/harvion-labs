@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harvion Labs - Next-Gen AI Ecosystem</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+    
+    <style>
+        /* --- GLOBAL PREMIUM STYLES --- */
+        :root {
+            --bg-main: #030712;
+            --bg-surface: #0b1329;
+            --bg-card: rgba(17, 24, 39, 0.7);
+            --accent-cyan: #00f3ff;
+            --accent-blue: #4facfe;
+            --neon-purple: #9d00ff;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border-glow: rgba(0, 242, 254, 0.15);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--bg-main); color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden;
+            background-image: radial-gradient(circle at 10% 20%, rgba(0, 242, 254, 0.05) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(79, 172, 254, 0.05) 0%, transparent 40%);
+        }
+
+        /* --- STICKY PREMIUM NAVBAR --- */
+        header { position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; background: rgba(3, 7, 18, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .nav-container { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 20px; }
+        
+        .logo {
+            font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 700;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none;
+            display: flex; align-items: center; gap: 12px;
+        }
+
+        .logo-img-container {
+            width: 40px; height: 40px; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center;
+            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(0, 242, 254, 0.3); box-shadow: 0 0 15px rgba(0, 242, 254, 0.2);
+        }
+        .logo-img-container img { width: 100%; height: 100%; object-fit: cover; }
+
+        .nav-links { display: flex !important; flex-direction: row !important; gap: 30px !important; list-style: none !important; margin: 0 !important; padding: 0 !important; align-items: center; }
+        .nav-links li { list-style: none !important; display: inline-block !important; }
+
+        .hdr-link { color: #9ca3af !important; text-decoration: none !important; font-size: 15px !important; font-weight: 500 !important; padding: 5px 10px !important; transition: all 0.3s ease !important; }
+        .hdr-link:hover { color: #00f2fe !important; text-shadow: 0 0 15px rgba(0, 242, 254, 0.8) !important; transform: translateY(-2px); }
+
+        .hdr-login { color: #f3f4f6 !important; background: transparent !important; border: none !important; font-size: 15px !important; font-weight: 600 !important; cursor: pointer !important; transition: all 0.3s ease !important; padding: 5px 10px !important; }
+        .hdr-login:hover { color: #00f2fe !important; text-shadow: 0 0 15px rgba(0, 242, 254, 0.8) !important; transform: translateY(-2px); }
+
+        .btn-use-ai {
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); color: #000; padding: 10px 24px; border-radius: 30px; text-decoration: none; font-weight: 700; font-size: 15px; box-shadow: 0 0 15px rgba(0, 242, 254, 0.3); transition: 0.3s;
+        }
+        .btn-use-ai:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(0, 242, 254, 0.6); }
+
+        /* --- HERO SECTION --- */
+        .hero { min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 150px 20px 100px 20px; position: relative; }
+        .hero-content { max-width: 900px; z-index: 10; }
+        .badge { background: rgba(0, 242, 254, 0.1); border: 1px solid rgba(0, 242, 254, 0.3); color: var(--accent-cyan); padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: inline-block; margin-bottom: 25px; animation: pulse 2s infinite; }
+        .hero h1 { font-family: 'Space Grotesk', sans-serif; font-size: 64px; line-height: 1.1; margin-bottom: 25px; font-weight: 700; }
+        .gradient-text { background: linear-gradient(90deg, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .neon-text { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero p { color: var(--text-muted); font-size: 20px; max-width: 700px; margin: 0 auto 40px auto; line-height: 1.6; }
+        .cta-group { display: flex; justify-content: center; gap: 20px; }
+        
+        .btn-primary { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); color: #000; padding: 16px 36px; border-radius: 8px; font-size: 18px; font-weight: 700; text-decoration: none; transition: 0.3s; box-shadow: 0 0 20px rgba(0, 242, 254, 0.2); cursor: pointer; border: none; }
+        .btn-primary:hover { transform: scale(1.03); box-shadow: 0 0 35px rgba(0, 242, 254, 0.5); }
+        .btn-secondary { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-main); padding: 16px 36px; border-radius: 8px; font-size: 18px; font-weight: 600; text-decoration: none; transition: 0.3s; }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.08); border-color: var(--accent-blue); }
+
+        /* --- SECTION BASE --- */
+        section { padding: 100px 20px; max-width: 1400px; margin: 0 auto; }
+        .section-title { text-align: center; margin-bottom: 60px; }
+        .section-title h2 { font-family: 'Space Grotesk', sans-serif; font-size: 40px; margin-bottom: 15px; }
+        .section-title p { color: var(--text-muted); font-size: 18px; }
+
+        /* --- FEATURES GRID --- */
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; }
+        .feature-card { background: var(--bg-card); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); padding: 40px; border-radius: 16px; transition: 0.4s; position: relative; overflow: hidden; }
+        .feature-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(45deg, transparent, rgba(0, 242, 254, 0.03), transparent); transform: translateX(-100%); transition: 0.6s; }
+        .feature-card:hover::before { transform: translateX(100%); }
+        .feature-card:hover { transform: translateY(-5px); border-color: var(--accent-cyan); box-shadow: 0 10px 30px rgba(0, 242, 254, 0.05); }
+        .feature-icon { font-size: 36px; color: var(--accent-cyan); margin-bottom: 25px; display: inline-block; }
+        .feature-card h3 { font-size: 22px; margin-bottom: 15px; font-family: 'Space Grotesk', sans-serif; }
+        .feature-card p { color: var(--text-muted); line-height: 1.6; font-size: 15px; }
+
+        /* --- CEO SECTION --- */
+        .ceo-section { background: linear-gradient(180deg, transparent, var(--bg-surface), transparent); display: flex; align-items: center; gap: 60px; border-radius: 24px; padding: 60px; border: 1px solid rgba(255, 255, 255, 0.03); margin-top: 50px; }
+        .ceo-image-wrapper { flex-shrink: 0; width: 300px; height: 300px; border-radius: 50%; border: 3px solid var(--accent-cyan); box-shadow: 0 0 30px rgba(0, 242, 254, 0.2); overflow: hidden; background: #111827; display: flex; align-items: center; justify-content: center; }
+        .ceo-image-wrapper i { font-size: 120px; color: var(--text-muted); }
+        .ceo-content h3 { font-family: 'Space Grotesk', sans-serif; font-size: 32px; color: var(--accent-cyan); margin-bottom: 5px; }
+        .ceo-title { color: var(--text-muted); font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; }
+        .ceo-quote { font-size: 18px; line-height: 1.7; color: #d1d5db; font-style: italic; }
+
+        /* --- PRICING SECTION --- */
+        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; margin-top: 40px; }
+        .pricing-card { background: var(--bg-card); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 40px; text-align: center; position: relative; transition: 0.3s; }
+        .pricing-card.premium { border-color: var(--accent-cyan); box-shadow: 0 0 30px rgba(0, 242, 254, 0.1); }
+        .pricing-card.premium::after { content: 'MOST POPULAR'; position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); color: #000; padding: 4px 16px; font-size: 12px; font-weight: 800; border-radius: 20px; letter-spacing: 1px; }
+        .pricing-card h3 { font-family: 'Space Grotesk', sans-serif; font-size: 24px; margin-bottom: 10px; }
+        .price { font-size: 48px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; margin: 20px 0; color: #fff; }
+        .price span { font-size: 16px; color: var(--text-muted); font-weight: 400; }
+        .pricing-features { list-style: none; margin: 30px 0; text-align: left; }
+        .pricing-features li { padding: 12px 0; color: #d1d5db; font-size: 15px; display: flex; align-items: center; gap: 10px; }
+        .pricing-features i { color: var(--accent-cyan); }
+        .btn-pricing { display: block; width: 100%; padding: 14px; border-radius: 8px; text-decoration: none; font-weight: 700; transition: 0.3s; border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; background: rgba(255, 255, 255, 0.02); cursor: pointer;}
+        .pricing-card.premium .btn-pricing { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); color: #000; border: none; }
+        .pricing-card.premium .btn-pricing:hover { box-shadow: 0 0 20px rgba(0, 242, 254, 0.4); }
+
+        /* --- DOWNLOAD & CONTACT --- */
+        .download-box { background: radial-gradient(rgba(0, 242, 254, 0.1), transparent); border: 1px solid var(--border-glow); border-radius: 24px; padding: 60px; text-align: center; }
+        .download-apps { display: flex; justify-content: center; gap: 20px; margin-top: 30px; flex-wrap: wrap; }
+        .app-btn { background: #000; border: 1px solid rgba(255, 255, 255, 0.2); padding: 12px 28px; border-radius: 10px; color: #fff; display: flex; align-items: center; gap: 15px; text-decoration: none; text-align: left; transition: 0.3s; }
+        .app-btn:hover { border-color: var(--accent-cyan); transform: translateY(-2px); }
+        .app-btn i { font-size: 28px; }
+        .app-btn span { display: block; font-size: 12px; color: var(--text-muted); }
+        .app-btn strong { font-size: 16px; }
+
+        .contact-form { max-width: 600px; margin: 40px auto 0 auto; display: flex; flex-direction: column; gap: 20px; }
+        .form-group input, .form-group textarea { width: 100%; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.1); padding: 16px; border-radius: 8px; color: #fff; font-family: inherit; font-size: 15px; transition: 0.3s; outline: none; }
+        .form-group input:focus, .form-group textarea:focus { border-color: var(--accent-cyan); box-shadow: 0 0 15px rgba(0, 242, 254, 0.2); }
+        .btn-submit-contact { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); color: #000; padding: 16px; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.3s; width: 100%; }
+        .btn-submit-contact:hover { box-shadow: 0 0 20px rgba(0, 242, 254, 0.4); }
+
+        /* --- FOOTER --- */
+        footer { border-top: 1px solid rgba(255, 255, 255, 0.05); padding: 40px 20px; background: #020617; }
+        .footer-container { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
+        .footer-links { display: flex; gap: 25px; }
+        .footer-links a { color: var(--text-muted); text-decoration: none; font-size: 14px; transition: 0.3s; }
+        .footer-links a:hover { color: var(--accent-cyan); }
+
+        /* --- 🔐 INTERACTIVE AUTH GATEWAY OVERLAY (IMPORTED FROM CHAT) --- */
+        #auth-gateway-overlay {
+            position: fixed; inset: 0; background: rgba(2, 2, 5, 0.95); backdrop-filter: blur(25px);
+            z-index: 9999; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s ease;
+        }
+        #auth-gateway-overlay.active { display: flex; opacity: 1; }
+        
+        .auth-card {
+            background: #040409; border: 1px solid var(--border-glow); border-radius: 24px;
+            width: 100%; max-width: 440px; padding: 35px; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            position: relative; overflow: hidden;
+        }
+        .auth-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg, var(--accent-cyan), var(--neon-purple)); }
+        
+        .auth-step { display: none; flex-direction: column; gap: 15px; animation: stepFade 0.4s ease-out forwards; }
+        .auth-step.active { display: flex; }
+        @keyframes stepFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .auth-title { font-family: 'Orbitron', sans-serif; font-size: 1.4rem; font-weight: 800; color: #fff; letter-spacing: 1px; text-align: center; margin-bottom: 2px; }
+        .auth-desc { font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-bottom: 5px; line-height: 1.4; }
+        
+        .auth-input-group { display: flex; flex-direction: column; gap: 6px; }
+        .auth-input-group label { font-size: 0.8rem; font-weight: 600; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
+        .auth-field { width: 100%; background: #0b0b14; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 12px 16px; color: #fff; font-size: 0.95rem; outline: none; transition: 0.2s; }
+        .auth-field:focus { border-color: var(--accent-cyan); box-shadow: 0 0 15px rgba(0,243,255,0.15); }
+        
+        .auth-btn-submit { background: linear-gradient(90deg, #00f2fe, #4facfe); border: none; color: #000; font-weight: 700; padding: 14px; border-radius: 10px; cursor: pointer; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; box-shadow: 0 0 15px rgba(0,242,254,0.2); text-align: center; width: 100%; }
+        .auth-btn-submit:hover { transform: scale(1.02); box-shadow: 0 0 25px rgba(0,242,254,0.4); }
+        
+        .auth-google-btn { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); color: #fff; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: 0.2s; width: 100%; margin-top: 5px; }
+        .auth-google-btn:hover { background: rgba(255,255,255,0.08); border-color: #fff; }
+
+        .auth-nav-links { display: flex; justify-content: space-between; font-size: 0.82rem; margin-top: 5px; }
+        .auth-link { color: var(--accent-cyan); text-decoration: none; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .auth-link:hover { text-shadow: 0 0 10px var(--accent-cyan); color: #fff; }
+        .modal-close { position: absolute; top: 18px; right: 22px; color: var(--text-muted); cursor: pointer; font-size: 1.4rem; z-index: 10; transition: 0.3s;}
+        .modal-close:hover { color: #fff; }
+
+        /* --- 🌌 MASTER WARP-SPEED TRANSITION PORTAL --- */
+        #portal-animation-overlay {
+            position: fixed; inset: 0; background: #000; z-index: 10000;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+        }
+        #portal-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+        .portal-telemetry { position: relative; z-index: 10001; text-align: center; pointer-events: none; }
+        .portal-status-text { font-family: 'Orbitron', sans-serif; font-size: 1.3rem; font-weight: 900; color: var(--accent-cyan); letter-spacing: 3px; text-shadow: 0 0 15px var(--accent-cyan); margin-top: 15px; }
+        .portal-sub-text { font-family: 'Space Grotesk', sans-serif; font-size: 0.9rem; color: var(--text-muted); margin-top: 5px; }
+
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(0, 242, 254, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0); } }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none !important; }
+            .hero h1 { font-size: 42px; }
+            .ceo-section { flex-direction: column; text-align: center; padding: 30px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="nav-container">
+            <a href="#home" class="logo">
+                <div class="logo-img-container">
+                    <img src="logo.png" alt="H">
+                </div>
+                Harvion Labs
+            </a>
+            <ul class="nav-links">
+                <li><a href="#home" class="hdr-link">Home</a></li>
+                <li><a href="#features" class="hdr-link">Features</a></li>
+                <li><a href="#ceo" class="hdr-link">CEO Message</a></li>
+                <li><a href="#pricing" class="hdr-link">Pricing</a></li>
+                <li><a href="#download" class="hdr-link">Download</a></li>
+                <li><a href="#contact" class="hdr-link">Contact Us</a></li>
+            </ul>
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <button class="hdr-login" id="hdr-login-btn" onclick="openLoginGateway()">Login</button>
+                <a href="chat.html" class="btn-use-ai">Use AI <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <div class="badge">Harvion Genesis Engine v1.5 Live</div>
+            <h1><span class="gradient-text">The World's Most Advanced</span> <br><span class="neon-text">Adaptive AI Ecosystem</span></h1>
+            <p>We have blended the global power of AI with smart, localized problem-solving. Built for global scaling, engineered for practical impact.</p>
+            <div class="cta-group">
+                <button onclick="openLoginGateway()" class="btn-primary">Launch Engine Free</button>
+                <a href="#features" class="btn-secondary">Explore Neural Systems</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="features">
+        <div class="section-title">
+            <h2>Neural Architecture & Core Systems</h2>
+            <p>Way beyond standard AI—custom-built neural tools designed to give you superpowers.</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fa-solid fa-gears"></i></div>
+                <h3>The "Jugaad" Engine</h3>
+                <p>Forget generic solutions! Harvion's native intelligence finds practical, highly efficient, and out-of-the-box workarounds for your complex codes, business ideas, and daily planning.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fa-solid fa-fire"></i></div>
+                <h3>Roast & Boost System</h3>
+                <p>A unique dynamic analyzer. It first delivers a stand-up comedy style 'Roast' of your resume, code, or scripts, and then instantly 'Boosts' them to premium industry standards.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fa-solid fa-microphone-lines"></i></div>
+                <h3>Hyper-Local Slang Speech</h3>
+                <p>Freedom from robotic voices. Harvion interacts with you like a close friend, offering real-time, clear voice chat with a touch of hyper-local regional dialects and cultural context.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fa-solid fa-share-nodes"></i></div>
+                <h3>One-Click WhatsApp Engine</h3>
+                <p>Zero copy-paste stress. Generate applications, code, or summaries with AI, and forward them directly to WhatsApp in a single click without losing any formatting.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="ceo">
+        <div class="section-title">
+            <h2>From the Founder's Desk</h2>
+            <p>Building the foundation of a Multi-Billion Tech Giant.</p>
+        </div>
+        <div class="ceo-section">
+            <div class="ceo-image-wrapper">
+                <i class="fa-solid fa-user-tie"></i>
+            </div>
+            <div class="ceo-content">
+                <h3>Saurabh Kumar</h3>
+                <div class="ceo-title">Founder & Visionary Architect, Harvion Labs</div>
+                <div class="ceo-quote">
+                    "The vision for Harvion Labs is crystal clear. We aren't just building another chatbot; we are constructing a global ecosystem that connects high-end engineering with everyday utility. Harvion Labs' true valuation lies in its premium features and unwavering user safety. The future is here, and it understands you."
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="pricing">
+        <div class="section-title">
+            <h2>Enterprise Valuation & Plans</h2>
+            <p>Transparent pricing model built for scaling from individuals to multi-million agencies.</p>
+        </div>
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <h3>Harvion Free</h3>
+                <p>For early adopters</p>
+                <div class="price">$0<span>/forever</span></div>
+                <ul class="pricing-features">
+                    <li><i class="fa-solid fa-check"></i> Access to Gemini Core Engine</li>
+                    <li><i class="fa-solid fa-check"></i> Standard Jugaad Engine</li>
+                    <li><i class="fa-solid fa-check"></i> Roast & Boost (3 runs/day)</li>
+                    <li><i class="fa-solid fa-check"></i> Standard Community Support</li>
+                </ul>
+                <button onclick="openLoginGateway()" class="btn-pricing">Deploy Free</button>
+            </div>
+            <div class="pricing-card premium">
+                <h3>Harvion Pro</h3>
+                <p>For heavy creators & devs</p>
+                <div class="price">$29<span>/month</span></div>
+                <ul class="pricing-features">
+                    <li><i class="fa-solid fa-check"></i> Access to Gemini Ultra 1.5 Pro</li>
+                    <li><i class="fa-solid fa-check"></i> Unlimited Roast & Boost runs</li>
+                    <li><i class="fa-solid fa-check"></i> Low-Latency Voice-First Slang AI</li>
+                    <li><i class="fa-solid fa-check"></i> Priority API Pipeline access</li>
+                    <li><i class="fa-solid fa-check"></i> Premium Dedicated Vault</li>
+                </ul>
+                <button onclick="openLoginGateway()" class="btn-pricing">Upgrade Now</button>
+            </div>
+            <div class="pricing-card">
+                <h3>Enterprise Vault</h3>
+                <p>For top-tier scale companies</p>
+                <div class="price">Custom<span>/enterprise</span></div>
+                <ul class="pricing-features">
+                    <li><i class="fa-solid fa-check"></i> Fully Air-Gapped Secure Cloud</li>
+                    <li><i class="fa-solid fa-check"></i> Custom Fine-Tuning Models</li>
+                    <li><i class="fa-solid fa-check"></i> Strict Private Data Privacy SLAs</li>
+                    <li><i class="fa-solid fa-check"></i> 24/7 Dedicated Support Core</li>
+                </ul>
+                <a href="#contact" class="btn-pricing" style="text-align: center;">Contact Executive Desk</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="download">
+        <div class="download-box">
+            <div class="section-title" style="margin-bottom: 30px;">
+                <h2>Download Core Interfaces</h2>
+                <p>Instantly deploy the Harvion Labs ecosystem across all your devices.</p>
+            </div>
+            <div class="download-apps">
+                <a href="#" class="app-btn" onclick="alert('iOS App compilation active under Developer Account.')">
+                    <i class="fa-brands fa-apple"></i>
+                    <div>
+                        <span>Download on the</span>
+                        <strong>Apple App Store</strong>
+                    </div>
+                </a>
+                <a href="#" class="app-btn" onclick="alert('Android Core APK bundle releasing soon.')">
+                    <i class="fa-brands fa-google-play"></i>
+                    <div>
+                        <span>Get it on</span>
+                        <strong>Google Play Store</strong>
+                    </div>
+                </a>
+                <a href="#" class="app-btn" onclick="alert('Chrome Web Extension undergoing security check.')">
+                    <i class="fa-brands fa-chrome"></i>
+                    <div>
+                        <span>Available inside</span>
+                        <strong>Chrome Web Store</strong>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact">
+        <div class="section-title">
+            <h2>Secure Executive Contact Desk</h2>
+            <p>Send a direct, encrypted query for investments, partnership offers, or platform support.</p>
+        </div>
+        <form class="contact-form" onsubmit="event.preventDefault(); alert('Query safely transmitted to Harvion Secure Logs!'); this.reset();">
+            <div class="form-group">
+                <input type="text" placeholder="Your Name" required>
+            </div>
+            <div class="form-group">
+                <input type="email" placeholder="Your Corporate Email" required>
+            </div>
+            <div class="form-group">
+                <textarea rows="5" placeholder="State your investment or deployment inquiry..." required></textarea>
+            </div>
+            <button type="submit" class="btn-submit-contact">Transmit Encrypted Signal</button>
+        </form>
+    </section>
+
+    <footer>
+        <div class="footer-container">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="logo-img-container" style="width: 30px; height: 30px;">
+                    <img src="logo.png" alt="H">
+                </div>
+                <p>&copy; 2026 Harvion Labs Inc. All Neural Rights Reserved.</p>
+            </div>
+            <div class="footer-links">
+                <a href="terms.html">Terms & Conditions</a>
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="#home">Back to Top</a>
+            </div>
+        </div>
+    </footer>
+
+    <div id="portal-animation-overlay">
+        <canvas id="portal-canvas"></canvas>
+        <div class="portal-telemetry">
+            <i class="fa-solid fa-atom fa-spin" style="font-size: 3.5rem; color: var(--accent-cyan); filter: drop-shadow(0 0 20px var(--accent-cyan));"></i>
+            <div class="portal-status-text" id="portal-status-text">INITIALIZING QUANTUM LINK...</div>
+            <div class="portal-sub-text" id="portal-sub-text">Bypassing local data grids. Routing to Mainframe.</div>
+        </div>
+    </div>
+
+    <div id="auth-gateway-overlay">
+        <div class="auth-card">
+            <i class="fa-solid fa-xmark modal-close" onclick="closeAuthGateway()"></i>
+            
+            <div style="width: 55px; height: 55px; margin: 0 auto 15px auto; border-radius: 10px; overflow: hidden; border: 1px solid rgba(0, 242, 254, 0.3); box-shadow: 0 0 15px rgba(0, 242, 254, 0.2);">
+                <img src="logo.png" alt="H" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+
+            <div class="auth-step" id="auth-login-step">
+                <div class="auth-title">MAINFRAME LOGIN</div>
+                <div class="auth-desc">Enter your verified Gmail ID or Registered Mobile number configuration to authenticate.</div>
+                
+                <div class="auth-input-group">
+                    <label>Gmail or Phone Identity Vector</label>
+                    <input type="text" class="auth-field" id="login-identity" placeholder="name@gmail.com or +91XXXXXXXXXX" autocomplete="off">
+                </div>
+                <div class="auth-input-group">
+                    <label>Security Keyphrase (Password)</label>
+                    <input type="password" class="auth-field" id="login-pass" placeholder="••••••••" autocomplete="off">
+                </div>
+                
+                <button class="auth-btn-submit" onclick="executeFirebaseLoginRoute()">Authorize Terminal</button>
+                
+                <div style="text-align: center; margin: 5px 0; color: var(--text-muted); font-size: 0.8rem;">OR</div>
+                <button class="auth-google-btn" onclick="executeGooglePopupAuth()"><i class="fa-brands fa-google" style="color: #ea4335;"></i> Continue with Google</button>
+                
+                <div class="auth-nav-links">
+                    <a class="auth-link" onclick="switchAuthStep('auth-forgot-1')">Forgot Passcode?</a>
+                    <a class="auth-link" onclick="switchAuthStep('auth-signup-method')">Create Core Node</a>
+                </div>
+            </div>
+
+            <div class="auth-step" id="auth-signup-method">
+                <div class="auth-title">ACCOUNT PROVISION</div>
+                <div class="auth-desc">Select your root system network interface method to bind your unique token id.</div>
+                <button class="auth-btn-submit" style="background: rgba(255,255,255,0.03); border:1px solid var(--accent-cyan); color:var(--accent-cyan);" onclick="switchAuthStep('auth-email-signup')"><i class="fa-solid fa-envelope"></i> Manual Gmail Registry</button>
+                <button class="auth-btn-submit" style="background: rgba(255,255,255,0.03); border:1px solid var(--neon-purple); color:var(--neon-purple);" onclick="switchAuthStep('auth-phone-signup')"><i class="fa-solid fa-phone"></i> Mobile Phone OTP Router</button>
+                <button class="auth-google-btn" onclick="executeGooglePopupAuth()"><i class="fa-brands fa-google"></i> Instant Google Auth Link</button>
+                <div class="auth-nav-links" style="justify-content: center;">
+                    <a class="auth-link" onclick="switchAuthStep('auth-login-step')">Back to Terminal Sign-In</a>
+                </div>
+            </div>
+
+            <div class="auth-step" id="auth-email-signup">
+                <div class="auth-title">GMAIL MATRIX CAPTURE</div>
+                <div class="auth-desc">Firebase will transmit an official structural verification link directly to your target mailbox.</div>
+                <div class="auth-input-group">
+                    <label>Gmail Endpoint Mail Box</label>
+                    <input type="email" class="auth-field" id="signup-email-input" placeholder="example@gmail.com" autocomplete="off">
+                </div>
+                <div class="auth-input-group">
+                    <label>Setup Master Passcode</label>
+                    <input type="password" class="auth-field" id="signup-email-pass" placeholder="••••••••" autocomplete="off">
+                </div>
+                <button class="auth-btn-submit" onclick="executeFirebaseEmailRegister()">Dispatch System Verification</button>
+                <div class="auth-nav-links" style="justify-content: center;">
+                    <a class="auth-link" onclick="switchAuthStep('auth-signup-method')">Change Interface Route</a>
+                </div>
+            </div>
+
+            <div class="auth-step" id="auth-phone-signup">
+                <div class="auth-title">PHONE OTP ROUTER</div>
+                <div class="auth-desc">Input your mobile node index with country prefix (e.g. +91) to capture Google SMS OTP signals.</div>
+                <div class="auth-input-group">
+                    <label>Cellular Endpoint Index No.</label>
+                    <input type="text" class="auth-field" id="signup-phone-input" placeholder="+91XXXXXXXXXX" autocomplete="off">
+                </div>
+                <div id="recaptcha-box-container" style="margin-top: 5px;"></div>
+                <button class="auth-btn-submit" onclick="executeFirebasePhoneAuth()">By-pass Secure SMS OTP</button>
+                <div class="auth-nav-links" style="justify-content: center;">
+                    <a class="auth-link" onclick="switchAuthStep('auth-signup-method')">Change Interface Route</a>
+                </div>
+            </div>
+
+            <div class="auth-step" id="auth-phone-verify">
+                <div class="auth-title">SMS OTP CAPTURED</div>
+                <div class="auth-desc" style="color: var(--accent-cyan);">Enter the 6-digit numeric network tracking code sent by Google servers.</div>
+                <div class="auth-input-group">
+                    <label>6-Digit Verification Token</label>
+                    <input type="text" class="auth-field" id="phone-otp-input" placeholder="••••••" maxlength="6" style="text-align: center; letter-spacing: 6px; font-family:'Orbitron';" autocomplete="off">
+                </div>
+                <button class="auth-btn-submit" onclick="executePhoneOtpCodeVerification()">Verify Cellular Token</button>
+            </div>
+
+            <div class="auth-step" id="auth-step-profile-form">
+                <div class="auth-title">IDENTITY METRICS REGISTRY</div>
+                <div class="auth-desc">Finalize configuration arrays to sync metadata records globally into cloud slots.</div>
+                <div class="auth-input-group">
+                    <label>Full Name Matrix</label>
+                    <input type="text" class="auth-field" id="reg-name" placeholder="E.g., Saurabh Kumar" autocomplete="off">
+                </div>
+                <div class="auth-input-group">
+                    <label>Authorization Rank</label>
+                    <select class="auth-field" id="reg-clearance-rank" style="color-scheme: dark;">
+                        <option value="Standard Beta User">Standard Beta User Node</option>
+                        <option value="Apex Archon Core">Apex Archon Core (Owner)</option>
+                    </select>
+                </div>
+                <button class="auth-btn-submit" onclick="compileCompletedUserProfileData()">Finalize Infrastructure Sync</button>
+            </div>
+
+            <div class="auth-step" id="auth-forgot-1">
+                <div class="auth-title">GRID RECOVERY MATRIX</div>
+                <div class="auth-desc">Input your target registered Gmail address. Google server will pipe an official Reset link automatically.</div>
+                <div class="auth-input-group">
+                    <label>Registered Gmail ID</label>
+                    <input type="email" class="auth-field" id="forgot-email-input" placeholder="yourmail@gmail.com" autocomplete="off">
+                </div>
+                <button class="auth-btn-submit" onclick="executeFirebasePasswordResetLink()">Pipeline Recovery Link</button>
+                <div class="auth-nav-links" style="justify-content: center;">
+                    <a class="auth-link" onclick="switchAuthStep('auth-login-step')">Back to Sign-In</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // 🚀 FIREBASE CREDENTIAL CONFIGURATION INTEGRITY MATRIX
+        const firebaseConfig = {
+            apiKey: "AIzaSyCUSuCzsmvcHZy2YJq8G-Xhbs-A9Iy1Tn8",
+            authDomain: "harvion-labs-51ca1.firebaseapp.com",
+            projectId: "harvion-labs-51ca1",
+            storageBucket: "harvion-labs-51ca1.firebasestorage.app",
+            messagingSenderId: "908526936420",
+            appId: "1:908526936420:web:94fd6c29a53375a4175a71"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        
+        let phoneConfirmationResultMatrix = null;
+        let currentAuthWorkflowEmail = "";
+
+        // FIREBASE STATE LISTENER FOR LANDING PAGE
+        auth.onAuthStateChanged((user) => {
+            const loginBtn = document.getElementById('hdr-login-btn');
+            if (user) {
+                // Agar user pehle se logged in hai toh Header ka button 'Dashboard' ban jayega
+                if (loginBtn) {
+                    loginBtn.innerHTML = '<i class="fa-solid fa-chart-line"></i> Dashboard';
+                    loginBtn.onclick = () => { window.location.href = 'chat.html'; };
+                }
+            } else {
+                if (loginBtn) {
+                    loginBtn.innerText = 'Login';
+                    loginBtn.onclick = openLoginGateway;
+                }
+            }
+        });
+
+        // --- AUTH ARCHITECTURE LOGICAL ACTIONS ---
+        function openLoginGateway() { document.getElementById('auth-gateway-overlay').classList.add('active'); switchAuthStep('auth-login-step'); setTimeout(() => { if(!window.recaptchaVerifierAnchor) { window.recaptchaVerifierAnchor = new firebase.auth.RecaptchaVerifier('recaptcha-box-container', {'size': 'invisible'}); } }, 500); }
+        function closeAuthGateway() { document.getElementById('auth-gateway-overlay').classList.remove('active'); }
+        function switchAuthStep(stepId) { document.querySelectorAll('.auth-step').forEach(el => el.classList.remove('active')); document.getElementById(stepId).classList.add('active'); }
+
+        function executeGooglePopupAuth() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).then(() => { closeAuthGateway(); triggerCinematicWarpPortal(); }).catch(err => alert(err.message));
+        }
+        function executeFirebaseLoginRoute() {
+            const idInp = document.getElementById('login-identity').value.trim(); const passInp = document.getElementById('login-pass').value;
+            if(!idInp || !passInp) { alert("Fields cannot be empty entries."); return; }
+            if(idInp.includes('@')) {
+                auth.signInWithEmailAndPassword(idInp, passInp).then(() => { closeAuthGateway(); triggerCinematicWarpPortal(); }).catch(err => alert(err.message));
+            } else { alert("Phone configuration matches requires valid active SMS token logs. Change interface step parameters."); }
+        }
+        function executeFirebasePasswordResetLink() {
+            const m = document.getElementById('forgot-email-input').value.trim();
+            auth.sendPasswordResetEmail(m).then(() => { alert("Google password reset link routed successfully."); switchAuthStep('auth-login-step'); }).catch(err => alert(err.message));
+        }
+        function executeFirebaseEmailRegister() {
+            const m = document.getElementById('signup-email-input').value.trim(); const p = document.getElementById('signup-email-pass').value;
+            if(!m || p.length < 6) { alert("Invalid structure criteria targets."); return; }
+            currentAuthWorkflowEmail = m; localStorage.setItem('harvion_transit_pass_temp', p); switchAuthStep('auth-step-profile-form');
+        }
+        function executeFirebasePhoneAuth() {
+            const p = document.getElementById('signup-phone-input').value.trim();
+            auth.signInWithPhoneNumber(p, window.recaptchaVerifierAnchor).then((res) => { phoneConfirmationResultMatrix = res; switchAuthStep('auth-phone-verify'); }).catch(err => alert(err.message));
+        }
+        function executePhoneOtpCodeVerification() {
+            const c = document.getElementById('phone-otp-input').value.trim();
+            phoneConfirmationResultMatrix.confirm(c).then(() => { switchAuthStep('auth-step-profile-form'); }).catch(err => alert(err.message));
+        }
+        function compileCompletedUserProfileData() {
+            const n = document.getElementById('reg-name').value.trim(); const rank = document.getElementById('reg-clearance-rank').value;
+            if(!n) { alert("Name parameters array missing bounds matching."); return; }
+            localStorage.setItem('harvion_temp_name', n); localStorage.setItem('harvion_clearance', rank);
+            if(rank.includes('Matrix') || rank.includes('Archon') || rank.includes('Owner')) { localStorage.setItem('harvion_premium_tier', "true"); }
+            
+            const user = auth.currentUser; const fPass = localStorage.getItem('harvion_transit_pass_temp');
+            if(user === null && currentAuthWorkflowEmail) {
+                auth.createUserWithEmailAndPassword(currentAuthWorkflowEmail, fPass).then((cred) => {
+                    cred.user.updateProfile({ displayName: n }); cred.user.sendEmailVerification();
+                    localStorage.removeItem('harvion_transit_pass_temp'); closeAuthGateway(); triggerCinematicWarpPortal();
+                }).catch(err => alert(err.message));
+            } else if(user) {
+                user.updateProfile({ displayName: n }).then(() => { closeAuthGateway(); triggerCinematicWarpPortal(); });
+            }
+        }
+
+        // --- 🌌 WARP DRIVE HIGH-FIDELITY OVERLAY PROTOCOLS ---
+        function triggerCinematicWarpPortal() {
+            const overlay = document.getElementById('portal-animation-overlay'); const pCanvas = document.getElementById('portal-canvas'); const pCtx = pCanvas.getContext('2d');
+            overlay.style.display = 'flex'; pCanvas.width = window.innerWidth; pCanvas.height = window.innerHeight;
+            let stars = [];
+            for(let i=0; i<450; i++) { stars.push({ x: Math.random()*pCanvas.width - pCanvas.width/2, y: Math.random()*pCanvas.height - pCanvas.height/2, z: Math.random()*pCanvas.width, color: Math.random()>0.5 ? 'rgba(0, 243, 255, ' : 'rgba(157, 0, 255, ' }); }
+            function draw() {
+                pCtx.fillStyle = 'rgba(2, 2, 6, 0.25)'; pCtx.fillRect(0,0,pCanvas.width,pCanvas.height);
+                let cx = pCanvas.width/2; let cy = pCanvas.height/2;
+                stars.forEach(s => {
+                    s.z -= 14; if(s.z <= 0) { s.z = pCanvas.width; s.x = Math.random()*pCanvas.width - cx; s.y = Math.random()*pCanvas.height - cy; }
+                    let k = 128.0 / s.z; let px = s.x * k + cx; let py = s.y * k + cy;
+                    if(px >= 0 && px <= pCanvas.width && py >= 0 && py <= pCanvas.height) {
+                        let size = (1 - s.z / pCanvas.width) * 5; let alpha = (1 - s.z / pCanvas.width);
+                        pCtx.beginPath(); pCtx.arc(px,py,size,0,Math.PI*2); pCtx.fillStyle = s.color + alpha + ')'; pCtx.fill();
+                    }
+                });
+                if(overlay.style.display === 'flex') requestAnimationFrame(draw);
+            }
+            draw();
+            
+            // Redirect to Chat Page after animation completes (3.1 seconds)
+            setTimeout(() => { 
+                overlay.style.transition = "opacity 0.6s ease"; overlay.style.opacity = 0; 
+                setTimeout(() => { 
+                    window.location.href = "chat.html"; 
+                }, 600); 
+            }, 3100);
+        }
+    </script>
+</body>
+</html>

@@ -99,7 +99,7 @@ export default async function handler(req) {
             }
         });
 
-        return new Response(transformStream.readable, {
+        return new Response(response.body.pipeThrough(transformStream), {
             headers: { 'Content-Type': 'text/event-stream' }
         });
 

@@ -41,7 +41,7 @@
             border-bottom: 1px solid rgba(255,255,255,0.05); position: sticky; top: 0; z-index: 1000;
         }
 
-        .nav-left { display: flex; align-items: center; gap: 15px; }
+        .nav-left { display: flex; align-items: center; gap: 12px; }
         .brand-logo { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid var(--neon-cyan); }
         .brand-name { font-family: 'Space Grotesk', sans-serif; font-size: 1.6rem; font-weight: 700; background: linear-gradient(90deg, #fff, var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
@@ -60,7 +60,7 @@
         .hdr-use-ai:hover { transform: translateY(-1px); box-shadow: 0 0 25px var(--neon-cyan); }
 
         /* LOGIN FLAT LINK */
-        .hdr-login { color: #fff; text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: 0.2s; }
+        .hdr-login { color: #fff; text-decoration: none; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: 0.2s; }
         .hdr-login:hover { color: var(--neon-cyan); text-shadow: 0 0 8px var(--neon-cyan); }
 
         /* PROFILE ROW DESIGN MATCHING CHAT ENGINE */
@@ -127,18 +127,17 @@
         .ceo-image-wrapper { width: 220px; height: 220px; flex-shrink: 0; border-radius: 50%; overflow: hidden; border: 3px solid var(--neon-purple); box-shadow: 0 0 25px rgba(157,0,255,0.3); }
         .ceo-image { width: 100%; height: 100%; object-fit: cover; }
         .ceo-content h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1.8rem; color: #fff; margin-bottom: 5px; }
-        .ceo-content .role { color: var(--neon-cyan); font-family: 'Orbitron'; font-size: 12px; letter-spacing: 2px; margin-bottom: 20px; text-transform: uppercase; }
         .ceo-content p { color: #d1d5db; font-size: 1.05rem; line-height: 1.7; font-style: italic; }
 
         /* --- PRICING GRID --- */
-        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; max-width: 900px; margin: 0 auto; }
-        .price-card { background: var(--glass-panel); border: 1px solid var(--glass-border); border-radius: 20px; padding: 35px 25px; text-align: center; position: relative; overflow: hidden; }
+        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; max-width: 1100px; margin: 0 auto; }
+        .price-card { background: var(--glass-panel); border: 1px solid var(--glass-border); border-radius: 20px; padding: 35px 25px; text-align: center; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; min-height: 450px; }
         .price-card.premium-tier { border-color: var(--neon-purple); box-shadow: 0 0 25px rgba(157,0,255,0.15); }
         .price-card.premium-tier::before { content: 'RECOMMENDED'; position: absolute; top: 15px; right: -35px; background: var(--neon-purple); color: #fff; font-size: 9px; font-weight: 800; padding: 4px 35px; transform: rotate(45deg); letter-spacing: 1px; }
         .price-card h3 { font-family: 'Orbitron', sans-serif; font-size: 1.2rem; letter-spacing: 1px; color: #fff; margin-bottom: 15px; }
         .price-amt { font-family: 'Space Grotesk', sans-serif; font-size: 2.8rem; font-weight: 700; color: #fff; margin-bottom: 25px; }
         .price-amt span { font-size: 1rem; color: var(--text-muted); font-weight: 400; }
-        .price-features { list-style: none; text-align: left; margin-bottom: 30px; display: flex; flex-direction: column; gap: 12px; font-size: 0.95rem; color: #d1d5db; }
+        .price-features { list-style: none; text-align: left; margin-bottom: 30px; display: flex; flex-direction: column; gap: 12px; font-size: 0.95rem; color: #d1d5db; flex-grow: 1; }
         .price-features i { color: var(--neon-cyan); margin-right: 8px; }
 
         /* --- CONTACT US FORM --- */
@@ -150,8 +149,24 @@
         .form-field:focus { border-color: var(--neon-cyan); box-shadow: 0 0 15px rgba(0,243,255,0.15); }
         .form-textarea { resize: none; min-height: 120px; }
 
+        /* --- 🌟 MODERN CYBERPUNK FOOTER MATRIX --- */
+        footer { background: rgba(2, 2, 5, 0.9); border-top: 1px solid rgba(255,255,255,0.05); padding: 30px 20px; margin-top: 60px; text-align: center; }
+        .footer-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
+        .footer-copyright { font-size: 0.9rem; color: var(--text-muted); }
+        .footer-links { display: flex; gap: 24px; }
+        .footer-links a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: 0.2s; }
+        .footer-links a:hover { color: var(--neon-cyan); text-shadow: 0 0 5px var(--neon-cyan); }
+
+        /* BACK TO TOP FLOATING CORE */
+        .back-to-top {
+            position: fixed; bottom: 30px; right: 30px; background: rgba(0, 243, 255, 0.05); border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan); width: 45px; height: 45px; border-radius: 50%; display: flex; justify-content: center;
+            align-items: center; cursor: pointer; z-index: 999; transition: 0.3s; box-shadow: 0 0 15px rgba(0, 243, 254, 0.15);
+        }
+        .back-to-top:hover { background: var(--neon-cyan); color: #000; box-shadow: 0 0 25px var(--neon-cyan); transform: translateY(-3px); }
+
         /* --- 🔮 MAINFRAME HUD MODAL STRUCTURES --- */
-        #mainframe-modal {
+        #mainframe-modal, #login-portal-modal {
             position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px);
             z-index: 100000; display: none; justify-content: center; align-items: center; padding: 20px;
         }
@@ -169,56 +184,58 @@
         .hud-diagnostic-graph-container { width: 100%; height: 110px; background: rgba(0,0,0,0.4); border: 1px solid rgba(0,243,255,0.1); border-radius: 12px; margin-top: 15px; position: relative; overflow: hidden; }
         #hud-canvas-vector { width: 100%; height: 100%; display: block; }
 
+        /* AUTH FORMS SYSTEM OVERRIDES */
+        .auth-step { display: none; flex-direction: column; gap: 15px; }
+        .auth-step.active { display: flex; }
+        .auth-nav-links { display: flex; justify-content: space-between; font-size: 0.85rem; margin-top: 12px; }
+        .auth-link { color: var(--neon-cyan); text-decoration: none; cursor: pointer; font-weight: 600; }
+        .auth-link:hover { text-shadow: 0 0 5px var(--neon-cyan); }
+
         /* --- 📱 SECURE MOBILE STRUCTURAL RULES (NO OVERLAPS) --- */
         @media (max-width: 1024px) {
             header.top-nav {
-                padding: 15px 16px !important;
+                padding: 12px 20px !important;
                 display: flex !important;
                 justify-content: space-between !important;
-                align-items: flex-start !important;
-                min-height: 125px !important;
+                align-items: center !important;
+                min-height: auto !important;
             }
             .nav-left {
                 display: flex !important;
-                flex-direction: column !important;
-                align-items: flex-start !important;
-                gap: 12px !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                gap: 10px !important;
             }
+            .brand-name { font-size: 1.3rem !important; }
             .nav-links { display: none !important; }
             
-            /* Three lines menu left-aligned directly beneath the logo text */
             .hv-mobile-toggle { display: flex !important; }
 
-            /* Right utilities row structural ordering mapping */
             .nav-right-tools {
                 display: flex !important;
                 align-items: center !important;
                 gap: 12px !important;
             }
             
-            /* Use AI pill button position control */
             .hdr-use-ai { 
                 order: 1 !important; 
-                padding: 8px 16px !important; 
-                font-size: 0.85rem !important; 
+                padding: 8px 14px !important; 
+                font-size: 0.82rem !important; 
             }
             
-            /* Login block configuration */
             .nav-auth-container { order: 2 !important; }
-            .hdr-login { font-size: 0.95rem !important; }
+            .hdr-login { font-size: 0.9rem !important; }
             
-            /* Profile Photo (Avatar Circle Only) shifted to the absolute right side */
             .user-nav-profile { 
                 order: 2 !important; 
-                padding: 4px !important; 
+                padding: 2px !important; 
                 background: transparent !important;
                 border: none !important;
                 gap: 0 !important;
             }
             .user-nav-avatar { width: 34px !important; height: 34px !important; font-size: 13px !important; }
-            .user-nav-meta { display: none !important; } /* Hidden on mobile to prevent overlapping */
+            .user-nav-profile .user-nav-meta { display: none !important; } 
             
-            /* Section structural scaling for small touch layouts */
             .hero-section { margin-top: 40px !important; }
             .hero-section h1 { font-size: 2.2rem !important; }
             .hero-section p { font-size: 0.95rem !important; }
@@ -226,6 +243,8 @@
             .ceo-section { flex-direction: column !important; text-align: center !important; gap: 25px !important; padding: 25px !important; }
             .ceo-image-wrapper { width: 160px !important; height: 160px !important; }
             .contact-container { padding: 20px !important; }
+            .footer-container { flex-direction: column !important; gap: 15px !important; }
+            .back-to-top { bottom: 20px !important; right: 20px !important; width: 40px !important; height: 40px !important; }
         }
     </style>
 </head>
@@ -233,15 +252,19 @@
 
     <canvas id="interactive-canvas"></canvas>
 
+    <div class="back-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'});">
+        <i class="fa-solid fa-arrow-up"></i>
+    </div>
+
     <header class="top-nav">
         <div class="nav-left">
+            <button class="hv-mobile-toggle" onclick="toggleMobileNavigationState()">
+                <i class="fa-solid fa-bars"></i>
+            </button>
             <div style="display: flex; align-items: center; gap: 10px;">
                 <img src="logo.png" alt="Harvion Main Logo" class="brand-logo">
                 <span class="brand-name">Harvion Labs</span>
             </div>
-            <button class="hv-mobile-toggle" onclick="toggleMobileNavigationState()">
-                <i class="fa-solid fa-bars"></i>
-            </button>
         </div>
 
         <nav class="nav-links">
@@ -256,8 +279,8 @@
             <a href="chat.html" class="hdr-use-ai">Use AI <i class="fa-solid fa-arrow-right" style="font-size: 10px; margin-left: 3px;"></i></a>
 
             <div class="nav-auth-container" id="nav-auth-block">
-    <a href="#" class="hdr-login" onclick="openLoginGateway()">Login</a>
-</div>
+                <a onclick="openLoginPortalGateway()" class="hdr-login">Login</a>
+            </div>
             
             <div class="user-nav-profile" id="user-profile-block" onclick="openMainframeModal('account')">
                 <div class="user-nav-avatar" id="avatar-initial">U</div>
@@ -313,12 +336,13 @@
     <section id="ceo">
         <div class="ceo-section">
             <div class="ceo-image-wrapper">
-                <img src="ceo.jpg" alt="Founder" class="ceo-image" onerror="this.src='logo.png'">
+                <img src="ceo.jpg" alt="Saurabh Kumar Founder" class="ceo-image" onerror="this.src='logo.png'">
             </div>
             <div class="ceo-content">
                 <h3>Message From Our Founder</h3>
-                <div class="role">Chief Infrastructure Archon / Harvion Labs</div>
-                <p>"Our objective at Harvion Labs is to bridge the terminal gap between synthetic neural models parameters and human logic environments workflows. We are constructing an open, edge-to-edge secure environment framework where data arrays can compile into pure practical impact layers safely across global cloud grids."</p>
+                <div class="role" style="font-size: 2.2rem; font-weight: 900; background: linear-gradient(90deg, var(--neon-cyan), #ffffff, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 20px rgba(0, 243, 255, 0.4); margin-bottom: 8px; font-family: 'Space Grotesk', sans-serif;">Saurabh Kumar</div>
+                <div class="role" style="font-family: 'Orbitron'; font-size: 11px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase;">Chief Infrastructure Archon / Harvion Labs</div>
+                <p style="margin-top: 15px;">"Our objective at Harvion Labs is to bridge the terminal gap between synthetic neural models parameters and human logic environments workflows. We are constructing an open, edge-to-edge secure environment framework where data arrays can compile into pure practical impact layers safely across global cloud grids."</p>
             </div>
         </div>
     </section>
@@ -343,10 +367,21 @@
                 <ul class="price-features">
                     <li><i class="fa-solid fa-circle-check"></i> Supernova Prime Logic Access</li>
                     <li><i class="fa-solid fa-circle-check"></i> Absolute Infinite Token Weights</li>
-                    <li><i class="fa-solid fa-circle-check"></i> Dedicated Dedicated Cloud Allocation</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Dedicated Cloud Allocation</li>
                     <li><i class="fa-solid fa-circle-check"></i> Quantum Nebula Vision Slots</li>
                 </ul>
                 <a href="chat.html" class="btn-core primary" style="display:block;">Upgrade Authorization</a>
+            </div>
+            <div class="price-card" style="border-color: rgba(255,255,255,0.1);">
+                <h3>Quantum Custom</h3>
+                <div class="price-amt">Custom<span>/matrix</span></div>
+                <ul class="price-features">
+                    <li><i class="fa-solid fa-circle-check"></i> Isolated Private Cluster Slots</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Custom Hyperparameter Fine-Tuning</li>
+                    <li><i class="fa-solid fa-circle-check"></i> 24/7 Priority Telemetry Support</li>
+                    <li><i class="fa-solid fa-circle-check"></i> Dedicated Dedicated Core Engineering</li>
+                </ul>
+                <a href="#contact" class="btn-core secondary" style="display:block;">Connect Matrix</a>
             </div>
         </div>
     </section>
@@ -359,7 +394,7 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Identity Name Vector</label>
-                        <input type="text" class="form-field" placeholder="Shubham Kumar" required>
+                        <input type="text" class="form-field" placeholder="Saurabh Kumar" required>
                     </div>
                     <div class="form-group">
                         <label>Mail Box Endpoint</label>
@@ -374,6 +409,69 @@
             </form>
         </div>
     </section>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-copyright">
+                &copy; 2026 Harvion Labs. All Rights Reserved. Mapped via Security Central Console.
+            </div>
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#home">Back to Top</a>
+            </div>
+        </div>
+    </footer>
+
+    <div id="login-portal-modal">
+        <div class="modal-card" style="max-width: 450px; padding: 35px; background: #05050c; border: 1px solid var(--neon-cyan);">
+            <i class="fa-solid fa-xmark modal-close" onclick="closeLoginPortalGateway()"></i>
+            
+            <div class="auth-step active" id="auth-login-step">
+                <h2 style="font-family: 'Orbitron', sans-serif; font-size: 1.8rem; font-weight: 800; color: #fff; letter-spacing: 1px; margin-bottom: 12px; text-transform: uppercase;">MAINFRAME LOGIN</h2>
+                <p style="font-size: 0.88rem; color: var(--text-muted); text-align: center; margin-bottom: 25px; line-height: 1.4;">Enter your verified Gmail ID or Registered Mobile number configuration to authenticate.</p>
+                
+                <div class="form-group" style="margin-bottom: 18px; text-align: left;">
+                    <label style="font-size: 0.75rem; font-weight: 700; color: #fff; text-transform: uppercase; margin-bottom: 6px; display: block;">GMAIL OR PHONE IDENTITY VECTOR</label>
+                    <input type="text" class="form-field" id="login-identity" placeholder="name@gmail.com or +91XXXXXXXXXX" autocomplete="off" style="background: #0d0d14;">
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 18px; text-align: left;">
+                    <label style="font-size: 0.75rem; font-weight: 700; color: #fff; text-transform: uppercase; margin-bottom: 6px; display: block;">SECURITY KEYPHRASE (PASSWORD)</label>
+                    <input type="password" class="form-field" id="login-pass" placeholder="••••••••" autocomplete="off" style="background: #0d0d14;">
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 22px; text-align: left;">
+                    <input type="checkbox" id="hv-login-agree-policy" checked style="accent-color: var(--neon-cyan); width: 15px; height: 15px; cursor: pointer;">
+                    <label for="hv-login-agree-policy" style="font-size: 0.82rem; color: var(--text-muted); cursor: pointer; line-height: 1.4;">
+                        I agree to the <a href="#" style="color: var(--neon-cyan); text-decoration: none; font-weight: 600;">Terms & Conditions</a> and <a href="#" style="color: var(--neon-cyan); text-decoration: none; font-weight: 600;">Privacy Policy</a>.
+                    </label>
+                </div>
+                
+                <button onclick="executeSupabaseAuthLogin()" class="btn-core primary" style="width: 100%; border: none; padding: 13px; font-weight: 800; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px;">AUTHORIZE TERMINAL</button>
+                <div style="margin: 16px 0; color: var(--text-muted); font-size: 0.8rem; font-family: 'Orbitron'; letter-spacing: 1px;">OR</div>
+                <button class="btn-core secondary" onclick="executeGoogleOauthLink()" style="width:100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; border-radius: 12px; font-size: 0.9rem; background: #0c0c14;"><img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google" style="width: 16px; height: 16px;"> Continue with Google</button>
+                
+                <div class="auth-nav-links">
+                    <a class="auth-link" onclick="switchAuthStep('auth-forgot-1')">Forgot Passcode?</a>
+                    <a class="auth-link" onclick="switchAuthStep('auth-forgot-1')">Create Core Node</a>
+                </div>
+            </div>
+
+            <div class="auth-step" id="auth-forgot-1">
+                <h2 style="font-family: 'Orbitron', sans-serif; font-size: 1.6rem; font-weight: 800; color: #fff; margin-bottom: 12px;">GRID RECOVERY MATRIX</h2>
+                <p style="font-size: 0.88rem; color: var(--text-muted); text-align: center; margin-bottom: 25px; line-height: 1.4;">Input your target registered Gmail address. System will dispatch an official password reset link.</p>
+                <div class="form-group" style="margin-bottom: 18px; text-align: left;">
+                    <label style="font-size: 0.75rem; font-weight: 700; color: #fff; display: block; margin-bottom: 6px;">REGISTERED GMAIL ID</label>
+                    <input type="email" class="form-field" id="forgot-email-input" placeholder="yourmail@gmail.com" autocomplete="off" style="background: #0d0d14;">
+                </div>
+                <button class="btn-core primary" onclick="executeFirebasePasswordResetLink()" style="width: 100%; border: none; padding: 13px; font-weight: 800;">PIPELINE RECOVERY LINK</button>
+                <div class="auth-nav-links" style="justify-content: center;">
+                    <a class="auth-link" onclick="switchAuthStep('auth-login-step')">Back to Terminal Sign-In</a>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div id="mainframe-modal">
         <div class="modal-card">
@@ -397,8 +495,20 @@
         const authEngine = firebase.auth();
         const firestoreDb = firebase.firestore();
 
-        let activeUserSession = { loggedIn: false, name: '', uid: '', token: '', email: '', clearance: '', serverSlot: 'Dynamic Routing Node v1.5' };
+        let activeUserSession = { loggedIn: false, name: '', username: '', uid: '', token: '', email: '', clearance: '', serverSlot: 'Dynamic Routing Node v1.5' };
         let hudAnimationLoopToken = null;
+
+        function openLoginPortalGateway() {
+            document.getElementById('login-portal-modal').style.display = 'flex';
+            switchAuthStep('auth-login-step');
+        }
+        function closeLoginPortalGateway() {
+            document.getElementById('login-portal-modal').style.display = 'none';
+        }
+        function switchAuthStep(stepId) {
+            document.querySelectorAll('.auth-step').forEach(el => el.classList.remove('active'));
+            document.getElementById(stepId).classList.add('active');
+        }
 
         function toggleMobileNavigationState() {
             const menuLayer = document.getElementById('hv-mobile-menu-layer');
@@ -409,6 +519,60 @@
             }
         }
 
+        // 👉 EXACT DATABASE PROCESSING CORRESPONDING TO THE CHAT INTERFACE OVERWATCH
+        async function executeSupabaseAuthLogin() {
+            if (!document.getElementById('hv-login-agree-policy').checked) {
+                alert("Please agree to the Terms and Privacy Policy to sign in.");
+                return;
+            }
+            const identity = document.getElementById('login-identity').value.trim();
+            const pass = document.getElementById('login-pass').value;
+            if (!identity || !pass) {
+                alert("Please enter both your identity parameter and password.");
+                return;
+            }
+            authEngine.signInWithEmailAndPassword(identity, pass)
+                .then(() => {
+                    closeLoginPortalGateway();
+                    window.location.href = "chat.html"; // Mapped direct routing sequence
+                }).catch((error) => {
+                    alert(error.message);
+                });
+        }
+
+        async function executeGoogleOauthLink() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            authEngine.signInWithPopup(provider)
+                .then(async (result) => {
+                    const u = result.user;
+                    const docSnap = await firestoreDb.collection("users").doc(u.uid).get();
+                    if (!docSnap.exists) {
+                        await firestoreDb.collection("users").doc(u.uid).set({
+                            full_name: u.displayName || "Google User Node",
+                            role: "Standard Beta User",
+                            registered_at: new Date().toISOString(),
+                            remaining_chats: 10
+                        });
+                    }
+                    closeLoginPortalGateway();
+                    window.location.href = "chat.html";
+                }).catch((error) => {
+                    alert(error.message);
+                });
+        }
+
+        function executeFirebasePasswordResetLink() {
+            const email = document.getElementById('forgot-email-input').value.trim();
+            if(!email) { alert("Please enter your registered email address."); return; }
+            authEngine.sendPasswordResetEmail(email)
+                .then(() => {
+                    alert("Reset link dispatched safely. Check your inbox.");
+                    switchAuthStep('auth-login-step');
+                }).catch((err) => {
+                    alert(err.message);
+                });
+        }
+
         authEngine.onAuthStateChanged(async (user) => {
             const authBlock = document.getElementById('nav-auth-block');
             const profileBlock = document.getElementById('user-profile-block');
@@ -416,8 +580,8 @@
             if (user) {
                 activeUserSession.loggedIn = true;
                 activeUserSession.email = user.email || "Cellular Provider Proxy";
-                activeUserSession.uid = "UID-" + user.uid.substring(0,8).toUpperCase();
-                activeUserSession.token = "TK-" + user.uid.substring(8,16).toUpperCase() + "-NODE";
+                activeUserSession.uid = user.uid;
+                activeUserSession.token = "TK-" + user.uid.substring(0,8).toUpperCase() + "-NODE";
 
                 try {
                     const snap = await firestoreDb.collection("users").doc(user.uid).get();
@@ -433,6 +597,8 @@
                     activeUserSession.name = localStorage.getItem('harvion_temp_name') || "Core Node Developer";
                     activeUserSession.clearance = "Standard Beta User";
                 }
+
+                activeUserSession.username = activeUserSession.name.toLowerCase().replace(/\s+/g, '_') + '_' + user.uid.substring(0,3);
 
                 if(authBlock) authBlock.style.display = 'none';
                 if(profileBlock) profileBlock.style.display = 'flex';
@@ -451,17 +617,22 @@
         function openMainframeModal(section) {
             const modal = document.getElementById('mainframe-modal');
             const content = document.getElementById('modal-body-content');
-            if (modal) modal.style.display = 'flex';
+            if (modal) modal.classList.add('active');
             
+            const normalizedRankLabel = activeUserSession.clearance.toLowerCase().replace(/\s+/g, '_');
+
             content.innerHTML = `
                 <div style='display:flex; align-items:center; gap:20px; margin-bottom:20px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); padding:14px; border-radius:16px;'>
                     <div style='width:55px; height:55px; border-radius:50%; background:linear-gradient(135deg,#00f3ff,#9d00ff); display:flex; justify-content:center; align-items:center; font-size:1.4rem; font-weight:900; color:#fff;'>${activeUserSession.name.charAt(0).toUpperCase()}</div>
-                    <div><h4 style='color:#fff; font-family:"Space Grotesk"; font-size:1.2rem;'>${activeUserSession.name}</h4><p style='color:var(--neon-cyan); font-size:0.85rem;'>@verified_node_developer</p></div>
+                    <div>
+                        <h4 style='color:#fff; font-family:"Space Grotesk"; font-size:1.2rem;'>${activeUserSession.name}</h4>
+                        <p style='color:var(--neon-cyan); font-size:0.85rem; font-family:monospace;'>@verified_node_developer</p>
+                    </div>
                 </div>
                 <div class="settings-group-title">Hardware Identity Matrix Logs</div>
-                <div class="settings-row"><span>Global Tracking User ID</span><span style="color:var(--neon-cyan); font-family:monospace; font-weight:700;">${activeUserSession.uid}</span></div>
-                <div class="settings-row"><span>Secure Session Auth Token</span><span style="color:#fff; font-family:monospace; font-size:11px; background:rgba(255,255,255,0.05); padding:4px 8px; border-radius:6px;">${activeUserSession.token}</span></div>
-                <div class="settings-row"><span>Mainframe Linked Mail Box</span><span style="color:var(--text-muted);">${activeUserSession.email}</span></div>
+                <div class="settings-row"><span>Global Tracking User ID</span><span style="color:var(--neon-cyan); font-family:monospace; font-weight:700; font-size:12px; word-break: break-all;">${activeUserSession.uid}</span></div>
+                <div class="settings-row"><span>Secure Session Auth Token</span><span style="color:#fff; font-family:monospace; font-size:11px; background:rgba(255,255,255,0.05); padding:4px 8px; border-radius:6px; word-break: break-all;">${activeUserSession.token}</span></div>
+                <div class="settings-row"><span>Mainframe Linked Mail Box</span><span style="color:var(--text-muted); word-break: break-all;">${activeUserSession.email}</span></div>
                 <div class="settings-group-title">Clearance Credentials & Core Allocation</div>
                 <div class="settings-row"><span>Security Privilege Clear Rank</span><span style="color:var(--neon-purple); font-weight:700;">${activeUserSession.clearance}</span></div>
                 <div class="settings-row"><span>Active Deployment Server Array</span><span>${activeUserSession.serverSlot}</span></div>
@@ -474,7 +645,7 @@
         }
 
         function closeMainframeModal() {
-            document.getElementById('mainframe-modal').style.display = 'none';
+            document.getElementById('mainframe-modal').classList.remove('active');
             if (hudAnimationLoopToken) cancelAnimationFrame(hudAnimationLoopToken);
         }
 
@@ -483,7 +654,7 @@
             hCanvas.width = hCanvas.parentElement.clientWidth; hCanvas.height = hCanvas.parentElement.clientHeight;
             let pointsArr = Array(40).fill(hCanvas.height / 2);
             function animateHUD() {
-                if(document.getElementById('mainframe-modal').style.display !== 'flex') { cancelAnimationFrame(hudAnimationLoopToken); return; }
+                if(!document.getElementById('mainframe-modal').classList.contains('active')) { cancelAnimationFrame(hudAnimationLoopToken); return; }
                 hCtx.clearRect(0,0,hCanvas.width,hCanvas.height); hCtx.strokeStyle = 'rgba(0, 243, 255, 0.04)'; hCtx.lineWidth = 1;
                 for(let i=0; i<hCanvas.width; i+=20) { hCtx.beginPath(); hCtx.moveTo(i,0); hCtx.lineTo(i,hCanvas.height); hCtx.stroke(); }
                 for(let j=0; j<hCanvas.height; j+=20) { hCtx.beginPath(); hCtx.moveTo(0,j); hCtx.lineTo(hCanvas.width,j); hCtx.stroke(); }
@@ -494,7 +665,7 @@
                 for(let k=0; k<pointsArr.length; k++) { let xp = k * sliceW; let yp = pointsArr[k]; if(k === 0) hCtx.moveTo(xp, yp); else hCtx.lineTo(xp, yp); }
                 hCtx.stroke(); hCtx.shadowBlur = 0; hudAnimationLoopToken = requestAnimationFrame(animateHUD);
             }
-            if(document.getElementById('mainframe-modal').style.display === 'flex') animateHUD();
+            if(document.getElementById('mainframe-modal').classList.contains('active')) animateHUD();
         }
 
         const canvas = document.getElementById('interactive-canvas'); const ctx = canvas.getContext('2d'); let width, height, points = [];
@@ -504,4 +675,4 @@
         renderPlexus();
     </script>
 </body>
-</html> Ab bolo pura sahi h n code ekdam check kr lo bahi bad me deploy me issue na aye please ekdam ache se check kr lo function to design sab kuch profile ka dynamic look sab kuch bahi please check line by line
+</html>

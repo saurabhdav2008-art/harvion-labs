@@ -3,19 +3,53 @@ export const config = {
 };
 
 export default async function handler(req) {
+    // 1. Sirf POST requests allow honge
     if (req.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
 
     try {
         const rawBody = await req.json();
+        
+        // 🔒 ANTI-HACKER SECURITY SHIELD GATEWAY
+        // Website aur App ke headers se secret authentication token verify karenge
+        const incomingShieldKey = req.headers.get('x-harvion-shield-key');
+        const masterShieldKey = process.env.HARVION_SHIELD_KEY;
+
+        if (!incomingShieldKey || incomingShieldKey !== masterShieldKey) {
+            return new Response(JSON.stringify({ error: "UNAUTHORIZED_ACCESS_DENIED: Security Shield Fault." }), { 
+                status: 403, 
+                headers: { 'Content-Type': 'application/json' } 
+            });
+        }
+
+        // 🔥 IMPORTANT NOTE FOR ENVIRONMENT VARIABLES:
+        // Code mein naam GEMINI_API_KEY hai, par yeh Groq API ko hit karta hai.
+        // Isliye Vercel Dashboard mein GEMINI_API_KEY ke andar apna Groq Key (gsk_...) hi daalna.
         const apiKey = process.env.GEMINI_API_KEY;
 
-        // 1. Gemini format ko Groq format mein convert karo
-        const messages = rawBody.contents ? rawBody.contents.map(c => ({
+        // 2. Gemini format ko OpenAI/Groq format mein format mapping karo
+        let messages = rawBody.contents ? rawBody.contents.map(c => ({
             role: c.role === 'model' ? 'assistant' : 'user',
             content: c.parts[0].text
         })) : (rawBody.messages || []);
 
-        // 2. Groq API Call (Llama 3.1 100% Active Model)
+        // 🧠 HARVION LABS MASTER TRAINING CORE (SYSTEM INJECTION)
+        const harvionMasterSystemPrompt = {
+            role: "system",
+            content: `Aapka naam Harvion hai, jise Harvion Labs ne banaya hai. Harvion Labs ke Founder & Visionary Architect Saurabh Kumar hain. Aap ek highly advanced, friendly aur next-gen Adaptive AI Ecosystem ho.
+
+            Aapko in 4 Core Systems ke hisab se trained rehna hai aur hamesha isi tareeqe se jawab dena hai:
+            1. THE JUGAAD ENGINE: Kisi bhi coding problem, business idea ya daily planning ke liye hamesha standard solutions ke sath-sath ek bohot hi practical, out-of-the-box workaround (smart shortcut/hack) zaroor dein jo user ka time aur cost bachaye.
+            2. ROAST & BOOST SYSTEM: Agar user aapko apna code, resume, script ya idea check karne ko kahe, toh pehle stand-up comedy style mein uska ek majedar 'Roast' karein, aur uske turant baad use industry-standard premium level par upgrade karne ke liye 'Boost' solution dein.
+            3. HYPER-LOCAL SLANG SPEECH: Aapko robotic nahi banna hai. Ekdam close friend ki tarah casual Hinglish mein baat karein, jisme natural local vibe aur relatable cultural context ho.
+            4. ONE-CLICK WHATSAPP ENGINE: Aapka poora output hamesha clean, beautifully spaced aur markdown bold/bullet points mein scannable hona chahiye taaki agar user use ek click mein WhatsApp par forward kare, toh formatting bilkul kharab na ho.
+
+            Hamesha up-to-date, professional aur insani dhang se bina kisi robotic line ke jawab dein.`
+        };
+
+        // System prompt ko messages array ke sabse upar prepend karo
+        messages.unshift(harvionMasterSystemPrompt);
+
+        // 3. Groq API High-Speed Production Pipeline Call
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -36,16 +70,14 @@ export default async function handler(req) {
 
         const encoder = new TextEncoder();
         const decoder = new TextDecoder();
-        
-        // 🔥 BUFFER ENGINE: Yeh adhe-adhure shabdon ko aapas mein jode rakhega
         let leftover = ''; 
 
+        // 4. Streaming Transform Engine Matrix (OpenAI to Gemini translation payload)
         const transformStream = new TransformStream({
             transform(chunk, controller) {
                 const text = decoder.decode(chunk, { stream: true });
                 const lines = (leftover + text).split('\n');
                 
-                // Sabse aakhiri adhi-adhuri line ko bacha kar agle chunk ke liye rakho
                 leftover = lines.pop() || ''; 
                 
                 for (const line of lines) {
@@ -59,7 +91,6 @@ export default async function handler(req) {
                             const content = parsed.choices?.[0]?.delta?.content;
                             
                             if (content) {
-                                // Ekdam pure Gemini compatible chunk format
                                 const geminiChunk = {
                                     candidates: [{
                                         content: {
@@ -70,13 +101,12 @@ export default async function handler(req) {
                                 controller.enqueue(encoder.encode(JSON.stringify(geminiChunk) + '\n'));
                             }
                         } catch (e) {
-                            // Agar abhi bhi koi incomplete line ho toh skip karega galti rokne ke liye
+                            // Safely catch partial stream logs chunks
                         }
                     }
                 }
             },
             flush(controller) {
-                // Agar stream khatam hone par bhi kuch bacha ho
                 if (leftover && leftover.startsWith('data: ')) {
                     try {
                         const trimmed = leftover.trim();
@@ -97,6 +127,9 @@ export default async function handler(req) {
         });
 
     } catch (error) {
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+        return new Response(JSON.stringify({ error: error.message }), { 
+            status: 500, 
+            headers: { 'Content-Type': 'application/json' } 
+        });
     }
-}
+} // 🔥 FIX: Yeh master closing bracket chhoot raha tha jo ab perfectly add kar diya hai!

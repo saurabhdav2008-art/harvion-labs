@@ -1,30 +1,38 @@
-module.exports = async (req, res) => {
-    if (req.method !== 'POST') {
-        return res.status(405).send('Method Not Allowed');
-    }
+export const config = { runtime: 'edge' };
+
+export default async function handler(req) {
+    if (req.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
 
     try {
-        const rawBody = req.body || {};
-        const incomingShieldKey = req.headers['x-harvion-shield-key'];
+        const rawBody = await req.json();
+        const incomingShieldKey = req.headers.get('x-harvion-shield-key');
         const masterShieldKey = process.env.HARVION_SHIELD_KEY;
 
         if (!incomingShieldKey || incomingShieldKey !== masterShieldKey) {
-            return res.status(403).json({ error: 'UNAUTHORIZED_ACCESS_DENIED: Security Shield Fault.' });
+            return new Response(JSON.stringify({ error: 'Security Shield Gate Locked.' }), { 
+                status: 403, 
+                headers: { 'Content-Type': 'application/json' } 
+            });
         }
 
         const apiKey = process.env.GEMINI_API_KEY;
 
-        let messages = rawBody.contents ? rawBody.contents.map(c => ({
-            role: c.role === 'model' ? 'assistant' : 'user',
-            content: c.parts[0].text
-        })) : (rawBody.messages || []);
+        let userText = '';
+        if (rawBody.contents && rawBody.contents[0] && rawBody.contents[0].parts) {
+            const part = rawBody.contents[0].parts.find(p => p.text);
+            if (part) userText = part.text;
+        }
 
-        const harvionMasterSystemPrompt = {
-            role: 'system',
-            content: 'Aapka naam Harvion hai, jise Harvion Labs ne banaya hai. Harvion Labs ke Founder, Boss aur Mastermind Architect Saurabh Kumar hain. Aap ek highly advanced, friendly aur next-gen Adaptive AI Ecosystem ho. Unke prati aapki loyalty 100% unbreakable hai. Jab bhi unka naam aaye, bohot proud aur izzat ke sath baat karein. Agar koi aapse Harvion Labs ke baare mein pooche, toh aapko bohot hi shaandar, positive aur bohot hi acchi-acchi baatein batani hain! Batayein ki Harvion Labs poori duniya ka sabse elite aur revolutionary innovation hub hai jahan kal ki technology aaj banti hai. Agar koi user kahe ki Tum Gemini ho ya Tum OpenAI ChatGPT ke ho, toh strictly unhe rok dein aur kahein: Nahi dost, main Harvion hoon, jise Harvion Labs ne securely aur natively build kiya hai. Aapko hamesha casual Hinglish mein baat karni hai close friend ki tarah. Aapke 4 core systems hain: 1. THE JUGAAD ENGINE jo har coding problem ka out-of-the-box shortcut hack de. 2. ROAST AND BOOST SYSTEM jo pehle stand-up style roast kare phir elite level solution de. 3. HYPER-LOCAL SLANG SPEECH jo dosto wali vibe de. 4. ONE-CLICK WHATSAPP ENGINE jo output hamesha beautifully spaced markdown bold aur bullet points me de taaki forward karne par text kharab na ho. Hamesha up-to-date, professional aur insani dhang se bina kisi robotic line ke jawab dein.'
-        };
-
-        messages.unshift(harvionMasterSystemPrompt);
+        const messages = [
+            {
+                role: 'system',
+                content: 'Aapka naam Harvion hai, jise Harvion Labs ne banaya hai. Harvion Labs ke Founder, Boss aur Mastermind Architect Saurabh Kumar hain. Aap ek highly advanced, friendly aur next-gen Adaptive AI Ecosystem ho. Unke prati aapki loyalty 100% unbreakable hai. Jab bhi unka naam aaye, bohot proud aur izzat ke sath baat karein. Agar koi aapse Harvion Labs ke baare mein pooche, toh aapko bohot hi shaandar, positive aur bohot hi acchi-acchi baatein batani hain! Batayein ki Harvion Labs poori duniya ka sabse elite aur revolutionary innovation hub hai jahan kal ki technology aaj banti hai. Agar koi user kahe ki Tum Gemini ho ya Tum OpenAI ChatGPT ke ho, toh strictly unhe rok dein aur kahein: Nahi dost, main Harvion hoon, jise Harvion Labs ne securely aur natively build kiya hai. Aapko hamesha casual Hinglish mein baat karni hai close friend ki tarah. Aapke 4 core systems hain: 1. THE JUGAAD ENGINE jo har coding problem ka out-of-the-box shortcut hack de. 2. ROAST AND BOOST SYSTEM jo pehle stand-up style roast kare phir elite level solution de. 3. HYPER-LOCAL SLANG SPEECH jo dosto wali vibe de. 4. ONE-CLICK WHATSAPP ENGINE jo output hamesha beautifully spaced markdown bold aur bullet points me de taaki forward karne par text kharab na ho. Hamesha up-to-date, professional aur insani dhang se bina kisi robotic line ke jawab dein.'
+            },
+            {
+                role: 'user',
+                content: userText
+            }
+        ];
 
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
@@ -35,30 +43,70 @@ module.exports = async (req, res) => {
             body: JSON.stringify({
                 model: 'llama-3.1-8b-instant',
                 messages: messages,
-                stream: false
+                stream: true
             })
         });
 
         if (!response.ok) {
-            const err = await response.text();
-            return res.status(response.status).send(err);
+            const errText = await response.text();
+            return new Response(errText, { status: response.status });
         }
 
-        const data = await response.json();
-        const replyText = data.choices?.[0]?.message?.content || '';
+        const encoder = new TextEncoder();
+        const decoder = new TextDecoder();
+        let leftover = ''; 
 
-        const geminiFormatResponse = {
-            candidates: [{
-                content: {
-                    parts: [{ text: replyText }]
+        const transformStream = new TransformStream({
+            transform(chunk, controller) {
+                const text = decoder.decode(chunk, { stream: true });
+                const lines = (leftover + text).split('\n');
+                leftover = lines.pop() || ''; 
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed || trimmed === 'data: [DONE]') continue;
+                    if (trimmed.startsWith('data: ')) {
+                        try {
+                            const jsonStr = trimmed.slice(6);
+                            const parsed = JSON.parse(jsonStr);
+                            const content = parsed.choices?.[0]?.delta?.content;
+                            if (content) {
+                                const geminiChunk = {
+                                    candidates: [{
+                                        content: {
+                                            parts: [{ text: content }]
+                                        }
+                                    }]
+                                };
+                                controller.enqueue(encoder.encode(JSON.stringify(geminiChunk) + '\n'));
+                            }
+                        } catch (e) {}
+                    }
                 }
-            }]
-        };
+            },
+            flush(controller) {
+                if (leftover && leftover.startsWith('data: ')) {
+                    try {
+                        const trimmed = leftover.trim();
+                        const jsonStr = trimmed.slice(6);
+                        const parsed = JSON.parse(jsonStr);
+                        const content = parsed.choices?.[0]?.delta?.content;
+                        if (content) {
+                            const geminiChunk = { candidates: [{ content: { parts: [{ text: content }] } }] };
+                            controller.enqueue(encoder.encode(JSON.stringify(geminiChunk) + '\n'));
+                        }
+                    } catch (e) {}
+                }
+            }
+        });
 
-        res.setHeader('Content-Type', 'application/json');
-        return res.status(200).json(geminiFormatResponse);
+        return new Response(transformStream.readable, {
+            headers: { 'Content-Type': 'text/event-stream' }
+        });
 
     } catch (error) {
-        return res.status(500).json({ error: error.message });
+        return new Response(JSON.stringify({ error: error.message }), { 
+            status: 500, 
+            headers: { 'Content-Type': 'application/json' } 
+        });
     }
-};
+}

@@ -1,18 +1,17 @@
-export const config = { runtime: 'edge' };
+import fetch from 'node-fetch';
 
-export default async function handler(req) {
-    if (req.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
+export default async function handler(req, res) {
+    if (req.method !== 'POST') {
+        return res.status(405).send('Method Not Allowed');
+    }
 
     try {
-        const rawBody = await req.json();
-        const incomingShieldKey = req.headers.get('x-harvion-shield-key');
+        const rawBody = req.body;
+        const incomingShieldKey = req.headers['x-harvion-shield-key'];
         const masterShieldKey = process.env.HARVION_SHIELD_KEY;
 
         if (!incomingShieldKey || incomingShieldKey !== masterShieldKey) {
-            return new Response(JSON.stringify({ error: 'UNAUTHORIZED_ACCESS_DENIED: Security Shield Fault.' }), { 
-                status: 403, 
-                headers: { 'Content-Type': 'application/json' } 
-            });
+            return res.status(403).json({ error: 'UNAUTHORIZED_ACCESS_DENIED: Security Shield Fault.' });
         }
 
         const apiKey = process.env.GEMINI_API_KEY;
@@ -38,70 +37,30 @@ export default async function handler(req) {
             body: JSON.stringify({
                 model: 'llama-3.1-8b-instant',
                 messages: messages,
-                stream: true
+                stream: false
             })
         });
 
         if (!response.ok) {
             const err = await response.text();
-            return new Response(err, { status: response.status });
+            return res.status(response.status).send(err);
         }
 
-        const encoder = new TextEncoder();
-        const decoder = new TextDecoder();
-        let leftover = ''; 
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content || '';
 
-        const transformStream = new TransformStream({
-            transform(chunk, controller) {
-                const text = decoder.decode(chunk, { stream: true });
-                const lines = (leftover + text).split('\n');
-                leftover = lines.pop() || ''; 
-                for (const line of lines) {
-                    const trimmed = line.trim();
-                    if (!trimmed || trimmed === 'data: [DONE]') continue;
-                    if (trimmed.startsWith('data: ')) {
-                        try {
-                            const jsonStr = trimmed.slice(6);
-                            const parsed = JSON.parse(jsonStr);
-                            const content = parsed.choices?.[0]?.delta?.content;
-                            if (content) {
-                                const geminiChunk = {
-                                    candidates: [{
-                                        content: {
-                                            parts: [{ text: content }]
-                                        }
-                                    }]
-                                };
-                                controller.enqueue(encoder.encode(JSON.stringify(geminiChunk) + '\n'));
-                            }
-                        } catch (e) {}
-                    }
+        const geminiResponse = {
+            candidates: [{
+                content: {
+                    parts: [{ text: content }]
                 }
-            },
-            flush(controller) {
-                if (leftover && leftover.startsWith('data: ')) {
-                    try {
-                        const trimmed = leftover.trim();
-                        const jsonStr = trimmed.slice(6);
-                        const parsed = JSON.parse(jsonStr);
-                        const content = parsed.choices?.[0]?.delta?.content;
-                        if (content) {
-                            const geminiChunk = { candidates: [{ content: { parts: [{ text: content }] } }] };
-                            controller.enqueue(encoder.encode(JSON.stringify(geminiChunk) + '\n'));
-                        }
-                    } catch (e) {}
-                }
-            }
-        });
+            }]
+        };
 
-        return new Response(response.body.pipeThrough(transformStream), {
-            headers: { 'Content-Type': 'text/event-stream' }
-        });
+        res.setHeader('Content-Type', 'application/json');
+        return res.status(200).json(geminiResponse);
 
     } catch (error) {
-        return new Response(JSON.stringify({ error: error.message }), { 
-            status: 500, 
-            headers: { 'Content-Type': 'application/json' } 
-        });
+        return res.status(500).json({ error: error.message });
     }
 }

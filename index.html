@@ -566,13 +566,7 @@
                     <label>Full Name Matrix</label>
                     <input type="text" class="auth-field" id="reg-name" placeholder="Your Name" autocomplete="off">
                 </div>
-                <div class="auth-input-group">
-                    <label>Authorization Rank</label>
-                    <select class="auth-field" id="reg-clearance-rank" style="color-scheme: dark;">
-                        <option value="Standard Beta User">Standard Beta User Node</option>
-                        <option value="Apex Archon Core">Apex Archon Core (Owner)</option>
-                    </select>
-                </div>
+                
                 <button class="auth-btn-submit" onclick="executeSupabaseFullRegistration()">Finalize Infrastructure Sync</button>
             </div>
 
@@ -703,33 +697,7 @@ const firebaseConfig = {
         }
 
         /* 🔐 MAINFRAME RE-ROUTED LOGIN OPERATION */
-        async function executeSupabaseAuthLogin() {
-            if (!document.getElementById('hv-login-agree-policy').checked) {
-                showCustomAlert("Please agree to the Terms and Privacy Policy to sign in.");
-                return;
-            }
-
-            const identity = document.getElementById('login-identity').value.trim();
-            const pass = document.getElementById('login-pass').value;
-
-            if(!identity || !pass) {
-                showCustomAlert("Security fields cannot be left void.");
-                return;
-            }
-
-            // Universal Identity Router (Detect Email vs Phone number)
-            if (identity.includes('@')) {
-                authEngine.signInWithEmailAndPassword(identity, pass)
-                    .then(() => {
-                        closeAuthGateway(); 
-                        triggerCinematicWarpPortal();
-                    }).catch((error) => {
-                        showCustomAlert(error.message);
-                    });
-            } else {
-                showCustomAlert("For cellular nodes, please log in via standard OTP provision link.");
-            }
-        }
+        executeSupabaseAuthLogin
 
         /* 🔐 GOOGLE POPUP AUTH LINK ENGINE */
         async function executeGoogleOauthLink() {
@@ -790,46 +758,54 @@ const firebaseConfig = {
         }
 
         /* 👤 REALTIME INFRASTRUCTURE CLOUD REGISTRATION */
-        async function executeSupabaseFullRegistration() {
-            const name = document.getElementById('reg-name').value.trim();
-            const rank = document.getElementById('reg-clearance-rank').value;
-            
-            if(!name) { showCustomAlert("Please fill in your name details vector."); return; }
+       async function executeSupabaseFullRegistration() {
+    const name = document.getElementById('reg-name').value.trim();
+    
+    if(!name) { 
+        showCustomAlert("Please fill in your name details vector."); 
+        return; 
+    }
 
-            // Route 1: Cellular node post profile database write update
-            if(activeRegistrationMethod === 'PHONE' && authEngine.currentUser) {
-                const activeUserNode = authEngine.currentUser;
-                await firestoreDb.collection("users").doc(activeUserNode.uid).set({
-                    full_name: name,
-                    role: rank,
-                    phone_linked: activeUserNode.phoneNumber,
-                    registered_at: new Date().toISOString()
-                });
-                showCustomAlert("Infrastructure node synced cleanly.");
-                closeAuthGateway();
-                triggerCinematicWarpPortal();
-                return;
-            }
+    if(activeRegistrationMethod === 'PHONE' && authEngine.currentUser) {
+        const activeUserNode = authEngine.currentUser;
+        await firestoreDb.collection("users").doc(activeUserNode.uid).set({
+            full_name: name,
+            role: "Standard Beta User", // Secure hardcoded value
+            phone_linked: activeUserNode.phoneNumber,
+            registered_at: new Date().toISOString()
+        });
+        showCustomAlert("Infrastructure node synced cleanly.");
+        closeAuthGateway();
+        triggerCinematicWarpPortal();
+        return;
+    }
 
-            // Route 2: Standard Manual Email Registry node setup
-            let emailTarget = document.getElementById('signup-email-input').value.trim();
-            let passTarget = document.getElementById('signup-email-pass').value;
+    let emailTarget = document.getElementById('signup-email-input').value.trim();
+    let passTarget = document.getElementById('signup-email-pass').value;
 
-            authEngine.createUserWithEmailAndPassword(emailTarget, passTarget)
-                .then(async (userCredential) => {
-                    await firestoreDb.collection("users").doc(userCredential.user.uid).set({
-                        full_name: name,
-                        role: rank,
-                        registered_at: new Date().toISOString()
-                    });
-                    showCustomAlert("Infrastructure synchronization complete. Active node live.");
-                    closeAuthGateway();
-                    triggerCinematicWarpPortal();
-                }).catch((error) => {
-                    showCustomAlert(error.message);
-                });
-        }
+    authEngine.createUserWithEmailAndPassword(emailTarget, passTarget)
+        .then(async (userCredential) => {
+            const user = userCredential.user;
 
+            // ✉️ Gmail par verification link bhejne ke liye
+            await user.sendEmailVerification();
+
+            // 📁 Database mein save karne ke liye
+            await firestoreDb.collection("users").doc(user.uid).set({
+                full_name: name,
+                role: "Standard Beta User", // Sabke liye default secure role
+                registered_at: new Date().toISOString()
+            });
+
+            // 🔒 Bina verification login rokne ke liye sign out
+            await authEngine.signOut();
+
+            showCustomAlert("Verification link dispatched! Kripya apna Gmail inbox check karein aur verify karne ke baad hi login karein.");
+            switchAuthStep('auth-login-step');
+        }).catch((error) => {
+            showCustomAlert(error.message);
+        });
+}
         /* 🔑 PASSCODE OVERRIDE SERVICE DISPATCHER */
         async function executeRecoveryLinkDispatch() {
             const email = document.getElementById('forgot-email-input').value.trim();

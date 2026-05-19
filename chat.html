@@ -8,8 +8,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;800;900&family=Outfit:wght@300;400;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     
     <style>
         :root {
@@ -296,7 +297,7 @@
         body.theme-cyberpunk { --neon-cyan: #ff007f; --neon-purple: #00f3ff; }
         body.theme-cyberpunk .main-chat, body.theme-cyberpunk .sidebar { border-color: rgba(255, 0, 127, 0.3); box-shadow: 0 0 30px rgba(255, 0, 127, 0.15); }
 
-        /* 📱 MOBILE SIDEBAR SLIDER OVERRIDES */
+        /* 📱 MOBILE SIDEBAR OVERRIDES */
         @media (max-width: 768px) {
             #app-wrapper { width: 100vw; height: 100vh; gap: 0; padding: 0; }
             .main-chat { border-radius: 0; border: none; }
@@ -305,6 +306,7 @@
                 height: 100vh; width: 290px;
                 border-radius: 0 24px 24px 0; background: rgba(5, 5, 12, 0.96);
                 transition: left 0.4s cubic-bezier(0.1, 1, 0.1, 1);
+                z-index: 500;
             }
             .sidebar.active { left: 0; }
             .menu-toggle-btn { display: flex; }
@@ -369,11 +371,16 @@
                     <label>Security Keyphrase (Password)</label>
                     <input type="password" class="auth-field" id="login-pass" placeholder="••••••••" autocomplete="off">
                 </div>
+                <div style="display: flex; align-items: flex-start; gap: 10px; margin: 10px 0 10px 0; text-align: left;">
+                    <input type="checkbox" id="hv-login-agree-policy" checked style="margin-top: 3px; cursor: pointer; accent-color: var(--neon-cyan);">
+                    <label for="hv-login-agree-policy" style="font-size: 0.8rem; color: var(--text-muted); cursor: pointer; line-height: 1.4;">
+                        I agree to the <a href="terms.html" target="_blank" style="color: var(--neon-cyan); text-decoration: none; font-weight: 600;">Terms & Conditions</a> and <a href="privacy.html" target="_blank" style="color: var(--neon-cyan); text-decoration: none; font-weight: 600;">Privacy Policy</a>.
+                    </label>
+                </div>
                 
-                <button class="auth-btn-submit" onclick="executeFirebaseLoginRoute()">Authorize Terminal</button>
-                
+                <button class="auth-btn-submit" onclick="executeSupabaseAuthLogin()">Authorize Terminal</button>
                 <div style="text-align: center; margin: 5px 0; color: var(--text-muted); font-size: 0.8rem;">OR</div>
-                <button class="auth-google-btn" onclick="executeGooglePopupAuth()"><i class="fa-brands fa-google" style="color: #ea4335;"></i> Continue with Google</button>
+                <button class="auth-google-btn" onclick="executeGoogleOauthLink()"><i class="fa-brands fa-google" style="color: #ea4335;"></i> Continue with Google</button>
                 
                 <div class="auth-nav-links">
                     <a class="auth-link" onclick="switchAuthStep('auth-forgot-1')">Forgot Passcode?</a>
@@ -384,9 +391,18 @@
             <div class="auth-step" id="auth-signup-method">
                 <div class="auth-title">ACCOUNT PROVISION</div>
                 <div class="auth-desc">Select your root system network interface method to bind your unique token id.</div>
-                <button class="auth-btn-submit" style="background: rgba(255,255,255,0.03); border:1px solid var(--neon-cyan); color:var(--neon-cyan);" onclick="switchAuthStep('auth-email-signup')"><i class="fa-solid fa-envelope"></i> Manual Gmail Registry</button>
-                <button class="auth-btn-submit" style="background: rgba(255,255,255,0.03); border:1px solid var(--neon-purple); color:var(--neon-purple);" onclick="switchAuthStep('auth-phone-signup')"><i class="fa-solid fa-phone"></i> Mobile Phone OTP Router</button>
-                <button class="auth-google-btn" onclick="executeGooglePopupAuth()"><i class="fa-brands fa-google"></i> Instant Google Auth Link</button>
+                
+                <div style="display: flex; align-items: flex-start; gap: 10px; margin: 5px 0 15px 0; text-align: left;">
+                    <input type="checkbox" id="hv-agree-policy" style="margin-top: 3px; cursor: pointer; accent-color: var(--neon-cyan);">
+                    <label for="hv-agree-policy" style="font-size: 0.8rem; color: var(--text-muted); cursor: pointer; line-height: 1.4;">
+                        I agree to the <a href="terms.html" target="_blank" style="color: var(--neon-cyan); text-decoration: none; font-weight: 600;">Terms & Conditions</a> and <a href="privacy.html" target="_blank" style="color: var(--neon-cyan); text-decoration: none; font-weight: 600;">Privacy Policy</a>.
+                    </label>
+                </div>
+
+                <button class="auth-btn-submit" style="background: rgba(255,255,255,0.03); border:1px solid var(--neon-cyan); color:var(--neon-cyan);" onclick="verifyPolicyGate('auth-email-signup')"><i class="fa-solid fa-envelope"></i> Manual Gmail Registry</button>
+                <button class="auth-btn-submit" style="background: rgba(255,255,255,0.03); border:1px solid var(--neon-purple); color:var(--neon-purple);" onclick="verifyPolicyGate('auth-phone-signup')"><i class="fa-solid fa-phone"></i> Mobile Phone OTP Router</button>
+                <button class="auth-google-btn" onclick="verifyPolicyGate('GOOGLE')"><i class="fa-brands fa-google"></i> Instant Google Auth Link</button>
+                
                 <div class="auth-nav-links" style="justify-content: center;">
                     <a class="auth-link" onclick="switchAuthStep('auth-login-step')">Back to Terminal Sign-In</a>
                 </div>
@@ -394,7 +410,7 @@
 
             <div class="auth-step" id="auth-email-signup">
                 <div class="auth-title">GMAIL MATRIX CAPTURE</div>
-                <div class="auth-desc">Firebase will transmit an official structural verification link directly to your target mailbox.</div>
+                <div class="auth-desc">System will link configuration data slots directly to your target mailbox.</div>
                 <div class="auth-input-group">
                     <label>Gmail Endpoint Mail Box</label>
                     <input type="email" class="auth-field" id="signup-email-input" placeholder="example@gmail.com" autocomplete="off">
@@ -411,7 +427,7 @@
 
             <div class="auth-step" id="auth-phone-signup">
                 <div class="auth-title">PHONE OTP ROUTER</div>
-                <div class="auth-desc">Input your mobile node index with country prefix (e.g. +91) to capture Google SMS OTP signals.</div>
+                <div class="auth-desc">Input your mobile node index with country prefix (e.g. +91) to capture secure SMS OTP signals.</div>
                 <div class="auth-input-group">
                     <label>Cellular Endpoint Index No.</label>
                     <input type="text" class="auth-field" id="signup-phone-input" placeholder="+91XXXXXXXXXX" autocomplete="off">
@@ -425,7 +441,7 @@
 
             <div class="auth-step" id="auth-phone-verify">
                 <div class="auth-title">SMS OTP CAPTURED</div>
-                <div class="auth-desc" style="color: var(--neon-cyan);">Enter the 6-digit numeric network tracking code sent by Google servers.</div>
+                <div class="auth-desc" style="color: var(--neon-cyan);">Enter the 6-digit numeric network tracking code sent to your device.</div>
                 <div class="auth-input-group">
                     <label>6-Digit Verification Token</label>
                     <input type="text" class="auth-field" id="phone-otp-input" placeholder="••••••" maxlength="6" style="text-align: center; letter-spacing: 6px; font-family:'Orbitron';" autocomplete="off">
@@ -452,7 +468,7 @@
 
             <div class="auth-step" id="auth-forgot-1">
                 <div class="auth-title">GRID RECOVERY MATRIX</div>
-                <div class="auth-desc">Input your target registered Gmail address. Google server will pipe an official Reset link automatically.</div>
+                <div class="auth-desc">Input your target registered Gmail address. System will dispatch an official password reset link.</div>
                 <div class="auth-input-group">
                     <label>Registered Gmail ID</label>
                     <input type="email" class="auth-field" id="forgot-email-input" placeholder="yourmail@gmail.com" autocomplete="off">
@@ -485,7 +501,7 @@
                 <i class="fa-solid fa-bolt-lightning"></i> New Thread
             </button>
 
-            <div class="history-section">
+            <div class="history-section" id="quantum-history-node">
                 <h4>Quantum History</h4>
                 <div class="history-item" onclick="loadHistorySimulation('physics')"><i class="fa-solid fa-fingerprint"></i> Physics simulation...</div>
                 <div class="history-item" onclick="loadHistorySimulation('neural')"><i class="fa-solid fa-network-wired"></i> Neural bypass script</div>
@@ -527,20 +543,8 @@
                 </div>
             </header>
 
-           <div class="chat-container" id="chat-box" onclick="closeSidebarMobile()">
-    <div id="welcome-center" style="position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; pointer-events: none !important; z-index: 0 !important; opacity: 0.12 !important; width: 100% !important; margin: 0 !important; padding: 0 !important;">
-        <img src="logo.png" alt="Harvion Labs" style="width: 120px !important; height: 120px !important; margin-bottom: 15px !important; filter: drop-shadow(0 0 25px #00f2fe) !important; object-fit: cover !important; border-radius: 16px !important;">
-        <h2 style="font-family: 'Space Grotesk', sans-serif !important; font-size: 32px !important; color: #fff !important; margin: 0 0 5px 0 !important; font-weight: 700 !important; letter-spacing: 1px !important;">Harvion Labs</h2>
-        <p style="font-family: 'Plus Jakarta Sans', sans-serif !important; color: #9ca3af !important; font-size: 15px !important; margin: 0 !important; letter-spacing: 0.5px !important;">Adaptive AI Ecosystem</p>
-    </div>
-
-    <div class="message" style="position: relative !important; z-index: 1 !important;">
-        <div class="avatar ai-avatar"></div>
-        <div class="msg-bubble ai-bubble">
-            Core stabilized. Mobile optimization protocol active. Main Harvion Genesis Engine hoon. Boliye dost, kya query hai?
-        </div>
-    </div>
-</div>
+            <div class="chat-container" id="chat-box" onclick="closeSidebarMobile()">
+            </div>
 
             <div class="input-dock">
                 <div class="input-box">
@@ -574,9 +578,16 @@
         </main>
     </div>
 
-   <script>
-        // 🚀 INFRASTRUCTURE CORE API KEYS AND FIREBASE SETUP
-        const GEMINI_API_KEY = 'AAPKI_API_KEY_YAHAN_DAALEIN'; 
+    <div id="hv-custom-alert-overlay" style="position: fixed; inset: 0; background: rgba(2, 2, 5, 0.85); backdrop-filter: blur(15px); z-index: 100005; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease;">
+        <div style="background: #040409; border: 1px solid var(--glass-border); border-radius: 16px; width: 100%; max-width: 380px; padding: 25px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.8); position: relative;">
+            <div style="width: 3px; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple)); margin: 0 auto;"></div>
+            <i class="fa-solid fa-circle-exclamation" style="font-size: 2.5rem; color: var(--neon-cyan); filter: drop-shadow(0 0 10px var(--neon-cyan)); margin-bottom: 15px; display: inline-block;"></i>
+            <p id="hv-alert-text" style="font-size: 0.95rem; color: #fff; line-height: 1.5; margin-bottom: 20px; font-weight: 500;"></p>
+            <button onclick="closeCustomAlert()" style="background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple)); border: none; color: #fff; font-weight: 700; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; width: 100%; transition: 0.2s;">Acknowledge</button>
+        </div>
+    </div>
+
+    <script>
         const firebaseConfig = {
             apiKey: "AIzaSyCUSuCzsmvcHZy2YJq8G-Xhbs-A9Iy1Tn8",
             authDomain: "harvion-labs-51ca1.firebaseapp.com",
@@ -585,19 +596,56 @@
             messagingSenderId: "908526936420",
             appId: "1:908526936420:web:94fd6c29a53375a4175a71"
         };
+
+        // Initialize Firebase Global Instances
         firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
+        const authEngine = firebase.auth();
+        const firestoreDb = firebase.firestore();
         
-        let phoneConfirmationResultMatrix = null;
+        let activeRegistrationMethod = "EMAIL";
         let currentAuthWorkflowEmail = "";
         let hudAnimationLoopToken = null; 
-        let generatedSecurityOtp = ""; 
 
         let activeUserSession = { 
-            loggedIn: false, name: '', username: '', email: '', dob: 'Not Registered', uid: '', token: '', ipAddress: '', clearance: '', location: '', credits: '', isPremium: false, isOwner: false
+            loggedIn: false, name: '', username: '', email: '', dob: 'Not Registered', uid: '', token: '', ipAddress: '', clearance: '', location: '', credits: '', isPremium: false, isOwner: false, remaining_chats: 0
         };
 
-        // 🎵 COCKPIT SOUND SYNTH MATRIX (JARVIS SYSTEM)
+        // 🧠 VISION SYSTEM MATRIX STATE SLOTS
+        let currentImageBase64 = null;
+        let currentImageMimeType = null;
+
+        // Central Welcome Initializer to cut the Looping Repetition bug completely
+        function runCentralWelcomeRefresh() {
+            const box = document.getElementById('chat-box');
+            if (!box) return;
+
+            const hasWelcomed = sessionStorage.getItem('harvion_session_welcomed');
+            
+            if (hasWelcomed === "true") {
+                box.innerHTML = `
+                    <div id="welcome-center" style="position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; pointer-events: none !important; z-index: 0 !important; opacity: 0.12 !important; width: 100% !important; margin: 0 !important; padding: 0 !important;">
+                        <img src="logo.png" alt="Harvion Labs" style="width: 120px !important; height: 120px !important; margin-bottom: 15px !important; filter: drop-shadow(0 0 25px #00f2fe) !important; object-fit: cover !important; border-radius: 16px !important;">
+                        <h2 style="font-family: 'Space Grotesk', sans-serif !important; font-size: 32px !important; color: #fff !important; margin: 0 0 5px 0 !important; font-weight: 700 !important; letter-spacing: 1px !important;">Harvion Labs</h2>
+                        <p style="font-family: 'Plus Jakarta Sans', sans-serif !important; color: #9ca3af !important; font-size: 15px !important; margin: 0 !important; letter-spacing: 0.5px !important;">Adaptive AI Ecosystem</p>
+                    </div>`;
+                return;
+            }
+
+            box.innerHTML = `
+                <div id="welcome-center" style="position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; pointer-events: none !important; z-index: 0 !important; opacity: 0.12 !important; width: 100% !important; margin: 0 !important; padding: 0 !important;">
+                    <img src="logo.png" alt="Harvion Labs" style="width: 120px !important; height: 120px !important; margin-bottom: 15px !important; filter: drop-shadow(0 0 25px #00f2fe) !important; object-fit: cover !important; border-radius: 16px !important;">
+                    <h2 style="font-family: 'Space Grotesk', sans-serif !important; font-size: 32px !important; color: #fff !important; margin: 0 0 5px 0 !important; font-weight: 700 !important; letter-spacing: 1px !important;">Harvion Labs</h2>
+                    <p style="font-family: 'Plus Jakarta Sans', sans-serif !important; color: #9ca3af !important; font-size: 15px !important; margin: 0 !important; letter-spacing: 0.5px !important;">Adaptive AI Ecosystem</p>
+                </div>
+                <div class="message" style="position: relative !important; z-index: 1 !important;">
+                    <div class="avatar ai-avatar"></div>
+                    <div class="msg-bubble ai-bubble">Harvion Neural Network Online. Adaptive AI clusters synchronized and running at maximum velocity. Welcome to the core ecosystem. How can I assist your mind and workflow today?</div>
+                </div>`;
+
+            sessionStorage.setItem('harvion_session_welcomed', "true");
+        }
+
+        // 🎵 COCKPIT SOUND SYNTH MATRIX
         function triggerJarvisSoundMatrix(type) {
             const savedAudioPref = localStorage.getItem('harvion-audio') !== "false";
             if (!savedAudioPref) return;
@@ -625,7 +673,6 @@
             } catch (e) {}
         }
 
-        // 🔮 THEMED PREMIUM MODAL POPUP VIEWPORTS 
         function showPremiumAlert() {
             triggerJarvisSoundMatrix('click');
             const alertModal = document.getElementById('premium-alert-overlay');
@@ -637,21 +684,48 @@
             if (alertModal) { alertModal.style.opacity = '0'; setTimeout(() => { alertModal.style.display = 'none'; }, 300); }
         }
 
-        // 🚀 FIREBASE STATE INITIALIZER
-        auth.onAuthStateChanged((user) => {
+        function showCustomAlert(msg) {
+            const overlay = document.getElementById('hv-custom-alert-overlay');
+            document.getElementById('hv-alert-text').innerText = msg;
+            overlay.style.display = 'flex';
+            setTimeout(() => { overlay.style.opacity = '1'; }, 10);
+        }
+        function closeCustomAlert() {
+            const overlay = document.getElementById('hv-custom-alert-overlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => { overlay.style.display = 'none'; }, 300);
+        }
+
+        // 🔄 FIREBASE INTEGRATED SESSIONS AUTOMATIC OBSERVER GRID
+        authEngine.onAuthStateChanged(async (user) => {
             if (user) {
                 activeUserSession.loggedIn = true;
-                activeUserSession.name = user.displayName || localStorage.getItem('harvion_temp_name') || "Core Node Developer";
-                activeUserSession.email = user.email || user.phoneNumber || "Encrypted Vector Identity";
+                activeUserSession.email = user.email || "Cellular Node Proxy";
                 activeUserSession.uid = "UID-" + user.uid.substring(0,8).toUpperCase();
                 activeUserSession.token = "TK-" + user.uid.substring(8,15).toUpperCase() + "-SLOT";
+                
+                try {
+                    const snap = await firestoreDb.collection("users").doc(user.uid).get();
+                    if(snap.exists) {
+                        const d = snap.data();
+                        activeUserSession.name = d.full_name || "Core Node Developer";
+                        activeUserSession.clearance = d.role || "Standard Beta User";
+                        activeUserSession.remaining_chats = d.remaining_chats !== undefined ? d.remaining_chats : 0;
+                    } else {
+                        activeUserSession.name = localStorage.getItem('harvion_temp_name') || "Core Node Developer";
+                        activeUserSession.clearance = localStorage.getItem('harvion_clearance') || 'Standard Beta User';
+                        activeUserSession.remaining_chats = 0;
+                    }
+                } catch(e) {
+                    activeUserSession.name = localStorage.getItem('harvion_temp_name') || "Core Node Developer";
+                    activeUserSession.clearance = localStorage.getItem('harvion_clearance') || 'Standard Beta User';
+                    activeUserSession.remaining_chats = 0;
+                }
+
                 activeUserSession.username = activeUserSession.name.toLowerCase().replace(/\s+/g, '_') + '_' + user.uid.substring(0,3);
-                activeUserSession.ipAddress = "Dynamic Encrypted Cloud Routing Node";
+                activeUserSession.ipAddress = "Dynamic Cloud Routing Node";
                 
-                const rankPref = localStorage.getItem('harvion_clearance') || 'Standard Beta User';
-                activeUserSession.clearance = rankPref;
-                
-                if(rankPref.includes('Owner') || rankPref.includes('Archon') || rankPref.includes('Apex')) {
+                if(['owner', 'archon', 'apex', 'premium', 'apex archon core'].some(keyword => activeUserSession.clearance.toLowerCase().includes(keyword))) {
                     activeUserSession.isOwner = true; activeUserSession.isPremium = true;
                     activeUserSession.clearance = "Apex Archon Core (Owner)";
                     document.getElementById('platform-title-version').innerHTML = "Harvion Engine <span style='color:var(--neon-purple); font-family:\"Orbitron\"; font-size:11px; letter-spacing:1px;'>[APEX ARCHON]</span>";
@@ -659,8 +733,9 @@
                     activeUserSession.isOwner = false;
                     activeUserSession.isPremium = localStorage.getItem('harvion_premium_tier') === "true";
                 }
-                activeUserSession.location = "Firebase Auth Primary Cloud Node Location";
+                activeUserSession.location = "Primary Cloud Node Location";
                 activeUserSession.credits = activeUserSession.isPremium ? "Unlimited Credit Weights" : "5,000.00 QCR Balance";
+                
                 syncPlatformPremiumUIRefresh();
                 document.getElementById('nav-auth-block').style.display = 'none';
                 const pBlock = document.getElementById('user-profile-block');
@@ -668,24 +743,47 @@
                 document.getElementById('avatar-initial').innerText = activeUserSession.name.charAt(0).toUpperCase();
                 document.getElementById('nav-user-title').innerText = activeUserSession.name;
                 document.getElementById('nav-user-uid').innerText = activeUserSession.uid;
+
+                // Fire Subcollection Map Loader for structural File backup streams
+                loadUserFileHistoryFromFirestore(user.uid);
             } else {
                 activeUserSession.loggedIn = false;
+                activeUserSession.isPremium = false;
+                activeUserSession.isOwner = false;
+                activeUserSession.remaining_chats = 0;
                 document.getElementById('nav-auth-block').style.display = 'flex';
                 document.getElementById('user-profile-block').style.display = 'none';
                 document.getElementById('platform-title-version').innerText = "Harvion Engine v1.5";
+                
+                // 🔥 UI REFRESH IN LOGOUT STATE ATTACHED
+                syncPlatformPremiumUIRefresh();
             }
         });
 
         function syncPlatformPremiumUIRefresh() {
-            const qLeft = getQuantumNebulaChatsRemaining();
             const qLbl = document.getElementById('quantum-lock-lbl');
             const qSlot = document.getElementById('quantum-dropdown-slot');
             const sSlot = document.getElementById('supernova-dropdown-slot');
+            
+            if (!activeUserSession.loggedIn) {
+                if(qSlot) qSlot.classList.add('locked-tier');
+                if(qLbl) qLbl.innerHTML = "<i class='fa-solid fa-lock' style='color:#6b7280;'></i> LOCKED";
+                if(sSlot) {
+                    sSlot.classList.add('locked-tier');
+                    sSlot.innerHTML = "<span>Supernova Prime</span><i class='fa-solid fa-lock' style='font-size:9px; color:#6b7280;'></i>";
+                }
+                return;
+            }
+
             if (activeUserSession.isPremium) {
                 if(qLbl) qLbl.innerHTML = "<i class='fa-solid fa-circle-check' style='color:#10b981;'></i> UNLOCKED";
                 if(qSlot) qSlot.classList.remove('locked-tier');
-                if(sSlot) { sSlot.classList.remove('locked-tier'); sSlot.innerHTML = "<span>Supernova Prime</span><small style='color:var(--neon-purple); font-size:9px;'>PREMIUM</small>"; }
+                if(sSlot) { 
+                    sSlot.classList.remove('locked-tier'); 
+                    sSlot.innerHTML = "<span>Supernova Prime</span><small style='color:var(--neon-purple); font-size:9px;'>PREMIUM</small>"; 
+                }
             } else {
+                let qLeft = activeUserSession.remaining_chats;
                 if (qLeft <= 0) {
                     if(qSlot) qSlot.classList.add('locked-tier');
                     if(qLbl) qLbl.innerHTML = "<i class='fa-solid fa-lock' style='color:#6b7280;'></i> LOCKED";
@@ -693,17 +791,21 @@
                     if(qSlot) qSlot.classList.remove('locked-tier');
                     if(qLbl) qLbl.innerText = `${qLeft} CHATS`;
                 }
+                if(sSlot) {
+                    sSlot.classList.add('locked-tier');
+                    sSlot.innerHTML = "<span>Supernova Prime</span><i class='fa-solid fa-lock' style='font-size:9px; color:#6b7280;'></i>";
+                }
             }
         }
 
-        function getQuantumNebulaChatsRemaining() {
-            let count = parseInt(localStorage.getItem('quantum_nebula_chats_run')) || 0;
-            return Math.max(0, 10 - count);
-        }
-
-        // --- PROGRESS SYSTEM AND INITIAL SYSTEM LOADER LOOP ---
+        // --- PROGRESS SYSTEM LOADER MATRIX ---
         const isMobile = window.innerWidth <= 768;
         window.onload = () => {
+            runCentralWelcomeRefresh();
+            
+            // 🔥 INITIAL STATE ACTIVE SYNC REFRESH
+            syncPlatformPremiumUIRefresh();
+
             const progressBar = document.getElementById('load-progress');
             const counterText = document.getElementById('load-counter');
             const splashScreen = document.getElementById('genesis-splash');
@@ -721,13 +823,17 @@
                     setTimeout(() => {
                         splashScreen.classList.add('exit');
                         setTimeout(() => { mainApplication.classList.add('loaded'); if(!isMobile) init3DTilt(); }, 600);
-                }, 300);
+                    }, 300);
                 }
                 if (progressBar) progressBar.style.width = count + '%'; if (counterText) counterText.textContent = count;
             }, 20);
+
+            window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-box-container', {
+                'size': 'invisible'
+            });
         };
 
-        // --- HTML5 CANVAS VECTORS LINES ---
+        // --- HTML5 CANVAS INTERACTIVE BACKGROUND RENDER ---
         const canvas = document.getElementById('interactive-canvas'); const ctx = canvas.getContext('2d'); let width, height, points = [];
         function setupCanvas() {
             width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; points = []; const maxP = isMobile ? 35 : 110;
@@ -747,6 +853,7 @@
             requestAnimationFrame(renderPlexus);
         }
         renderPlexus();
+
         function init3DTilt() {
             const asideS = document.getElementById('panel-left'); const mainP = document.getElementById('panel-right');
             document.addEventListener('mousemove', (e) => {
@@ -759,35 +866,115 @@
         function toggleSidebar() { triggerJarvisSoundMatrix('click'); document.getElementById('panel-left').classList.toggle('active'); }
         function closeSidebarMobile() { if(isMobile) document.getElementById('panel-left').classList.remove('active'); }
 
-        // --- ASYNC INFERENCE CHAT RUNNERS WITH FILTERS CONTROLS ---
+        // --- PRODUCTION EDGE MULTI-MODAL VISION INFERENCE CHAT PIPELINE ---
         async function sendMessage() {
-            const inputField = document.getElementById('user-input'); const message = inputField.value.trim(); if (message === '') return;
+            const inputField = document.getElementById('user-input'); const message = inputField.value.trim(); 
+            if (message === '' && !currentImageBase64) return;
+            
             const activeMode = document.getElementById('selected-mode-text').innerText;
-            if (activeMode === "Quantum Nebula" && !activeUserSession.isPremium) {
-                let remaining = getQuantumNebulaChatsRemaining(); if (remaining <= 0) { showPremiumAlert(); return; }
-                localStorage.setItem('quantum_nebula_chats_run', (parseInt(localStorage.getItem('quantum_nebula_chats_run')) || 0) + 1); syncPlatformPremiumUIRefresh();
+            if (!activeUserSession.loggedIn && activeMode !== 'Pulse Stream') {
+                showCustomAlert("Unlock the Next-Gen Cores! Sign in now to claim your 10 FREE Quantum Nebula chats, or upgrade to Premium for absolute unlimited access.");
+                return;
             }
-            triggerJarvisSoundMatrix('click'); addMessage(message, 'user'); inputField.value = ''; closeSidebarMobile();
+
+            if (activeUserSession.loggedIn && activeMode === "Quantum Nebula" && !activeUserSession.isPremium) {
+                if (activeUserSession.remaining_chats <= 0) { showPremiumAlert(); return; }
+            }
+            triggerJarvisSoundMatrix('click'); 
+            
+            if (message !== '') {
+                addMessage(message, 'user');
+            } else if (currentImageBase64) {
+                addMessage("<i class='fa-solid fa-file-image'></i> Image Payload Vector Dispatched.", 'user');
+            }
+            
+            inputField.value = ''; closeSidebarMobile();
+            
             const chatBox = document.getElementById('chat-box'); const messageDiv = document.createElement('div'); messageDiv.className = 'message';
             const avatarDiv = document.createElement('div'); avatarDiv.className = 'avatar ai-avatar';
             const bubbleDiv = document.createElement('div'); bubbleDiv.className = 'msg-bubble ai-bubble';
-            bubbleDiv.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Loading Inference Clusters...`;
+            bubbleDiv.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Loading Inference Vision Clusters...`;
             messageDiv.appendChild(avatarDiv); messageDiv.appendChild(bubbleDiv); chatBox.appendChild(messageDiv); scrollToBottom();
+            
             try {
                 const savedTemp = localStorage.getItem('harvion-temp') || "0.7"; const savedTokens = localStorage.getItem('harvion-tokens') || "2048";
                 const harvionPersonality = `Tumhara naam Harvion hai. Tum Harvion Labs ke model arrays ho. Operational Profile: ${activeMode}. Logic configurations bounds: Temp=${savedTemp}, MaxTokens=${savedTokens}. Speak casual Hinglish. Prompt: `;
-                const response = await fetch(`/api/chat`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: harvionPersonality + message }] }] })
-                });
-                const reader = response.body.getReader(); const decoder = new TextDecoder("utf-8"); let buffer = ""; bubbleDiv.innerHTML = "";
-                while (true) {
-                    const { value, done } = await reader.read(); if (done) break; buffer += decoder.decode(value, { stream: true });
-                    let matches = [...buffer.matchAll(/"text"\s*:\s*"((?:[^"\\]|\\.)*)"/g)];
-                    let liveResponse = matches.map(m => m[1].replace(/\\n/g, '<br>').replace(/\\"/g, '"').replace(/\\\//g, '/')).join("");
-                    bubbleDiv.innerHTML = liveResponse.replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--neon-cyan);">$1</strong>'); scrollToBottom();
+                
+                let requestParts = [];
+                if (message !== '') {
+                    requestParts.push({ text: harvionPersonality + message });
+                } else {
+                    requestParts.push({ text: harvionPersonality + "Analyze this matrix file snapshot blueprint cleanly." });
                 }
+
+                if (currentImageBase64) {
+                    requestParts.push({
+                        inlineData: {
+                            mimeType: currentImageMimeType,
+                            data: currentImageBase64
+                        }
+                    });
+                }
+
+                currentImageBase64 = null;
+                currentImageMimeType = null;
+
+                const response = await fetch(`/api/chat`, {
+                    method: 'POST', 
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-harvion-shield-key': 'HarvionQuantumLabsEngineCoreSecret2026'
+                    }, 
+                    body: JSON.stringify({ contents: [{ parts: requestParts }] })
+                });
+
+                if(!response.ok) throw new Error("Server disconnect error");
+
+                const reader = response.body.getReader(); const decoder = new TextDecoder("utf-8"); 
+                let streamLiveTokenAccumulator = ""; bubbleDiv.innerHTML = "";
+                
+                while (true) {
+                    const { value, done } = await reader.read(); if (done) break; 
+                    const chunkText = decoder.decode(value, { stream: true });
+                    const lines = chunkText.split('\n');
+                    
+                    for (const line of lines) {
+                        if (line.trim() === '') continue;
+                        try {
+                            const parsedChunk = JSON.parse(line.trim());
+                            const chunkExtractedContent = parsedChunk.candidates?.[0]?.content?.parts?.[0]?.text;
+                            if (chunkExtractedContent) {
+                                streamLiveTokenAccumulator += chunkExtractedContent;
+                                let reactiveHtml = streamLiveTokenAccumulator
+                                    .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--neon-cyan);">$1</strong>')
+                                    .replace(/\n/g, '<br>');
+                                bubbleDiv.innerHTML = reactiveHtml;
+                                scrollToBottom();
+                            }
+                        } catch(jsonErr) {}
+                    }
+                }
+
+                if (!activeUserSession.loggedIn) {
+                    streamLiveTokenAccumulator += "<br><br><em style='color:var(--text-muted); font-size:13px; display:block;'><i class='fa-solid fa-right-to-bracket'></i> Login for a better experience and unlock advanced features.</em>";
+                    bubbleDiv.innerHTML = streamLiveTokenAccumulator;
+                    scrollToBottom();
+                } else {
+                    if (activeMode === "Quantum Nebula" && !activeUserSession.isPremium) {
+                        let newChatCount = Math.max(0, activeUserSession.remaining_chats - 1);
+                        activeUserSession.remaining_chats = newChatCount;
+                        
+                        await firestoreDb.collection("users").doc(authEngine.currentUser.uid).update({
+                            remaining_chats: newChatCount
+                        });
+                        syncPlatformPremiumUIRefresh();
+                    }
+                }
+                
                 triggerJarvisSoundMatrix('chime');
-            } catch (error) { bubbleDiv.innerHTML = `<span style="color:var(--neon-purple);">HARD FAULT: Mainframe pipeline synchronization severed.</span>`; }
+            } catch (error) { 
+                bubbleDiv.innerHTML = `<span style="color:var(--neon-purple); font-weight:600;"><i class="fa-solid fa-triangle-exclamation"></i> HARD FAULT: Mainframe pipeline synchronization severed.</span>`; 
+            }
         }
 
         function addMessage(text, sender) {
@@ -797,49 +984,242 @@
         }
         function scrollToBottom() { const box = document.getElementById('chat-box'); if (box) box.scrollTop = box.scrollHeight; }
         function handleKeyPress(event) { if (event.key === 'Enter') sendMessage(); }
-        
-       function clearChat() { 
-    triggerJarvisSoundMatrix('click'); 
-    const box = document.getElementById('chat-box'); 
-    if (box) { 
-        box.innerHTML = `
-            <div id="welcome-center" style="position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; pointer-events: none !important; z-index: 0 !important; opacity: 0.12 !important; width: 100% !important; margin: 0 !important; padding: 0 !important;">
-                <img src="logo.png" alt="Harvion Labs" style="width: 120px !important; height: 120px !important; margin-bottom: 15px !important; filter: drop-shadow(0 0 25px #00f2fe) !important; object-fit: cover !important; border-radius: 16px !important;">
-                <h2 style="font-family: 'Space Grotesk', sans-serif !important; font-size: 32px !important; color: #fff !important; margin: 0 0 5px 0 !important; font-weight: 700 !important; letter-spacing: 1px !important;">Harvion Labs</h2>
-                <p style="font-family: 'Plus Jakarta Sans', sans-serif !important; color: #9ca3af !important; font-size: 15px !important; margin: 0 !important; letter-spacing: 0.5px !important;">Adaptive AI Ecosystem</p>
-            </div>
-            <div class="message" style="position: relative !important; z-index: 1 !important;">
-                <div class="avatar ai-avatar"></div>
-                <div class="msg-bubble ai-bubble">Core stabilized. Mobile optimization protocol active. Main Harvion Genesis Engine hoon. Boliye dost, kya query hai?</div>
-            </div>`; 
-    }
-    const inp = document.getElementById('user-input'); if(inp) inp.value = '';
-}
+        function clearChat() { triggerJarvisSoundMatrix('click'); runCentralWelcomeRefresh(); const inp = document.getElementById('user-input'); if(inp) inp.value = ''; }
 
-        // --- GATEWAY CONFIGS INTERFACES FLOWS ---
-        function openLoginGateway() { triggerJarvisSoundMatrix('click'); document.getElementById('auth-gateway-overlay').classList.add('active'); switchAuthStep('auth-login-step'); setTimeout(() => { if(!window.recaptchaVerifierAnchor) { window.recaptchaVerifierAnchor = new firebase.auth.RecaptchaVerifier('recaptcha-box-container', {'size': 'invisible'}); } }, 500); }
+        // --- AUTH PORTALS AND INTERFACES OVERRIDES ---
+        function openLoginGateway() { triggerJarvisSoundMatrix('click'); document.getElementById('auth-gateway-overlay').classList.add('active'); switchAuthStep('auth-login-step'); }
         function openSignupGateway() { triggerJarvisSoundMatrix('click'); document.getElementById('auth-gateway-overlay').classList.add('active'); switchAuthStep('auth-signup-method'); }
         function closeAuthGateway() { document.getElementById('auth-gateway-overlay').classList.remove('active'); }
         function switchAuthStep(stepId) { document.querySelectorAll('.auth-step').forEach(el => el.classList.remove('active')); document.getElementById(stepId).classList.add('active'); }
 
-        function executeGooglePopupAuth() { triggerJarvisSoundMatrix('click'); const provider = new firebase.auth.GoogleAuthProvider(); auth.signInWithPopup(provider).then(() => { closeAuthGateway(); triggerCinematicWarpPortal(); }).catch(err => alert(err.message)); }
-        function executeFirebaseLoginRoute() { const idInp = document.getElementById('login-identity').value.trim(); const passInp = document.getElementById('login-pass').value; if(!idInp || !passInp) { alert("Fields entries required."); return; } if(idInp.includes('@')) { auth.signInWithEmailAndPassword(idInp, passInp).then(() => { closeAuthGateway(); triggerCinematicWarpPortal(); }).catch(err => alert(err.message)); } else { alert("Phone validation logs matches standard SMS tokens parameters layer router."); } }
-        function executeFirebasePasswordResetLink() { const m = document.getElementById('forgot-email-input').value.trim(); auth.sendPasswordResetEmail(m).then(() => { alert("Google password reset link routed."); switchAuthStep('auth-login-step'); }).catch(err => alert(err.message)); }
-        function executeFirebaseEmailRegister() { const m = document.getElementById('signup-email-input').value.trim(); const p = document.getElementById('signup-email-pass').value; if(!m || p.length < 6) { alert("Invalid length depths."); return; } currentAuthWorkflowEmail = m; localStorage.setItem('harvion_transit_pass_temp', p); switchAuthStep('auth-step-profile-form'); }
-        function executeFirebasePhoneAuth() { const p = document.getElementById('signup-phone-input').value.trim(); auth.signInWithPhoneNumber(p, window.recaptchaVerifierAnchor).then((res) => { phoneConfirmationResultMatrix = res; switchAuthStep('auth-phone-verify'); }).catch(err => alert(err.message)); }
-        function executePhoneOtpCodeVerification() { const c = document.getElementById('phone-otp-input').value.trim(); phoneConfirmationResultMatrix.confirm(c).then(() => { switchAuthStep('auth-step-profile-form'); }).catch(err => alert(err.message)); }
-        
-        function compileCompletedUserProfileData() {
-            const n = document.getElementById('reg-name').value.trim(); const rank = document.getElementById('reg-clearance-rank').value; if(!n) { alert("Name matrix required."); return; }
-            localStorage.setItem('harvion_temp_name', n); localStorage.setItem('harvion_clearance', rank);
-            if(rank.includes('Matrix') || rank.includes('Archon') || rank.includes('Apex')) { localStorage.setItem('harvion_premium_tier', "true"); }
-            const user = auth.currentUser; const fPass = localStorage.getItem('harvion_transit_pass_temp');
-            if(user === null && currentAuthWorkflowEmail) {
-                auth.createUserWithEmailAndPassword(currentAuthWorkflowEmail, fPass).then((cred) => { cred.user.updateProfile({ displayName: n }); cred.user.sendEmailVerification(); localStorage.removeItem('harvion_transit_pass_temp'); closeAuthGateway(); triggerCinematicWarpPortal(); }).catch(err => alert(err.message));
-            } else if(user) { user.updateProfile({ displayName: n }).then(() => { closeAuthGateway(); triggerCinematicWarpPortal(); }); }
+        document.addEventListener('click', (e) => {
+            const m = document.getElementById('auth-gateway-overlay');
+            if(e.target === m) closeAuthGateway();
+        });
+
+        function verifyPolicyGate(targetRoute) {
+            if (!document.getElementById('hv-agree-policy').checked) {
+                showCustomAlert("Please agree to the Terms and Privacy Policy to create a core node.");
+                return;
+            }
+            if (targetRoute === 'GOOGLE') {
+                executeGoogleOauthLink(); 
+            } else {
+                activeRegistrationMethod = (targetRoute === 'auth-email-signup') ? 'EMAIL' : 'PHONE';
+                switchAuthStep(targetRoute); 
+            }
         }
 
-        // --- REAL CINEMATIC TRANSITIONS DRIFTS DRIVE ---
+        function executeFirebaseEmailRegister() {
+            const m = document.getElementById('signup-email-input').value.trim();
+            const p = document.getElementById('signup-email-pass').value;
+            if(!m || p.length < 6) { showCustomAlert("Invalid email format or master passcode structure depth criteria."); return; }
+            currentAuthWorkflowEmail = m;
+            localStorage.setItem('harvion_transit_pass_temp', p);
+            switchAuthStep('auth-step-profile-form');
+        }
+
+        function executeFirebasePhoneAuth() {
+            const pNum = document.getElementById('signup-phone-input').value.trim();
+            if(!pNum) { showCustomAlert("Cellular parameter mapping vacantly registered."); return; }
+            
+            authEngine.signInWithPhoneNumber(pNum, window.recaptchaVerifier)
+                .then((result) => {
+                    window.phoneConfirmationResultMatrix = result;
+                    showCustomAlert("Secure proxy signals dispatched to your device.");
+                    switchAuthStep('auth-phone-verify');
+                }).catch((error) => {
+                    showCustomAlert(error.message);
+                });
+        }
+
+        function executePhoneOtpCodeVerification() {
+            const code = document.getElementById('phone-otp-input').value.trim();
+            if(!code || code.length !== 6) { showCustomAlert("Verification numeric array must be 6 digits."); return; }
+            
+            if(window.phoneConfirmationResultMatrix) {
+                window.phoneConfirmationResultMatrix.confirm(code)
+                    .then(() => {
+                        switchAuthStep('auth-step-profile-form');
+                    }).catch(() => {
+                        showCustomAlert("Invalid cellular tracking token verification match failure.");
+                    });
+            } else {
+                switchAuthStep('auth-step-profile-form');
+            }
+        }
+
+        function compileCompletedUserProfileData() {
+            executeSupabaseFullRegistration();
+        }
+
+        function executeFirebasePasswordResetLink() {
+            const email = document.getElementById('forgot-email-input').value.trim();
+            if(!email) { showCustomAlert("Please enter your registered email address."); return; }
+            
+            authEngine.sendPasswordResetEmail(email)
+                .then(() => {
+                    showCustomAlert("Reset link dispatched safely. Check your inbox.");
+                    switchAuthStep('auth-login-step');
+                }).catch((err) => {
+                    showCustomAlert(err.message);
+                });
+        }
+
+        async function executeSupabaseAuthLogin() {
+            if (!document.getElementById('hv-login-agree-policy').checked) {
+                showCustomAlert("Please agree to the Terms and Privacy Policy to sign in.");
+                return;
+            }
+            const identity = document.getElementById('login-identity').value.trim();
+            const pass = document.getElementById('login-pass').value;
+            if (!identity || !pass) {
+                showCustomAlert("Please enter both your identity parameter and password.");
+                return;
+            }
+            authEngine.signInWithEmailAndPassword(identity, pass)
+                .then(() => {
+                    closeAuthGateway(); 
+                    triggerCinematicWarpPortal();
+                }).catch((error) => {
+                    showCustomAlert(error.message);
+                });
+        }
+
+        async function executeGoogleOauthLink() {
+            if (!document.getElementById('hv-login-agree-policy').checked) {
+                showCustomAlert("You must accept the terms and conditions to continue.");
+                return;
+            }
+            const provider = new firebase.auth.GoogleAuthProvider();
+            authEngine.signInWithPopup(provider)
+                .then(async (result) => {
+                    const u = result.user;
+                    const docSnap = await firestoreDb.collection("users").doc(u.uid).get();
+                    if (!docSnap.exists) {
+                        await firestoreDb.collection("users").doc(u.uid).set({
+                            full_name: u.displayName || "Google User Node",
+                            role: "Standard Beta User",
+                            registered_at: new Date().toISOString(),
+                            remaining_chats: 10
+                        });
+                    }
+                    closeAuthGateway(); 
+                    triggerCinematicWarpPortal();
+                }).catch((error) => {
+                    showCustomAlert(error.message);
+                });
+        }
+
+        async function executeSupabaseFullRegistration() {
+            const name = document.getElementById('reg-name').value.trim();
+            const rank = document.getElementById('reg-clearance-rank').value;
+            if(!name) { showCustomAlert("Please fill in your name details parameters vector."); return; }
+
+            localStorage.setItem('harvion_temp_name', name);
+            localStorage.setItem('harvion_clearance', rank);
+            if(rank.includes('Archon') || rank.includes('Apex')) { localStorage.setItem('harvion_premium_tier', "true"); }
+
+            let emailTarget = currentAuthWorkflowEmail;
+            let passTarget = localStorage.getItem('harvion_transit_pass_temp') || "MasterFallbackNodePass123!";
+
+            if (!emailTarget && authEngine.currentUser) {
+                const u = authEngine.currentUser;
+                await firestoreDb.collection("users").doc(u.uid).set({
+                    full_name: name,
+                    role: rank,
+                    registered_at: new Date().toISOString(),
+                    remaining_chats: 10
+                });
+                showCustomAlert("Infrastructure synchronization complete.");
+                closeAuthGateway();
+                triggerCinematicWarpPortal();
+                return;
+            }
+
+            authEngine.createUserWithEmailAndPassword(emailTarget, passTarget)
+                .then(async (userCredential) => {
+                    await firestoreDb.collection("users").doc(userCredential.user.uid).set({
+                        full_name: name,
+                        role: rank,
+                        registered_at: new Date().toISOString(),
+                        remaining_chats: 10
+                    });
+                    showCustomAlert("Infrastructure synchronization complete. Active node live.");
+                    closeAuthGateway();
+                    triggerCinematicWarpPortal();
+                }).catch((error) => {
+                    showCustomAlert(error.message);
+                });
+        }
+
+        // --- 📁 PRODUCTION CLOUD FILE HISTORY SECURE STORAGE GRID TRACKING & VISION INTERFACES ---
+        async function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const activeUser = authEngine.currentUser;
+
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    currentImageBase64 = event.target.result.split(',')[1];
+                    currentImageMimeType = file.type;
+                    showCustomAlert(`Image "${file.name}" synchronized into system memory. Type your vision instructions signal and press Transmit!`);
+                };
+                reader.readAsDataURL(file);
+            }
+
+            if (!activeUser) {
+                if (!file.type.startsWith('image/')) {
+                    showCustomAlert(`Local Sandbox Active: ${file.name}. Sign in to save into encrypted cloud storage metadata slots.`);
+                }
+                return;
+            }
+
+            try {
+                await firestoreDb.collection("users").doc(activeUser.uid).collection("file_history").add({
+                    fileName: file.name,
+                    fileSize: file.size,
+                    uploadedAt: new Date().toISOString()
+                });
+
+                if (!file.type.startsWith('image/')) {
+                    showCustomAlert(`Encrypted backup transmission successful: ${file.name}`);
+                }
+                loadUserFileHistoryFromFirestore(activeUser.uid); 
+            } catch (err) {
+                showCustomAlert("Transmission Blocked: Target database denied structural tracking document inputs.");
+            }
+        }
+
+        function loadUserFileHistoryFromFirestore(uid) {
+            const historyBox = document.getElementById('quantum-history-node');
+            if (!historyBox) return;
+
+            firestoreDb.collection("users").doc(uid).collection("file_history")
+                .orderBy("uploadedAt", "desc").limit(10).get()
+                .then((querySnapshot) => {
+                    historyBox.innerHTML = `
+                        <h4>Quantum History</h4>
+                        <div class="history-item" onclick="loadHistorySimulation('physics')"><i class="fa-solid fa-fingerprint"></i> Physics simulation...</div>
+                        <div class="history-item" onclick="loadHistorySimulation('neural')"><i class="fa-solid fa-network-wired"></i> Neural bypass script</div>
+                    `;
+                    
+                    querySnapshot.forEach((doc) => {
+                        const fileMetadataNode = doc.data();
+                        const historyItemElementRow = document.createElement('div');
+                        historyItemElementRow.className = 'history-item';
+                        historyItemElementRow.innerHTML = `<i class="fa-solid fa-file-shield" style="color:var(--neon-cyan); font-family: 'Outfit';"></i> ${fileMetadataNode.fileName}`;
+                        historyItemElementRow.onclick = () => showCustomAlert(`Accessing node storage slot download stream -> ${fileMetadataNode.fileName}`);
+                        historyBox.appendChild(historyItemElementRow);
+                    });
+                }).catch((e) => {
+                    console.log("History network pipeline sync fault bypassed.");
+                });
+        }
+
+        // --- STAR CINEMATIC WARP TIME TUNNEL GRID ---
         function triggerCinematicWarpPortal() {
             triggerJarvisSoundMatrix('success'); const overlay = document.getElementById('portal-animation-overlay'); const pCanvas = document.getElementById('portal-canvas'); const pCtx = pCanvas.getContext('2d');
             overlay.style.display = 'flex'; pCanvas.width = window.innerWidth; pCanvas.height = window.innerHeight; let stars = [];
@@ -857,19 +1237,37 @@
                 if(overlay.style.display === 'flex') requestAnimationFrame(draw);
             }
             draw();
-            setTimeout(() => { overlay.style.transition = "opacity 0.6s ease"; overlay.style.opacity = 0; setTimeout(() => { overlay.style.display='none'; overlay.style.opacity=1; window.location.reload(); }, 600); }, 3100);
+            setTimeout(() => { overlay.style.transition = "opacity 0.6s ease"; overlay.style.opacity = 0; setTimeout(() => { overlay.style.display='none'; overlay.style.opacity=1; }, 600); }, 3100);
         }
 
         function toggleModeDropdown(event) { event.stopPropagation(); const el = document.getElementById('mode-options-list'); el.style.display = el.style.display === 'block' ? 'none' : 'block'; }
         function selectMode(name, isLockedByDefault) {
             triggerJarvisSoundMatrix('click');
-            if(isLockedByDefault && !activeUserSession.isPremium) { showPremiumAlert(); return; }
-            if(name === "Quantum Nebula" && !activeUserSession.isPremium && getQuantumNebulaChatsRemaining() <= 0) { showPremiumAlert(); return; }
-            document.getElementById('selected-mode-text').innerText = name; document.getElementById('mode-options-list').style.display = 'none';
+            
+            if (!activeUserSession.loggedIn && name !== 'Pulse Stream') {
+                showCustomAlert("Unlock the Next-Gen Cores! Sign in now to claim your 10 FREE Quantum Nebula chats, or upgrade to Premium for absolute unlimited access.");
+                return;
+            }
+            
+            if (activeUserSession.loggedIn) {
+                if (name === "Supernova Prime" && !activeUserSession.isPremium) {
+                    showPremiumAlert();
+                    return;
+                }
+                if (name === "Quantum Nebula" && !activeUserSession.isPremium) {
+                    if (activeUserSession.remaining_chats <= 0) {
+                        showPremiumAlert();
+                        return;
+                    }
+                }
+            }
+            
+            document.getElementById('selected-mode-text').innerText = name; 
+            document.getElementById('mode-options-list').style.display = 'none';
         }
         document.addEventListener('click', () => { if(document.getElementById('mode-options-list')) document.getElementById('mode-options-list').style.display = 'none'; });
 
-        // --- LIVE DIAGNOSTICS HUD MATRIX GRAPHS INJECTION ENGINE ---
+        // --- HUD Real-Time Analytics Graph Generator ---
         function initializeLiveCoreDiagnosticHudGraph() {
             const hCanvas = document.getElementById('hud-canvas-vector'); if(!hCanvas) return; const hCtx = hCanvas.getContext('2d');
             hCanvas.width = hCanvas.parentElement.clientWidth; hCanvas.height = hCanvas.parentElement.clientHeight;
@@ -911,11 +1309,11 @@
                         <div class="settings-row"><span>Security Privilege Clear Rank</span><span style="color:var(--neon-purple); font-weight:700;">${activeUserSession.clearance}</span></div>
                         <div class="settings-row"><span>Active Deployment Server Array</span><span>${activeUserSession.location}</span></div>
                         <div class="settings-row"><span>Quantum Allocation Credits</span><span style="color:#10b981; font-family:'Orbitron'; font-weight:700;">${activeUserSession.credits}</span></div>
-                        <div class="settings-row"><span>Data Encryption Compliance</span><span style="color:#10b981; font-weight:700;"><i class="fa-solid fa-circle-check"></i> GOOGLE CLOUD SECURED</span></div>
+                        <div class="settings-row"><span>Data Encryption Compliance</span><span style="color:#10b981; font-weight:700;"><i class="fa-solid fa-circle-check"></i> FIREBASE CLOUD SECURED</span></div>
                         <div class="settings-row"><span>Mainframe Linked Mail Box</span><span style="color:var(--text-muted); font-size:13px;">${activeUserSession.email}</span></div>
                         <div class="settings-group-title">Live Core Quantum Telemetry HUD Matrix</div>
                         <div class="hud-diagnostic-graph-container"><canvas id="hud-canvas-vector"></canvas></div>
-                        <button onclick="localStorage.removeItem('harvion_premium_tier'); localStorage.removeItem('harvion_clearance'); auth.signOut().then(() => window.location.reload())" style="width:100%; margin-top:20px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 12px; border-radius: 12px; font-weight:700; cursor:pointer; font-size:12px;">TERMINATE MAINFRAME SESSION (SIGN OUT)</button>
+                        <button onclick="localStorage.clear(); authEngine.signOut(); window.location.reload();" style="width:100%; margin-top:20px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 12px; border-radius: 12px; font-weight:700; cursor:pointer; font-size:12px;">TERMINATE MAINFRAME SESSION (SIGN OUT)</button>
                     `;
                     setTimeout(initializeLiveCoreDiagnosticHudGraph, 100);
                 }
@@ -938,19 +1336,26 @@
                     <div class="settings-row"><span>Fluid Jarvis Audio Matrix Feedback</span><input type="checkbox" ${sAudio ? 'checked' : ''} class="settings-checkbox" onchange="localStorage.setItem('harvion-audio', this.checked)"></div>
                     <div class="settings-row"><span>Speech Microphone Db Threshold</span><div style="display:flex; align-items:center; gap:10px;"><span id="mic-lbl" style="color:var(--neon-cyan); font-weight:700;">${sMic}%</span><input type="range" min="10" max="100" value="${sMic}" class="settings-slider" oninput="updateLiveSettings('mic', this.value)"></div></div>
                     <div class="settings-group-title">Support Telemetry Pipeline Desk</div>
-                    <div class="settings-row" style="flex-direction:column; align-items:flex-start; gap:10px;"><span>Transmit Engine Bug Logs</span><textarea class="settings-textarea" id="feedback-text-area" placeholder="Type data log arrays stream here..."></textarea><button onclick="alert('Telemetry Sync Packets complete.'); document.getElementById('feedback-text-area').value='';" style="background:var(--neon-cyan); border:none; padding:8px 16px; border-radius:8px; color:#000; font-weight:700; align-self:flex-end;">Transmit Payload</button></div>
-                    <button onclick="localStorage.clear(); alert('Mainframe flushed.'); window.location.reload();" style="width:100%; margin-top:15px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 12px; border-radius: 12px; font-weight:700; cursor:pointer; font-size:12px;"><i class="fa-solid fa-dumpster-fire"></i> PURGE ALL MAINFRAME MEMORY CACHES</button>
+                    <div class="settings-row" style="flex-direction:column; align-items:flex-start; gap:10px;"><span>Transmit Engine Bug Logs</span><textarea class="settings-textarea" id="feedback-text-area" placeholder="Type data log arrays stream here..."></textarea><button onclick="showCustomAlert('Telemetry Sync Packets complete.'); document.getElementById('feedback-text-area').value='';" style="background:var(--neon-cyan); border:none; padding:8px 16px; border-radius:8px; color:#000; font-weight:700; align-self:flex-end;">Transmit Payload</button></div>
+                    <button onclick="localStorage.clear(); showCustomAlert('Mainframe flushed.'); window.location.reload();" style="width:100%; margin-top:15px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 12px; border-radius: 12px; font-weight:700; cursor:pointer; font-size:12px;"><i class="fa-solid fa-dumpster-fire"></i> PURGE ALL MAINFRAME MEMORY CACHES</button>
                 `;
             }
         }
 
-        function closeMainframeModal() { triggerJarvisSoundMatrix('click'); cancelAnimationFrame(hudAnimationLoopToken); const modal = document.getElementById('mainframe-modal'); if (modal) modal.classList.remove('active'); }
         function applyThemeRoutine(t) { document.body.classList.remove('theme-void', 'theme-cyberpunk'); if(t==='void') document.body.classList.add('theme-void'); else if(t==='cyberpunk') document.body.classList.add('theme-cyberpunk'); }
         function updateLiveSettings(k, v) { if(k==='theme'){ localStorage.setItem('harvion-theme', v); applyThemeRoutine(v); } else if(k==='density'){ localStorage.setItem('harvion-density', v); document.getElementById('chat-box').style.padding = v==="compact"?"12px 20px":"30px"; } else if(k==='temp'){ document.getElementById('temp-lbl').innerText = v; localStorage.setItem('harvion-temp', v); } else if(k==='tokens'){ document.getElementById('tokens-lbl').innerText = v; localStorage.setItem('harvion-tokens', v); } else if(k==='plexus'){ localStorage.setItem('harvion-plexus', v); document.getElementById('interactive-canvas').style.display = v?'block':'none'; } else if(k==='mic'){ document.getElementById('mic-lbl').innerText = v+"%"; localStorage.setItem('harvion-mic', v); } }
-        function sharePlatform() { if(navigator.share) { navigator.share({ title: 'Harvion AI', url: window.location.href }); } else { navigator.clipboard.writeText(window.location.href); alert("Mainframe link parameters cloned to system stack."); } }
+        
+        function sharePlatform() { 
+            if(navigator.share) { 
+                navigator.share({ title: 'Harvion AI', url: window.location.href }); 
+            } else { 
+                navigator.clipboard.writeText(window.location.href); 
+                showCustomAlert("Mainframe link parameters cloned to system stack."); 
+            } 
+        }
+        
         function downloadChat() { const txt = Array.from(document.querySelectorAll('.msg-bubble')).map(el => el.innerText).join('\n\n'); if(!txt) return; const blob = new Blob([txt], {type:"text/plain"}); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "harvion_chat_dump.txt"; a.click(); }
         function triggerUpload() { document.getElementById('doc-upload').click(); }
-        function handleFileUpload(e) { if(e.target.files[0]) alert(`Payload map linked target -> ${e.target.files[0].name}`); }
         function startSpeech() { const Speech = window.SpeechRecognition || window.webkitSpeechRecognition; if(!Speech) return; const rec = new Speech(); rec.lang = 'hi-IN'; rec.start(); rec.onresult = (e) => { document.getElementById('user-input').value = e.results[0][0].transcript; }; }
         function loadHistorySimulation(t) { clearChat(); setTimeout(() => { addMessage("Diagnostic network test simulation.", 'user'); addMessage("Core stabilized inference response mapped successfully under runtime variables tracking parameters layer framework.", 'ai'); }, 120); }
     </script>

@@ -1357,7 +1357,17 @@
         function downloadChat() { const txt = Array.from(document.querySelectorAll('.msg-bubble')).map(el => el.innerText).join('\n\n'); if(!txt) return; const blob = new Blob([txt], {type:"text/plain"}); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "harvion_chat_dump.txt"; a.click(); }
         function triggerUpload() { document.getElementById('doc-upload').click(); }
         function startSpeech() { const Speech = window.SpeechRecognition || window.webkitSpeechRecognition; if(!Speech) return; const rec = new Speech(); rec.lang = 'hi-IN'; rec.start(); rec.onresult = (e) => { document.getElementById('user-input').value = e.results[0][0].transcript; }; }
-        function loadHistorySimulation(t) { clearChat(); setTimeout(() => { addMessage("Diagnostic network test simulation.", 'user'); addMessage("Core stabilized inference response mapped successfully under runtime variables tracking parameters layer framework.", 'ai'); }, 120); }
+        function loadHistorySimulation(t) { clearChat(); setTimeout(() => { addMessage("Diagnostic network test simulation.", 'user'); addMessage("Core stabilized inference response mapped successfully under runtime variables tracking parameters layer framework.", 'ai'); }, 120); }function closeMainframeModal() {
+    triggerJarvisSoundMatrix('click');
+    const modal = document.getElementById('mainframe-modal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+    // HUD animation loop ko rokne ke liye
+    if (typeof hudAnimationLoopToken !== 'undefined' && hudAnimationLoopToken) {
+        cancelAnimationFrame(hudAnimationLoopToken);
+    }
+}
     </script>
 </body>
 </html>

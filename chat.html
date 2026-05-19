@@ -139,7 +139,7 @@
             z-index: 500;
         }
 
-        .brand-header { display: flex; align-items: center; gap: 15px; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .brand-header { display: flex; align-items: center; gap: 15px; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
         .brand-logo { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid var(--neon-cyan); }
         .brand-name { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 700; background: linear-gradient(90deg, #fff, var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
@@ -298,28 +298,31 @@
         body.theme-cyberpunk .main-chat, body.theme-cyberpunk .sidebar { border-color: rgba(255, 0, 127, 0.3); box-shadow: 0 0 30px rgba(255, 0, 127, 0.15); }
 
         /* 📱 MOBILE SIDEBAR OVERRIDES */
-       @media (max-width: 768px) {
-    #app-wrapper { width: 100vw; height: 100vh; gap: 0; padding: 0; }
-
-    .chat-container { padding: 15px; }
-    
-    .input-dock { padding: 10px; }
-    .input-box { border-radius: 16px; padding: 5px 8px; gap: 4px; } 
-    .input-box input[type="text"] { font-size: 0.9rem; padding: 8px 2px; }
-    .action-btn { width: 32px; height: 32px; font-size: 1rem; }
-    .send-btn { width: 36px; height: 36px; min-width: 36px; border-radius: 10px; }
-    .mode-dropdown-trigger { padding: 6px 10px; font-size: 11px; gap: 4px; }
-}
+        @media (max-width: 768px) {
+            #app-wrapper { width: 100vw; height: 100vh; gap: 0; padding: 0; }
+            .main-chat { border-radius: 0; border: none; }
+            .sidebar {
+                position: fixed; left: -320px; top: 0; bottom: 0;
+                height: 100vh; width: 290px;
+                border-radius: 0 24px 24px 0; background: rgba(5, 5, 12, 0.96);
+                transition: left 0.4s cubic-bezier(0.1, 1, 0.1, 1);
+                z-index: 500;
+            }
             .sidebar.active { left: 0; }
             .menu-toggle-btn { display: flex; }
             .splash-title { font-size: 2.2rem; letter-spacing: 6px; }
             .chat-container { padding: 15px; }
             .msg-bubble { font-size: 0.95rem; padding: 12px 16px; }
             .top-nav { padding: 10px 15px; }
+            .nav-tools, .nav-auth-container { display: none; }
+            
+            /* Enhanced mobile input dock adjustments to prevent squeezing */
             .input-dock { padding: 10px; }
-            .input-box { border-radius: 16px; padding: 5px 10px; }
-            .nav-tools { display: none; }
-            .nav-auth-container { display: none; }
+            .input-box { border-radius: 16px; padding: 5px 8px; gap: 4px; }
+            .input-box input[type="text"] { font-size: 0.9rem; padding: 8px 2px; }
+            .action-btn { width: 32px; height: 32px; font-size: 1rem; }
+            .send-btn { width: 36px; height: 36px; min-width: 36px; border-radius: 10px; }
+            .mode-dropdown-trigger { padding: 6px 10px; font-size: 11px; gap: 4px; }
         }
     </style>
 </head>
@@ -458,7 +461,6 @@
                     <label>Full Name Matrix</label>
                     <input type="text" class="auth-field" id="reg-name" placeholder="Shubham Kumar" autocomplete="off">
                 </div>
-                
                 <button class="auth-btn-submit" onclick="compileCompletedUserProfileData()">Finalize Infrastructure Sync</button>
             </div>
 
@@ -593,7 +595,6 @@
             appId: "1:908526936420:web:94fd6c29a53375a4175a71"
         };
 
-        // Initialize Firebase Global Instances
         firebase.initializeApp(firebaseConfig);
         const authEngine = firebase.auth();
         const firestoreDb = firebase.firestore();
@@ -606,11 +607,9 @@
             loggedIn: false, name: '', username: '', email: '', dob: 'Not Registered', uid: '', token: '', ipAddress: '', clearance: '', location: '', credits: '', isPremium: false, isOwner: false, remaining_chats: 0
         };
 
-        // 🧠 VISION SYSTEM MATRIX STATE SLOTS
         let currentImageBase64 = null;
         let currentImageMimeType = null;
 
-        // Central Welcome Initializer to cut the Looping Repetition bug completely
         function runCentralWelcomeRefresh() {
             const box = document.getElementById('chat-box');
             if (!box) return;
@@ -641,7 +640,6 @@
             sessionStorage.setItem('harvion_session_welcomed', "true");
         }
 
-        // 🎵 COCKPIT SOUND SYNTH MATRIX
         function triggerJarvisSoundMatrix(type) {
             const savedAudioPref = localStorage.getItem('harvion-audio') !== "false";
             if (!savedAudioPref) return;
@@ -692,7 +690,6 @@
             setTimeout(() => { overlay.style.display = 'none'; }, 300);
         }
 
-        // 🔄 FIREBASE INTEGRATED SESSIONS AUTOMATIC OBSERVER GRID
         authEngine.onAuthStateChanged(async (user) => {
             if (user) {
                 activeUserSession.loggedIn = true;
@@ -740,7 +737,6 @@
                 document.getElementById('nav-user-title').innerText = activeUserSession.name;
                 document.getElementById('nav-user-uid').innerText = activeUserSession.uid;
 
-                // Fire Subcollection Map Loader for structural File backup streams
                 loadUserFileHistoryFromFirestore(user.uid);
             } else {
                 activeUserSession.loggedIn = false;
@@ -751,7 +747,6 @@
                 document.getElementById('user-profile-block').style.display = 'none';
                 document.getElementById('platform-title-version').innerText = "Harvion Engine v1.5";
                 
-                // 🔥 UI REFRESH IN LOGOUT STATE ATTACHED
                 syncPlatformPremiumUIRefresh();
             }
         });
@@ -794,12 +789,9 @@
             }
         }
 
-        // --- PROGRESS SYSTEM LOADER MATRIX ---
         const isMobile = window.innerWidth <= 768;
         window.onload = () => {
             runCentralWelcomeRefresh();
-            
-            // 🔥 INITIAL STATE ACTIVE SYNC REFRESH
             syncPlatformPremiumUIRefresh();
 
             const progressBar = document.getElementById('load-progress');
@@ -829,7 +821,6 @@
             });
         };
 
-        // --- HTML5 CANVAS INTERACTIVE BACKGROUND RENDER ---
         const canvas = document.getElementById('interactive-canvas'); const ctx = canvas.getContext('2d'); let width, height, points = [];
         function setupCanvas() {
             width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; points = []; const maxP = isMobile ? 35 : 110;
@@ -862,7 +853,6 @@
         function toggleSidebar() { triggerJarvisSoundMatrix('click'); document.getElementById('panel-left').classList.toggle('active'); }
         function closeSidebarMobile() { if(isMobile) document.getElementById('panel-left').classList.remove('active'); }
 
-        // --- PRODUCTION EDGE MULTI-MODAL VISION INFERENCE CHAT PIPELINE ---
         async function sendMessage() {
             const inputField = document.getElementById('user-input'); const message = inputField.value.trim(); 
             if (message === '' && !currentImageBase64) return;
@@ -894,7 +884,7 @@
             
             try {
                 const savedTemp = localStorage.getItem('harvion-temp') || "0.7"; const savedTokens = localStorage.getItem('harvion-tokens') || "2048";
-                const harvionPersonality = `Tumhara naam Harvion hai. Tum Harvion Labs ke model arrays ho. Operational Profile: ${activeMode}. Logic configurations bounds: Temp=${savedTemp}, MaxTokens=${savedTokens}. Speak casual Hinglish. Prompt: `;
+                const harvionPersonality = `Operational Profile: ${activeMode}. Logic configurations bounds: Temp=${savedTemp}, MaxTokens=${savedTokens}. Prompt: `;
                 
                 let requestParts = [];
                 if (message !== '') {
@@ -982,7 +972,6 @@
         function handleKeyPress(event) { if (event.key === 'Enter') sendMessage(); }
         function clearChat() { triggerJarvisSoundMatrix('click'); runCentralWelcomeRefresh(); const inp = document.getElementById('user-input'); if(inp) inp.value = ''; }
 
-        // --- AUTH PORTALS AND INTERFACES OVERRIDES ---
         function openLoginGateway() { triggerJarvisSoundMatrix('click'); document.getElementById('auth-gateway-overlay').classList.add('active'); switchAuthStep('auth-login-step'); }
         function openSignupGateway() { triggerJarvisSoundMatrix('click'); document.getElementById('auth-gateway-overlay').classList.add('active'); switchAuthStep('auth-signup-method'); }
         function closeAuthGateway() { document.getElementById('auth-gateway-overlay').classList.remove('active'); }
@@ -1046,7 +1035,48 @@
         }
 
         function compileCompletedUserProfileData() {
-            executeSupabaseFullRegistration();
+            const name = document.getElementById('reg-name').value.trim();
+            if(!name) { showCustomAlert("Please fill in your name details details vector."); return; }
+
+            localStorage.setItem('harvion_temp_name', name);
+            localStorage.setItem('harvion_clearance', "Standard Beta User");
+
+            let emailTarget = currentAuthWorkflowEmail;
+            let passTarget = localStorage.getItem('harvion_transit_pass_temp') || "MasterFallbackNodePass123!";
+
+            if (!emailTarget && authEngine.currentUser) {
+                const u = authEngine.currentUser;
+                firestoreDb.collection("users").doc(u.uid).set({
+                    full_name: name,
+                    role: "Standard Beta User",
+                    registered_at: new Date().toISOString(),
+                    remaining_chats: 10
+                }).then(() => {
+                    showCustomAlert("Infrastructure synchronization complete.");
+                    closeAuthGateway();
+                    triggerCinematicWarpPortal();
+                });
+                return;
+            }
+
+            authEngine.createUserWithEmailAndPassword(emailTarget, passTarget)
+                .then(async (userCredential) => {
+                    const user = userCredential.user;
+                    await user.sendEmailVerification();
+                    
+                    await firestoreDb.collection("users").doc(user.uid).set({
+                        full_name: name,
+                        role: "Standard Beta User",
+                        registered_at: new Date().toISOString(),
+                        remaining_chats: 10
+                    });
+                    
+                    await authEngine.signOut();
+                    showCustomAlert("Verification link dispatched! Kripya apna Gmail check karein aur verify karne ke baad hi dobara login karein.");
+                    switchAuthStep('auth-login-step');
+                }).catch((error) => {
+                    showCustomAlert(error.message);
+                });
         }
 
         function executeFirebasePasswordResetLink() {
@@ -1062,36 +1092,32 @@
                 });
         }
 
-       async function executeSupabaseAuthLogin() {
-    if (!document.getElementById('hv-login-agree-policy').checked) {
-        showCustomAlert("Please agree to the Terms and Privacy Policy to sign in.");
-        return;
-    }
-    const identity = document.getElementById('login-identity').value.trim();
-    const pass = document.getElementById('login-pass').value;
-
-    if (!identity || !pass) {
-        showCustomAlert("Please enter both your identity parameter and password.");
-        return;
-    }
-    authEngine.signInWithEmailAndPassword(identity, pass)
-        .then(async (userCredential) => {
-            const user = userCredential.user;
-
-            // 🕵️ Check karein ki user verified hai ya nahi
-            if (!user.emailVerified) {
-                showCustomAlert("Access Denied: Aapka Gmail ID verified nahi hai. Pehle inbox mein jaakar link par click karein.");
-                await authEngine.signOut(); // Wapas nikaal do
+        async function executeSupabaseAuthLogin() {
+            if (!document.getElementById('hv-login-agree-policy').checked) {
+                showCustomAlert("Please agree to the Terms and Privacy Policy to sign in.");
                 return;
             }
+            const identity = document.getElementById('login-identity').value.trim();
+            const pass = document.getElementById('login-pass').value;
+            if (!identity || !pass) {
+                showCustomAlert("Please enter both your identity parameter and password.");
+                return;
+            }
+            authEngine.signInWithEmailAndPassword(identity, pass)
+                .then(async (userCredential) => {
+                    const user = userCredential.user;
+                    if (!user.emailVerified) {
+                        showCustomAlert("Access Denied: Aapka Gmail ID verified nahi hai. Kripya pehle email verify karein.");
+                        await authEngine.signOut();
+                        return;
+                    }
+                    closeAuthGateway(); 
+                    triggerCinematicWarpPortal();
+                }).catch((error) => {
+                    showCustomAlert(error.message);
+                });
+        }
 
-            // Agar verified hai toh portal khulega
-            closeAuthGateway(); 
-            triggerCinematicWarpPortal();
-        }).catch((error) => {
-            showCustomAlert(error.message);
-        });
-}
         async function executeGoogleOauthLink() {
             if (!document.getElementById('hv-login-agree-policy').checked) {
                 showCustomAlert("You must accept the terms and conditions to continue.");
@@ -1117,55 +1143,6 @@
                 });
         }
 
-        async function executeSupabaseFullRegistration() {
-    const name = document.getElementById('reg-name').value.trim();
-    
-    if(!name) { 
-        showCustomAlert("Please fill in your name details vector."); 
-        return; 
-    }
-
-    if(activeRegistrationMethod === 'PHONE' && authEngine.currentUser) {
-        const activeUserNode = authEngine.currentUser;
-        await firestoreDb.collection("users").doc(activeUserNode.uid).set({
-            full_name: name,
-            role: "Standard Beta User", // Secure lock
-            phone_linked: activeUserNode.phoneNumber,
-            registered_at: new Date().toISOString()
-        });
-        showCustomAlert("Infrastructure node synced cleanly.");
-        closeAuthGateway();
-        triggerCinematicWarpPortal();
-        return;
-    }
-
-    let emailTarget = document.getElementById('signup-email-input').value.trim();
-    let passTarget = document.getElementById('signup-email-pass').value;
-
-    authEngine.createUserWithEmailAndPassword(emailTarget, passTarget)
-        .then(async (userCredential) => {
-            const user = userCredential.user;
-
-            // ✉️ Verification link bhejein
-            await user.sendEmailVerification();
-
-            // 📁 Secure role save karein
-            await firestoreDb.collection("users").doc(user.uid).set({
-                full_name: name,
-                role: "Standard Beta User",
-                registered_at: new Date().toISOString()
-            });
-
-            // 🔒 Login block karne ke liye sign out
-            await authEngine.signOut();
-
-            showCustomAlert("Verification link sent! Kripya apna Gmail check karein aur verify karne ke baad hi dobara login karein.");
-            switchAuthStep('auth-login-step');
-        }).catch((error) => {
-            showCustomAlert(error.message);
-        });
-}
-        // --- 📁 PRODUCTION CLOUD FILE HISTORY SECURE STORAGE GRID TRACKING & VISION INTERFACES ---
         async function handleFileUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -1231,7 +1208,6 @@
                 });
         }
 
-        // --- STAR CINEMATIC WARP TIME TUNNEL GRID ---
         function triggerCinematicWarpPortal() {
             triggerJarvisSoundMatrix('success'); const overlay = document.getElementById('portal-animation-overlay'); const pCanvas = document.getElementById('portal-canvas'); const pCtx = pCanvas.getContext('2d');
             overlay.style.display = 'flex'; pCanvas.width = window.innerWidth; pCanvas.height = window.innerHeight; let stars = [];
@@ -1279,7 +1255,6 @@
         }
         document.addEventListener('click', () => { if(document.getElementById('mode-options-list')) document.getElementById('mode-options-list').style.display = 'none'; });
 
-        // --- HUD Real-Time Analytics Graph Generator ---
         function initializeLiveCoreDiagnosticHudGraph() {
             const hCanvas = document.getElementById('hud-canvas-vector'); if(!hCanvas) return; const hCtx = hCanvas.getContext('2d');
             hCanvas.width = hCanvas.parentElement.clientWidth; hCanvas.height = hCanvas.parentElement.clientHeight;
@@ -1354,6 +1329,13 @@
             }
         }
 
+        function closeMainframeModal() {
+            triggerJarvisSoundMatrix('click');
+            const modal = document.getElementById('mainframe-modal');
+            if (modal) modal.classList.remove('active');
+            if (hudAnimationLoopToken) cancelAnimationFrame(hudAnimationLoopToken);
+        }
+
         function applyThemeRoutine(t) { document.body.classList.remove('theme-void', 'theme-cyberpunk'); if(t==='void') document.body.classList.add('theme-void'); else if(t==='cyberpunk') document.body.classList.add('theme-cyberpunk'); }
         function updateLiveSettings(k, v) { if(k==='theme'){ localStorage.setItem('harvion-theme', v); applyThemeRoutine(v); } else if(k==='density'){ localStorage.setItem('harvion-density', v); document.getElementById('chat-box').style.padding = v==="compact"?"12px 20px":"30px"; } else if(k==='temp'){ document.getElementById('temp-lbl').innerText = v; localStorage.setItem('harvion-temp', v); } else if(k==='tokens'){ document.getElementById('tokens-lbl').innerText = v; localStorage.setItem('harvion-tokens', v); } else if(k==='plexus'){ localStorage.setItem('harvion-plexus', v); document.getElementById('interactive-canvas').style.display = v?'block':'none'; } else if(k==='mic'){ document.getElementById('mic-lbl').innerText = v+"%"; localStorage.setItem('harvion-mic', v); } }
         
@@ -1369,17 +1351,7 @@
         function downloadChat() { const txt = Array.from(document.querySelectorAll('.msg-bubble')).map(el => el.innerText).join('\n\n'); if(!txt) return; const blob = new Blob([txt], {type:"text/plain"}); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "harvion_chat_dump.txt"; a.click(); }
         function triggerUpload() { document.getElementById('doc-upload').click(); }
         function startSpeech() { const Speech = window.SpeechRecognition || window.webkitSpeechRecognition; if(!Speech) return; const rec = new Speech(); rec.lang = 'hi-IN'; rec.start(); rec.onresult = (e) => { document.getElementById('user-input').value = e.results[0][0].transcript; }; }
-        function loadHistorySimulation(t) { clearChat(); setTimeout(() => { addMessage("Diagnostic network test simulation.", 'user'); addMessage("Core stabilized inference response mapped successfully under runtime variables tracking parameters layer framework.", 'ai'); }, 120); }function closeMainframeModal() {
-    triggerJarvisSoundMatrix('click');
-    const modal = document.getElementById('mainframe-modal');
-    if (modal) {
-        modal.classList.remove('active');
-    }
-    // HUD animation loop ko rokne ke liye
-    if (typeof hudAnimationLoopToken !== 'undefined' && hudAnimationLoopToken) {
-        cancelAnimationFrame(hudAnimationLoopToken);
-    }
-}
+        function loadHistorySimulation(t) { clearChat(); setTimeout(() => { addMessage("Diagnostic network test simulation.", 'user'); addMessage("Core stabilized inference response mapped successfully under runtime variables tracking parameters layer framework.", 'ai'); }, 120); }
     </script>
 </body>
 </html>

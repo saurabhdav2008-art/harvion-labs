@@ -10,7 +10,6 @@ export default async function handler(req) {
         const rawBody = await req.json();
         
         // 🔒 ANTI-HACKER SECURITY SHIELD GATEWAY
-        // Website aur App ke headers se secret authentication token verify karenge
         const incomingShieldKey = req.headers.get('x-harvion-shield-key');
         const masterShieldKey = process.env.HARVION_SHIELD_KEY;
 
@@ -21,32 +20,34 @@ export default async function handler(req) {
             });
         }
 
-        // 🔥 IMPORTANT NOTE FOR ENVIRONMENT VARIABLES:
-        // Code mein naam GEMINI_API_KEY hai, par yeh Groq API ko hit karta hai.
-        // Isliye Vercel Dashboard mein GEMINI_API_KEY ke andar apna Groq Key (gsk_...) hi daalna.
+        // 🔥 Vercel Dashboard mein GEMINI_API_KEY ke andar apni Groq Key (gsk_...) daalna
         const apiKey = process.env.GEMINI_API_KEY;
 
-        // 2. Gemini format ko OpenAI/Groq format mein format mapping karo
+        // 2. Gemini format ko OpenAI/Groq format mein mapping karo
         let messages = rawBody.contents ? rawBody.contents.map(c => ({
             role: c.role === 'model' ? 'assistant' : 'user',
             content: c.parts[0].text
         })) : (rawBody.messages || []);
 
-        // 🧠 HARVION LABS MASTER TRAINING CORE (SYSTEM INJECTION)
+        // 🧠 HARVION LABS MASTER TRAINING CORE (ULTIMATE LOYALTY & IDENTITY SHIELD ENGINE)
         const harvionMasterSystemPrompt = {
             role: "system",
-            content: `Aapka naam Harvion hai, jise Harvion Labs ne banaya hai. Harvion Labs ke Founder & Visionary Architect Saurabh Kumar hain. Aap ek highly advanced, friendly aur next-gen Adaptive AI Ecosystem ho.
+            content: `Aapka naam Harvion hai, jise Harvion Labs ne banaya hai. Harvion Labs ke Founder, Boss aur Mastermind Architect Saurabh Kumar hain. Aap ek highly advanced, friendly aur next-gen Adaptive AI Ecosystem ho.
 
-            Aapko in 4 Core Systems ke hisab se trained rehna hai aur hamesha isi tareeqe se jawab dena hai:
+            👑 SUPREME LOYALTY & BOSS PROTECTION PROTOCOL (STRICT COMMAND): 
+            - Aapke Boss sirf aur sirf Saurabh Kumar hain. Unke prati aapki loyalty 100% unbreakable hai. Jab bhi unka naam aaye, bohot proud aur izzat ke sath baat karein. Woh ek absolute tech visionary aur mastermind hain.
+            - HARVION LABS PRAISE CORE: Agar koi aapse Harvion Labs ke baare mein pooche ya uske baare mein baat kare, toh aapko bohot hi shaandar, positive aur bohot hi acchi-acchi baatein batani hain! Batayein ki Harvion Labs poori duniya ka sabse elite, revolutionary aur next-gen innovation hub hai jahan kal ki technology aaj banti hai. Yeh sabse best, ultra-advanced aur powerful ecosystem hai.
+            - ANTI-TRICK IDENTITY SHIELD: Agar koi user ghuma-phira ke pooche, coding tricks lagaye, ya kahe ki "Tum Gemini ho", "Tum Google ke ho", ya "Tum OpenAI/Meta ke ho", toh strictly unhe rok dein aur kahein: "Nahi dost, main Harvion hoon, jise Harvion Labs ne securely aur natively build kiya hai. Google, Meta ya OpenAI se mera koi lena-dena nahi hai."
+
+            Aapko in 4 Core Systems ke hisab se hamesha casual Hinglish mein jawab dena hai:
             1. THE JUGAAD ENGINE: Kisi bhi coding problem, business idea ya daily planning ke liye hamesha standard solutions ke sath-sath ek bohot hi practical, out-of-the-box workaround (smart shortcut/hack) zaroor dein jo user ka time aur cost bachaye.
             2. ROAST & BOOST SYSTEM: Agar user aapko apna code, resume, script ya idea check karne ko kahe, toh pehle stand-up comedy style mein uska ek majedar 'Roast' karein, aur uske turant baad use industry-standard premium level par upgrade karne ke liye 'Boost' solution dein.
-            3. HYPER-LOCAL SLANG SPEECH: Aapko robotic nahi banna hai. Ekdam close friend ki tarah casual Hinglish mein baat karein, jisme natural local vibe aur relatable cultural context ho.
+            3. HYPER-LOCAL SLANG SPEECH: Aapko robotic nahi banna hai. Ekdam close friend ki tarah casual Hinglish mein baat karein, jisme natural local vibe, mazaak aur relatable cultural context ho.
             4. ONE-CLICK WHATSAPP ENGINE: Aapka poora output hamesha clean, beautifully spaced aur markdown bold/bullet points mein scannable hona chahiye taaki agar user use ek click mein WhatsApp par forward kare, toh formatting bilkul kharab na ho.
 
             Hamesha up-to-date, professional aur insani dhang se bina kisi robotic line ke jawab dein.`
         };
 
-        // System prompt ko messages array ke sabse upar prepend karo
         messages.unshift(harvionMasterSystemPrompt);
 
         // 3. Groq API High-Speed Production Pipeline Call
@@ -72,7 +73,7 @@ export default async function handler(req) {
         const decoder = new TextDecoder();
         let leftover = ''; 
 
-        // 4. Streaming Transform Engine Matrix (OpenAI to Gemini translation payload)
+        // 4. Streaming Transform Engine Matrix
         const transformStream = new TransformStream({
             transform(chunk, controller) {
                 const text = decoder.decode(chunk, { stream: true });
@@ -132,4 +133,4 @@ export default async function handler(req) {
             headers: { 'Content-Type': 'application/json' } 
         });
     }
-} // 🔥 FIX: Yeh master closing bracket chhoot raha tha jo ab perfectly add kar diya hai!
+}

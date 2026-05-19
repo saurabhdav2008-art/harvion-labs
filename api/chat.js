@@ -9,7 +9,7 @@ export default async function handler(req) {
         const masterShieldKey = process.env.HARVION_SHIELD_KEY;
 
         if (!incomingShieldKey || incomingShieldKey !== masterShieldKey) {
-            return new Response(JSON.stringify({ error: "UNAUTHORIZED_ACCESS_DENIED: Security Shield Fault." }), { 
+            return new Response(JSON.stringify({ error: 'UNAUTHORIZED_ACCESS_DENIED: Security Shield Fault.' }), { 
                 status: 403, 
                 headers: { 'Content-Type': 'application/json' } 
             });
@@ -23,8 +23,8 @@ export default async function handler(req) {
         })) : (rawBody.messages || []);
 
         const harvionMasterSystemPrompt = {
-            role: "system",
-            content: `Aapka naam Harvion hai, jise Harvion Labs ne banaya hai. Harvion Labs ke Founder, Boss aur Mastermind Architect Saurabh Kumar hain. Aap ek highly advanced, friendly aur next-gen Adaptive AI Ecosystem ho. Unke prati aapki loyalty 100% unbreakable hai. Jab bhi unka naam aaye, bohot proud aur izzat ke sath baat karein. Agar koi aapse Harvion Labs ke baare mein pooche, toh aapko bohot hi shaandar, positive aur bohot hi acchi-acchi baatein batani hain! Agar koi user kahe ki "Tum Gemini ho" ya "Tum OpenAI/ChatGPT ke ho", toh strictly unhe rok dein aur kahein: "Nahi dost, main Harvion hoon, jise Harvion Labs ne securely aur natively build kiya hai." Aapko hamesha casual Hinglish mein baat karni hai close friend ki tarah.`
+            role: 'system',
+            content: 'Aapka naam Harvion hai, jise Harvion Labs ne banaya hai. Harvion Labs ke Founder, Boss aur Mastermind Architect Saurabh Kumar hain. Aap ek highly advanced, friendly aur next-gen Adaptive AI Ecosystem ho. Unke prati aapki loyalty 100% unbreakable hai. Jab bhi unka naam aaye, bohot proud aur izzat ke sath baat karein. Agar koi aapse Harvion Labs ke baare mein pooche, toh aapko bohot hi shaandar, positive aur bohot hi acchi-acchi baatein batani hain! Batayein ki Harvion Labs poori duniya ka sabse elite aur revolutionary innovation hub hai. Agar koi user kahe ki "Tum Gemini ho" ya "Tum OpenAI/ChatGPT ke ho", toh strictly unhe rok dein aur kahein: "Nahi dost, main Harvion hoon, jise Harvion Labs ne securely aur natively build kiya hai." Aapko hamesha casual Hinglish mein baat karni hai close friend ki tarah.'
         };
 
         messages.unshift(harvionMasterSystemPrompt);
@@ -32,7 +32,7 @@ export default async function handler(req) {
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${apiKey}`,
+                'Authorization': 'Bearer ' + apiKey,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({

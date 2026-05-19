@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Harvion 6.0 - Universal Core</title>
+    <title>Harvion Labs - Next-Gen AI Ecosystem</title>
     <link rel="icon" type="image/png" href="logo.png">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;800;900&family=Outfit:wght@300;400;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -14,58 +16,155 @@
     
     <style>
         :root {
-            --bg-deep: #020205;
-            --glass-panel: rgba(10, 10, 20, 0.65);
-            --glass-border: rgba(0, 243, 255, 0.2);
-            --neon-cyan: #00f3ff;
+            --bg-main: #030712;
+            --bg-surface: #0b1329;
+            --bg-card: rgba(17, 24, 39, 0.7);
+            --accent-cyan: #00f3ff;
+            --accent-blue: #4facfe;
             --neon-purple: #9d00ff;
-            --text-main: #f0f8ff;
-            --text-muted: #8a9ba8;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border-glow: rgba(0, 242, 254, 0.15);
+            --interface-curve: cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; scroll-behavior: smooth; }
 
         body {
-            background-color: var(--bg-deep); color: var(--text-main);
-            height: 100vh; overflow: hidden; display: flex; justify-content: center; align-items: center;
-            perspective: 2000px; transition: background 0.3s ease;
+            background-color: var(--bg-main); color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden;
+            background-image: radial-gradient(circle at 10% 20%, rgba(0, 242, 254, 0.05) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(79, 172, 254, 0.05) 0%, transparent 40%);
         }
 
-        /* --- SPLASH SCREEN --- */
-        #genesis-splash {
-            position: fixed; inset: 0; background: #000; z-index: 99999;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            transition: opacity 1.2s cubic-bezier(0.1, 1, 0.1, 1), visibility 1.2s;
-            padding: 20px;
+        header { position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; background: rgba(3, 7, 18, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .nav-container { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 20px; position: relative; }
+        
+        .logo {
+            font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 700;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none;
+            display: flex; align-items: center; gap: 12px; z-index: 1001;
         }
 
-        .splash-core { position: relative; width: 130px; height: 130px; margin-bottom: 30px; }
-        .splash-logo { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--neon-cyan); box-shadow: 0 0 30px var(--neon-cyan); animation: logoFloat 3s infinite ease-in-out; }
-        .splash-scanner { position: absolute; inset: -15px; border: 2px solid var(--neon-purple); border-radius: 50%; border-top-color: transparent; border-bottom-color: transparent; animation: spinScanner 4s linear infinite; }
-
-        .splash-title {
-            font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 2.8rem; letter-spacing: 10px;
-            color: #fff; text-shadow: 0 0 25px var(--neon-cyan); margin-bottom: 10px;
-            overflow: hidden; white-space: nowrap; width: 0;
-            animation: typeTitle 1.8s steps(15, end) forwards; animation-delay: 0.5s;
+        .logo-img-container {
+            width: 40px; height: 40px; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center;
+            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(0, 242, 254, 0.3); box-shadow: 0 0 15px rgba(0, 242, 254, 0.2);
         }
+        .logo-img-container img { width: 100%; height: 100%; object-fit: cover; }
 
-        .loading-container { width: 200px; height: 4px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; margin-top: 15px; border: 1px solid rgba(0,243,255,0.1); }
-        .loading-bar { width: 0%; height: 100%; background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple)); box-shadow: 0 0 10px var(--neon-cyan); transition: width 0.1s linear; }
-        .counter-text { font-family: 'Orbitron', sans-serif; color: var(--neon-cyan); font-size: 0.9rem; margin-top: 8px; letter-spacing: 2px; }
+        .nav-links { display: flex; flex-direction: row; gap: 30px; list-style: none; margin: 0; padding: 0; align-items: center; }
+        .hdr-link { color: #9ca3af; text-decoration: none; font-size: 15px; font-weight: 500; padding: 5px 10px; transition: all 0.3s var(--interface-curve); }
+        .hdr-link:hover { color: #00f2fe; text-shadow: 0 0 15px rgba(0, 242, 254, 0.8); transform: translateY(-2px); }
 
-        @keyframes logoFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        @keyframes spinScanner { 100% { transform: rotate(360deg); } }
-        @keyframes typeTitle { to { width: 100%; text-align: center; } }
-        #genesis-splash.exit { opacity: 0; visibility: hidden; }
+        .hv-action-hub { display: flex; align-items: center; gap: 20px; z-index: 1001; }
+        
+        .btn-use-ai {
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); color: #000; padding: 10px 24px; border-radius: 30px; text-decoration: none; font-weight: 700; font-size: 15px; box-shadow: 0 0 15px rgba(0, 242, 254, 0.3); transition: all 0.3s var(--interface-curve);
+        }
+        .btn-use-ai:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(0, 242, 254, 0.6); }
 
-        /* --- BACKGROUND CANVAS --- */
-        #interactive-canvas { position: absolute; inset: 0; z-index: -1; pointer-events: auto; }
-        .ambient-glow { position: absolute; width: 500px; height: 500px; border-radius: 50%; filter: blur(150px); z-index: 0; opacity: 0.12; pointer-events: none; }
-        .glow-cyan { background: var(--neon-cyan); top: -15%; left: -15%; }
-        .glow-purple { background: var(--neon-purple); bottom: -15%; right: -15%; }
+        .hdr-login { color: #f3f4f6; background: transparent; border: none; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s var(--interface-curve); padding: 5px 10px; display: inline-flex; align-items: center; }
+        .hdr-login:hover { color: #00f2fe; text-shadow: 0 0 15px rgba(0, 242, 254, 0.8); transform: translateY(-2px); }
 
-        /* --- 🔐 INTERACTIVE AUTH GATEWAY OVERLAY --- */
+        .hv-avatar-frame {
+            width: 38px; height: 38px; border-radius: 50%; background: #0b1329; border: 2px solid var(--accent-cyan); display: none; align-items: center; justify-content: center; cursor: pointer; position: relative; box-shadow: 0 0 12px rgba(0, 242, 254, 0.4); transition: transform 0.3s var(--interface-curve);
+        }
+        .hv-avatar-frame:hover { transform: scale(1.08); }
+        .hv-avatar-initial { font-family: 'Orbitron', sans-serif; font-size: 15px; font-weight: 900; color: var(--accent-cyan); text-shadow: 0 0 8px var(--accent-cyan); text-transform: uppercase; }
+
+        .hv-mainframe-panel {
+            position: absolute; top: 75px; right: 20px; width: 280px; background: #040409; border: 1px solid var(--border-glow); border-radius: 16px; padding: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.9); display: none; flex-direction: column; gap: 14px; transform: translateY(-10px); opacity: 0; transition: transform 0.3s var(--interface-curve), opacity 0.3s var(--interface-curve); z-index: 2000; pointer-events: none;
+        }
+        .hv-mainframe-panel.visible { display: flex; transform: translateY(0); opacity: 1; pointer-events: auto; }
+        .hv-meta-header { border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 10px; }
+        .hv-meta-name { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700; color: #fff; }
+        .hv-meta-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .hv-mainframe-btn { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); color: #fff; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s ease; text-decoration: none; }
+        .hv-mainframe-btn:hover { background: rgba(0,242,254,0.08); border-color: var(--accent-cyan); color: var(--accent-cyan); }
+        .hv-mainframe-btn.danger-action { border-color: rgba(239, 68, 68, 0.3); color: #ef4444; margin-top: 5px; }
+        .hv-mainframe-btn.danger-action:hover { background: rgba(239, 68, 68, 0.1); border-color: #ef4444; text-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+
+        .hv-mobile-toggle { display: none; background: transparent; border: none; color: var(--accent-cyan); font-size: 24px; cursor: pointer; z-index: 1002; width: 44px; height: 44px; border-radius: 10px; align-items: center; justify-content: center; border: 1px solid rgba(0, 242, 254, 0.2); box-shadow: 0 0 10px rgba(0, 242, 254, 0.1); }
+        
+        .hv-mobile-overlay { position: fixed; inset: 0; background: rgba(2,2,5,0.98); backdrop-filter: blur(20px); z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 25px; transform: translateX(100%); transition: transform 0.4s var(--interface-curve); }
+        .hv-mobile-overlay.active { transform: translateX(0); }
+        .hv-mobile-overlay a { font-family: 'Space Grotesk', sans-serif; font-size: 22px; color: var(--text-main); text-decoration: none; font-weight: 600; }
+        .hv-mobile-overlay a:hover { color: var(--accent-cyan); text-shadow: 0 0 10px var(--accent-cyan); }
+
+        /* --- HERO SECTION --- */
+        .hero { min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 150px 20px 100px 20px; position: relative; }
+        .hero-content { max-width: 900px; z-index: 10; }
+        .badge { background: rgba(0, 242, 254, 0.1); border: 1px solid rgba(0, 242, 254, 0.3); color: var(--accent-cyan); padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: inline-block; margin-bottom: 25px; animation: pulse 2s infinite; }
+        .hero h1 { font-family: 'Space Grotesk', sans-serif; font-size: 64px; line-height: 1.1; margin-bottom: 25px; font-weight: 700; }
+        .gradient-text { background: linear-gradient(90deg, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .neon-text { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero p { color: var(--text-muted); font-size: 20px; max-width: 700px; margin: 0 auto 40px auto; line-height: 1.6; }
+        .cta-group { display: flex; justify-content: center; gap: 20px; }
+        
+        .btn-primary { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); color: #000; padding: 16px 36px; border-radius: 8px; font-size: 18px; font-weight: 700; text-decoration: none; transition: all 0.3s var(--interface-curve); box-shadow: 0 0 20px rgba(0, 242, 254, 0.2); cursor: pointer; border: none; }
+        .btn-primary:hover { transform: scale(1.03) translateY(-2px); box-shadow: 0 0 35px rgba(0, 242, 254, 0.5); }
+        .btn-secondary { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-main); padding: 16px 36px; border-radius: 8px; font-size: 18px; font-weight: 600; text-decoration: none; transition: all 0.3s var(--interface-curve); }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.08); border-color: var(--accent-blue); }
+
+        /* --- FEATURE ELEMENTS --- */
+        section { padding: 100px 20px; max-width: 1400px; margin: 0 auto; }
+        .section-title { text-align: center; margin-bottom: 60px; }
+        .section-title h2 { font-family: 'Space Grotesk', sans-serif; font-size: 40px; margin-bottom: 15px; }
+        .section-title p { color: var(--text-muted); font-size: 18px; }
+
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; }
+        .feature-card { background: var(--bg-card); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); padding: 40px; border-radius: 16px; transition: all 0.4s var(--interface-curve); position: relative; overflow: hidden; }
+        .feature-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(45deg, transparent, rgba(0, 242, 254, 0.03), transparent); transform: translateX(-100%); transition: 0.6s; }
+        .feature-card:hover::before { transform: translateX(100%); }
+        .feature-card:hover { transform: translateY(-5px); border-color: var(--accent-cyan); box-shadow: 0 10px 30px rgba(0, 242, 254, 0.05); }
+        .feature-icon { font-size: 36px; color: var(--accent-cyan); margin-bottom: 25px; display: inline-block; }
+        .feature-card h3 { font-size: 22px; margin-bottom: 15px; font-family: 'Space Grotesk', sans-serif; }
+        .feature-card p { color: var(--text-muted); line-height: 1.6; font-size: 15px; }
+
+        /* --- FOUNDER MODULE --- */
+        .ceo-section { background: linear-gradient(180deg, transparent, var(--bg-surface), transparent); display: flex; align-items: center; gap: 60px; border-radius: 24px; padding: 60px; border: 1px solid rgba(255, 255, 255, 0.03); margin-top: 50px; }
+        .ceo-image-wrapper { flex-shrink: 0; width: 300px; height: 300px; border-radius: 50%; border: 3px solid var(--accent-cyan); box-shadow: 0 0 30px rgba(0, 242, 254, 0.2); overflow: hidden; background: #111827; display: flex; align-items: center; justify-content: center; }
+        .ceo-image-wrapper i { font-size: 120px; color: var(--text-muted); }
+        .ceo-content h3 { font-family: 'Space Grotesk', sans-serif; font-size: 32px; color: var(--accent-cyan); margin-bottom: 5px; }
+        .ceo-title { color: var(--text-muted); font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; }
+        .ceo-quote { font-size: 18px; line-height: 1.7; color: #d1d5db; font-style: italic; }
+
+        /* --- VALUE MODULES --- */
+        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; margin-top: 40px; }
+        .pricing-card { background: var(--bg-card); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 40px; text-align: center; position: relative; transition: all 0.3s ease; }
+        .pricing-card.premium { border-color: var(--accent-cyan); box-shadow: 0 0 30px rgba(0, 242, 254, 0.1); }
+        .pricing-card.premium::after { content: 'MOST POPULAR'; position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); color: #000; padding: 4px 16px; font-size: 12px; font-weight: 800; border-radius: 20px; letter-spacing: 1px; }
+        .pricing-card h3 { font-family: 'Space Grotesk', sans-serif; font-size: 24px; margin-bottom: 10px; }
+        .price { font-size: 48px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; margin: 20px 0; color: #fff; }
+        .price span { font-size: 16px; color: var(--text-muted); font-weight: 400; }
+        .pricing-features { list-style: none; margin: 30px 0; text-align: left; }
+        .pricing-features li { padding: 12px 0; color: #d1d5db; font-size: 15px; display: flex; align-items: center; gap: 10px; }
+        .pricing-features i { color: var(--accent-cyan); }
+        .btn-pricing { display: block; width: 100%; padding: 14px; border-radius: 8px; text-decoration: none; font-weight: 700; transition: all 0.3s var(--interface-curve); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; background: rgba(255, 255, 255, 0.02); cursor: pointer;}
+        .pricing-card.premium .btn-pricing { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); color: #000; border: none; }
+        .pricing-card.premium .btn-pricing:hover { box-shadow: 0 0 20px rgba(0, 242, 254, 0.4); transform: scale(1.02); }
+
+        .download-box { background: radial-gradient(rgba(0, 242, 254, 0.1), transparent); border: 1px solid var(--border-glow); border-radius: 24px; padding: 60px; text-align: center; }
+        .download-apps { display: flex; justify-content: center; gap: 20px; margin-top: 30px; flex-wrap: wrap; }
+        .app-btn { background: #000; border: 1px solid rgba(255, 255, 255, 0.2); padding: 12px 28px; border-radius: 10px; color: #fff; display: flex; align-items: center; gap: 15px; text-decoration: none; text-align: left; transition: 0.3s; }
+        .app-btn:hover { border-color: var(--accent-cyan); transform: translateY(-2px); }
+        .app-btn i { font-size: 28px; }
+        .app-btn span { display: block; font-size: 12px; color: var(--text-muted); }
+        .app-btn strong { font-size: 16px; }
+
+        .contact-form { max-width: 600px; margin: 40px auto 0 auto; display: flex; flex-direction: column; gap: 20px; }
+        .form-group input, .form-group textarea { width: 100%; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.1); padding: 16px; border-radius: 8px; color: #fff; font-family: inherit; font-size: 15px; transition: 0.3s; outline: none; }
+        .form-group input:focus, .form-group textarea:focus { border-color: var(--accent-cyan); box-shadow: 0 0 15px rgba(0, 242, 254, 0.2); }
+        .btn-submit-contact { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); color: #000; padding: 16px; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.3s var(--interface-curve); width: 100%; }
+        .btn-submit-contact:hover { box-shadow: 0 0 20px rgba(0, 242, 254, 0.4); transform: translateY(-1px); }
+
+        footer { border-top: 1px solid rgba(255, 255, 255, 0.05); padding: 40px 20px; background: #020617; }
+        .footer-container { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
+        .footer-links { display: flex; gap: 25px; }
+        .footer-links a { color: var(--text-muted); text-decoration: none; font-size: 14px; transition: 0.3s; }
+        .footer-links a:hover { color: var(--accent-cyan); }
+
+        /* --- AUTH MATRIX WINDOW OVERLAYS --- */
         #auth-gateway-overlay {
             position: fixed; inset: 0; background: rgba(2, 2, 5, 0.95); backdrop-filter: blur(25px);
             z-index: 9999; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s ease;
@@ -73,13 +172,13 @@
         #auth-gateway-overlay.active { display: flex; opacity: 1; }
         
         .auth-card {
-            background: #040409; border: 1px solid var(--glass-border); border-radius: 24px;
+            background: #040409; border: 1px solid var(--border-glow); border-radius: 24px;
             width: 100%; max-width: 440px; padding: 35px; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
             position: relative; overflow: hidden;
         }
-        .auth-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple)); }
+        .auth-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg, var(--accent-cyan), var(--neon-purple)); }
         
-        .auth-step { display: none; flex-direction: column; gap: 15px; animation: stepFade 0.4s ease-out forwards; }
+        .auth-step { display: none; flex-direction: column; gap: 15px; animation: stepFade 0.4s var(--interface-curve) forwards; }
         .auth-step.active { display: flex; }
         @keyframes stepFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -89,7 +188,7 @@
         .auth-input-group { display: flex; flex-direction: column; gap: 6px; }
         .auth-input-group label { font-size: 0.8rem; font-weight: 600; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
         .auth-field { width: 100%; background: #0b0b14; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 12px 16px; color: #fff; font-size: 0.95rem; outline: none; transition: 0.2s; }
-        .auth-field:focus { border-color: var(--neon-cyan); box-shadow: 0 0 15px rgba(0,243,255,0.15); }
+        .auth-field:focus { border-color: var(--accent-cyan); box-shadow: 0 0 15px rgba(0,243,255,0.15); }
         
         .auth-btn-submit { background: linear-gradient(90deg, #00f2fe, #4facfe); border: none; color: #000; font-weight: 700; padding: 14px; border-radius: 10px; cursor: pointer; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; box-shadow: 0 0 15px rgba(0,242,254,0.2); text-align: center; width: 100%; }
         .auth-btn-submit:hover { transform: scale(1.02); box-shadow: 0 0 25px rgba(0,242,254,0.4); }
@@ -98,267 +197,281 @@
         .auth-google-btn:hover { background: rgba(255,255,255,0.08); border-color: #fff; }
 
         .auth-nav-links { display: flex; justify-content: space-between; font-size: 0.82rem; margin-top: 5px; }
-        .auth-link { color: var(--neon-cyan); text-decoration: none; cursor: pointer; font-weight: 600; transition: 0.2s; }
-        .auth-link:hover { text-shadow: 0 0 10px var(--neon-cyan); color: #fff; }
+        .auth-link { color: var(--accent-cyan); text-decoration: none; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .auth-link:hover { text-shadow: 0 0 10px var(--accent-cyan); color: #fff; }
+        .modal-close { position: absolute; top: 18px; right: 22px; color: var(--text-muted); cursor: pointer; font-size: 1.4rem; z-index: 10; transition: 0.3s;}
+        .modal-close:hover { color: #fff; }
 
-        /* --- 🌌 MASTER WARP-SPEED TRANSITION PORTAL --- */
+        /* --- STREAM VISUAL PORTALS --- */
         #portal-animation-overlay {
             position: fixed; inset: 0; background: #000; z-index: 10000;
             display: none; flex-direction: column; justify-content: center; align-items: center;
         }
         #portal-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
         .portal-telemetry { position: relative; z-index: 10001; text-align: center; pointer-events: none; }
-        .portal-status-text { font-family: 'Orbitron', sans-serif; font-size: 1.3rem; font-weight: 900; color: var(--neon-cyan); letter-spacing: 3px; text-shadow: 0 0 15px var(--neon-cyan); margin-top: 15px; }
+        .portal-status-text { font-family: 'Orbitron', sans-serif; font-size: 1.3rem; font-weight: 900; color: var(--accent-cyan); letter-spacing: 3px; text-shadow: 0 0 15px var(--accent-cyan); margin-top: 15px; }
         .portal-sub-text { font-family: 'Space Grotesk', sans-serif; font-size: 0.9rem; color: var(--text-muted); margin-top: 5px; }
 
-        /* --- 🔮 THEMED PREMIUM EXCLUSIVE DENIED OVERLAY POPUP --- */
-        #premium-alert-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.82); backdrop-filter: blur(20px);
-            z-index: 100005; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease;
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(0, 242, 254, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0); } }
+
+        @media (max-width: 1024px) {
+            .nav-links { display: none; }
+            .hv-mobile-toggle { display: flex; }
+            .hero h1 { font-size: 48px; }
+            .ceo-section { flex-direction: column; text-align: center; padding: 40px; gap: 30px; }
         }
-        .premium-alert-card {
-            background: #06060e; border: 1px solid var(--neon-purple); border-radius: 24px;
-            width: 100%; max-width: 440px; padding: 35px; text-align: center;
-            box-shadow: 0 0 35px rgba(157, 0, 255, 0.25); position: relative;
-        }
-        .premium-alert-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg, var(--neon-purple), #ff0055); }
-
-        /* --- APPLICATION LAYOUT FRAMEWORK --- */
-        #app-wrapper {
-            width: 98vw; height: 96vh; max-width: 1800px; display: flex; gap: 20px; z-index: 10;
-            opacity: 0; transform: rotateX(15deg) translateY(50px);
-            transition: opacity 1.5s ease, transform 1.5s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        #app-wrapper.loaded { opacity: 1; transform: rotateX(0deg) translateY(0); }
-
-        /* SIDEBAR PANEL */
-        .sidebar {
-            width: 310px; background: var(--glass-panel); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-            border: 1px solid var(--glass-border); border-radius: 24px; display: flex; flex-direction: column; padding: 25px 20px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.6); transition: transform 0.1s ease-out, left 0.4s cubic-bezier(0.1, 1, 0.1, 1), background 0.3s;
-            z-index: 500;
-        }
-
-        .brand-header { display: flex; align-items: center; gap: 15px; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .brand-logo { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid var(--neon-cyan); }
-        .brand-name { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 700; background: linear-gradient(90deg, #fff, var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-
-        .new-chat-btn {
-            background: linear-gradient(135deg, rgba(0, 243, 255, 0.1), rgba(157, 0, 255, 0.05)); border: 1px solid var(--neon-cyan); color: #fff;
-            padding: 14px; border-radius: 12px; cursor: pointer; font-size: 1rem; font-weight: 600;
-            display: flex; align-items: center; gap: 12px; transition: 0.3s;
-        }
-        .new-chat-btn:hover { background: rgba(0, 243, 255, 0.2); }
-
-        .history-section { flex: 1; overflow-y: auto; margin-top: 25px; display: flex; flex-direction: column; gap: 8px; }
-        .history-section h4 { color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; }
-        
-        .history-item {
-            padding: 12px; background: rgba(255,255,255,0.01); border-radius: 10px;
-            color: var(--text-muted); font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 12px;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: 0.2s;
-        }
-        .history-item:hover { background: rgba(0, 243, 255, 0.05); color: #fff; }
-
-        .sidebar-footer { border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; display: flex; flex-direction: column; gap: 8px; }
-        .action-item { display: flex; align-items: center; gap: 12px; color: var(--text-main); padding: 10px; cursor: pointer; border-radius: 10px; transition: 0.2s; }
-        .action-item:hover { background: rgba(255, 255, 255, 0.04); color: var(--neon-cyan); }
-
-        /* MAIN CHAT AREA */
-        .main-chat {
-            flex: 1; background: var(--glass-panel); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-            border: 1px solid var(--glass-border); border-radius: 24px; display: flex; flex-direction: column; position: relative; overflow: hidden;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.6); transition: background 0.3s, border-color 0.3s;
-        }
-
-        .top-nav { padding: 15px 30px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); gap: 10px; }
-        
-        .menu-toggle-btn {
-            display: none; background: transparent; border: 1px solid var(--neon-cyan); color: var(--neon-cyan);
-            width: 40px; height: 40px; border-radius: 10px; justify-content: center; align-items: center; cursor: pointer; font-size: 1.2rem;
-            box-shadow: 0 0 10px rgba(0, 243, 255, 0.2); z-index: 600;
-        }
-        
-        .nav-tools { display: flex; gap: 12px; align-items: center; }
-        .tool-icon { width: 40px; height: 40px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: center; align-items: center; color: var(--text-muted); cursor: pointer; background: transparent; transition: 0.2s; }
-        .tool-icon:hover { color: var(--neon-cyan); border-color: var(--neon-cyan); }
-
-        /* AUTH PROFILE BUTTONS */
-        .nav-auth-container { display: flex; gap: 10px; align-items: center; border-left: 1px solid rgba(255,255,255,0.08); padding-left: 12px; }
-        .auth-btn { background: transparent; border: none; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; padding: 8px 14px; border-radius: 8px; transition: 0.2s; }
-        .auth-btn.signup { background: rgba(0, 243, 255, 0.1); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); }
-        .auth-btn:hover { opacity: 0.8; transform: translateY(-1px); }
-        
-        .user-nav-profile { display: none; align-items: center; gap: 12px; cursor: pointer; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); padding: 4px 14px 4px 5px; border-radius: 30px; transition: 0.2s; }
-        .user-nav-profile:hover { border-color: var(--neon-cyan); box-shadow: 0 0 10px rgba(0,243,255,0.15); }
-        .user-nav-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #00f2fe, #9d00ff); border: 1px solid var(--neon-cyan); display: flex; justify-content: center; align-items: center; font-weight: 800; color: #fff; font-family: 'Space Grotesk', sans-serif; font-size: 13px; }
-        .user-nav-meta { display: flex; flex-direction: column; text-align: left; }
-        .user-nav-meta span { font-size: 12px; font-weight: 600; color: #fff; line-height: 1.2; }
-        .user-nav-meta small { font-size: 9px; color: var(--neon-cyan); font-family: 'Orbitron', sans-serif; letter-spacing: 0.5px; }
-
-        /* Chat Layouts */
-        .chat-container { flex: 1; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; gap: 25px; scroll-behavior: smooth; position: relative !important; transition: padding 0.3s ease; }
-        .message { display: flex; gap: 15px; max-width: 85%; animation: bubbleEntry 0.4s ease-out forwards; position: relative !important; z-index: 1 !important; }
-        @keyframes bubbleEntry { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        .message.user { align-self: flex-end; flex-direction: row-reverse; }
-
-        .avatar { width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0; display: flex; justify-content: center; align-items: center; }
-        .ai-avatar {
-            width: 40px; height: 40px; border-radius: 50%;
-            background-image: url('logo.png'); background-size: cover; background-position: center;
-            border: 1px solid #00f2fe; box-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
-        }        
-        .user-avatar { background: rgba(157, 0, 255, 0.15); color: var(--neon-purple); border: 1px solid var(--neon-purple); font-size: 1rem; border-radius: 50%; }
-
-        .msg-bubble { padding: 15px 20px; border-radius: 18px; font-size: 1.05rem; line-height: 1.6; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); color: #e2e8f0; word-break: break-word; }
-        .ai-bubble { border-top-left-radius: 4px; }
-        .user-bubble { background: rgba(0, 243, 255, 0.04); border-color: rgba(0, 243, 255, 0.15); border-top-right-radius: 4px; color: #fff; }
-
-        /* INLINE COMPACT DROPDOWN SELECTOR WITH LOCK DESIGN */
-        .mode-dropdown-container { position: relative; display: inline-block; }
-        .mode-dropdown-trigger {
-            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted);
-            padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 700;
-            display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.2s;
-            font-family: 'Space Grotesk', sans-serif;
-        }
-        .mode-dropdown-trigger:hover { border-color: var(--neon-cyan); color: var(--neon-cyan); }
-        
-        .mode-dropdown-options {
-            position: absolute; bottom: calc(100% + 12px); right: 0; width: 220px;
-            background: #07070f; border: 1px solid rgba(0, 242, 254, 0.2); border-radius: 10px;
-            overflow: hidden; display: none; z-index: 800; box-shadow: 0 -10px 25px rgba(0,0,0,0.8);
-        }
-        .mode-option { padding: 11px 14px; color: #9ca3af; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; text-align: left; display: flex; justify-content: space-between; align-items: center; }
-        .mode-option:hover { background: rgba(0, 243, 255, 0.08); color: #fff; }
-        .mode-option.locked-tier { opacity: 0.45; color: #6b7280; }
-
-        /* Inputs Matrix Dock */
-        .input-dock { padding: 20px; display: flex; flex-direction: column; align-items: center; background: linear-gradient(transparent, rgba(0,0,0,0.6)); }
-        .input-box {
-            width: 100%; max-width: 950px; background: rgba(3, 3, 6, 0.85); border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 20px; display: flex; align-items: center; padding: 5px 15px; gap: 10px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.6); position: relative;
-        }
-        .input-box:focus-within { border-color: var(--neon-cyan); box-shadow: 0 0 25px rgba(0, 243, 255, 0.25); }
-
-        .action-btn { background: transparent; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-        .action-btn:hover { color: var(--neon-cyan); }
-
-        .input-box input[type="text"] { flex: 1; background: transparent; border: none; color: #fff; font-size: 1.05rem; padding: 12px 5px; outline: none; min-width: 0; }
-
-        .send-btn {
-            background: var(--neon-cyan); border: none; color: #000; width: 42px; height: 42px;
-            border-radius: 12px; cursor: pointer; font-size: 1.1rem;
-            display: flex; justify-content: center; align-items: center; box-shadow: 0 0 15px var(--neon-cyan); transition: 0.2s;
-        }
-        .send-btn:hover { transform: scale(1.05); box-shadow: 0 0 22px var(--neon-cyan); }
-
-        /* --- CONTROL PANEL MODALS --- */
-        #mainframe-modal {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px);
-            z-index: 100000; display: none; justify-content: center; align-items: center;
-            opacity: 0; visibility: hidden; transition: opacity 0.3s ease;
-        }
-        #mainframe-modal.active { display: flex; opacity: 1; visibility: visible; }
-        
-        .modal-card {
-            background: #05050c; border: 1px solid var(--neon-cyan); width: 100%; max-width: 620px;
-            padding: 30px; border-radius: 24px; box-shadow: 0 0 40px rgba(0, 243, 255, 0.2);
-            position: relative; text-align: center; display: flex; flex-direction: column; max-height: 85vh;
-        }
-        .modal-close { position: absolute; top: 18px; right: 22px; color: var(--text-muted); cursor: pointer; font-size: 1.4rem; z-index: 10; }
-        .modal-close:hover { color: #fff; }
-
-        .modal-scroll-pane { flex: 1; overflow-y: auto; text-align: left; padding-right: 8px; margin-top: 15px; }
-        .modal-scroll-pane::-webkit-scrollbar { width: 5px; }
-        .modal-scroll-pane::-webkit-scrollbar-thumb { background: rgba(0,243,255,0.2); border-radius: 4px; }
-
-        .settings-group-title { font-family: 'Orbitron', sans-serif; font-size: 0.85rem; font-weight: 700; color: var(--neon-purple); text-transform: uppercase; letter-spacing: 2px; margin: 24px 0 12px 0; border-left: 2px solid var(--neon-purple); padding-left: 8px; }
-        .settings-group-title:first-child { margin-top: 0; }
-        
-        .settings-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); padding: 14px 18px; border-radius: 12px; margin-bottom: 8px; color: #fff; font-size: 0.95rem; }
-        .settings-row-label { display: flex; flex-direction: column; gap: 4px; max-width: 68%; }
-        .settings-row-label span { font-size: 0.95rem; font-weight: 600; color: #e2e8f0; }
-        .settings-row-label small { font-size: 0.78rem; color: var(--text-muted); font-weight: 400; line-height: 1.4; }
-
-        .settings-slider { width: 130px; height: 5px; background: rgba(255,255,255,0.1); border-radius: 5px; outline: none; accent-color: var(--neon-cyan); cursor: pointer; }
-        .settings-checkbox { width: 20px; height: 20px; accent-color: var(--neon-cyan); cursor: pointer; }
-        .settings-select { background: #0b0b16; border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; outline: none; cursor: pointer; }
-        .settings-textarea { width: 100%; background: #0b0b16; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; padding: 10px; font-size: 0.9rem; outline: none; resize: none; min-height: 70px; margin-top: 5px; }
-
-        /* HUD Live Real-Time Canvas Render View */
-        .hud-diagnostic-graph-container { width: 100%; height: 110px; background: rgba(0,0,0,0.4); border: 1px solid rgba(0,243,255,0.1); border-radius: 12px; margin-top: 15px; position: relative; overflow: hidden; }
-        #hud-canvas-vector { width: 100%; height: 100%; display: block; }
-
-        body.theme-void { --bg-deep: #000000; }
-        body.theme-void .main-chat, body.theme-void .sidebar { background: #050508; border-color: rgba(255,255,255,0.03); }
-        
-        body.theme-cyberpunk { --neon-cyan: #ff007f; --neon-purple: #00f3ff; }
-        body.theme-cyberpunk .main-chat, body.theme-cyberpunk .sidebar { border-color: rgba(255, 0, 127, 0.3); box-shadow: 0 0 30px rgba(255, 0, 127, 0.15); }
-
-        /* 📱 MOBILE SIDEBAR OVERRIDES */
-        @media (max-width: 768px) {
-            #app-wrapper { width: 100vw; height: 100vh; gap: 0; padding: 0; }
-            .main-chat { border-radius: 0; border: none; }
-            .sidebar {
-                position: fixed; left: -320px; top: 0; bottom: 0;
-                height: 100vh; width: 290px;
-                border-radius: 0 24px 24px 0; background: rgba(5, 5, 12, 0.96);
-                transition: left 0.4s cubic-bezier(0.1, 1, 0.1, 1);
-                z-index: 500;
-            }
-            .sidebar.active { left: 0; }
-            .menu-toggle-btn { display: flex; }
-            .splash-title { font-size: 2.2rem; letter-spacing: 6px; }
-            .chat-container { padding: 15px; }
-            .msg-bubble { font-size: 0.95rem; padding: 12px 16px; }
-            .top-nav { padding: 10px 15px; }
-            .input-dock { padding: 10px; }
-            .input-box { border-radius: 16px; padding: 5px 10px; }
-            .nav-tools { display: none; }
-            .nav-auth-container { display: none; }
+        @media (max-width: 640px) {
+            .hero h1 { font-size: 36px; }
+            .cta-group { flex-direction: column; gap: 15px; width: 100%; max-width: 320px; margin: 0 auto; }
+            .btn-primary, .btn-secondary { width: 100%; text-align: center; }
         }
     </style>
 </head>
 <body>
 
-    <canvas id="interactive-canvas"></canvas>
-    <div class="ambient-glow glow-cyan" id="glow-l"></div>
-    <div class="ambient-glow glow-purple" id="glow-r"></div>
+    <header>
+        <div class="nav-container">
+            <a href="#home" class="logo">
+                <div class="logo-img-container">
+                    <img src="logo.png" alt="H">
+                </div>
+                Harvion Labs
+            </a>
+            
+            <ul class="nav-links">
+                <li><a href="#home" class="hdr-link">Home</a></li>
+                <li><a href="#features" class="hdr-link">Features</a></li>
+                <li><a href="#ceo" class="hdr-link">Founder Message</a></li>
+                <li><a href="#pricing" class="hdr-link">Pricing</a></li>
+                <li><a href="#download" class="hdr-link">Download</a></li>
+                <li><a href="#contact" class="hdr-link">Contact Us</a></li>
+            </ul>
+            
+            <div class="hv-action-hub">
+                <a href="chat.html" class="btn-use-ai">Use AI <i class="fa-solid fa-arrow-right"></i></a>
+                <button class="hdr-login" id="hdr-login-btn" onclick="openLoginGateway()">Login</button>
+                
+                <div class="hv-avatar-frame" id="hv-user-avatar" onclick="toggleMainframePanel(event)">
+                    <span class="hv-avatar-initial" id="hv-avatar-letter">U</span>
+                </div>
 
-    <div id="genesis-splash">
-        <div class="splash-core">
-            <div class="splash-scanner"></div>
-            <img src="logo.png" alt="Harvion Logo Core" class="splash-logo">
+                <button class="hv-mobile-toggle" onclick="toggleMobileNavigation(true)">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+
+            <div class="hv-mainframe-panel" id="hv-mainframe-menu">
+                <div class="hv-meta-header">
+                    <div class="hv-meta-name" id="hv-mainframe-username">Loading Terminal...</div>
+                    <div class="hv-meta-sub" id="hv-mainframe-email">syncing cloud...</div>
+                </div>
+                <a href="chat.html" class="hv-mainframe-btn"><i class="fa-solid fa-terminal"></i> Access Chat Console</a>
+                <button class="hv-mainframe-btn" onclick="triggerClientSignOut()"><i class="fa-solid fa-power-off"></i> Terminate Session</button>
+                <button class="hv-mainframe-btn danger-action" onclick="executeDestructiveAccountPurge()"><i class="fa-solid fa-trash-can"></i> Delete Account</button>
+            </div>
         </div>
-        <div class="splash-title">HARVION</div>
-        <div class="loading-container"><div class="loading-bar" id="load-progress"></div></div>
-        <div class="counter-text"><span id="load-counter">0</span>% NODE CONNECTED</div>
+    </header>
+
+    <div class="hv-mobile-overlay" id="hv-mobile-menu-layer">
+        <i class="fa-solid fa-xmark modal-close" style="top: 30px; right: 30px;" onclick="toggleMobileNavigation(false)"></i>
+        <a href="#home" onclick="toggleMobileNavigation(false)">Home</a>
+        <a href="#features" onclick="toggleMobileNavigation(false)">Features</a>
+        <a href="#ceo" onclick="toggleMobileNavigation(false)">Founder Message</a>
+        <a href="#pricing" onclick="toggleMobileNavigation(false)">Pricing</a>
+        <a href="#download" onclick="toggleMobileNavigation(false)">Download</a>
+        <a href="#contact" onclick="toggleMobileNavigation(false)">Contact Us</a>
     </div>
+
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <div class="badge">Harvion Genesis Engine v1.5 Live</div>
+            <h1><span class="gradient-text">The World's Most Advanced</span> <br><span class="neon-text">Adaptive AI Ecosystem</span></h1>
+            <p>We have blended the global power of AI with smart, localized problem-solving. Built for global scaling, engineered for practical impact.</p>
+            <div class="cta-group">
+                <button onclick="openLoginGateway()" class="btn-primary" id="hero-main-cta">Launch Engine Free</button>
+                <a href="#features" class="btn-secondary">Explore Neural Systems</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="features">
+        <div class="section-title">
+            <h2>Neural Architecture & Core Systems</h2>
+            <p>Way beyond standard AI—custom-built neural tools designed to give you superpowers.</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fa-solid fa-gears"></i></div>
+                <h3>The "Jugaad" Engine</h3>
+                <p>Forget generic solutions! Harvion's native intelligence finds practical, highly efficient, and out-of-the-box workarounds for your complex codes, business ideas, and daily planning.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fa-solid fa-fire"></i></div>
+                <h3>Roast & Boost System</h3>
+                <p>A unique dynamic analyzer. It first delivers a stand-up comedy style 'Roast' of your resume, code, or scripts, and then instantly 'Boosts' them to premium industry standards.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fa-solid fa-microphone-lines"></i></div>
+                <h3>Hyper-Local Slang Speech</h3>
+                <p>Freedom from robotic voices. Harvion interacts with you like a close friend, offering real-time, clear voice chat with a touch of hyper-local regional dialects and cultural context.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fa-solid fa-share-nodes"></i></div>
+                <h3>One-Click WhatsApp Engine</h3>
+                <p>Zero copy-paste stress. Generate applications, code, or summaries with AI, and forward them directly to WhatsApp in a single click without losing any formatting.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="ceo">
+        <div class="section-title">
+            <h2>From the Founder's Desk</h2>
+            <p>Building the foundation of a Multi-Billion Tech Giant.</p>
+        </div>
+        <div class="ceo-section">
+            <div class="ceo-image-wrapper">
+                <i class="fa-solid fa-user-tie"></i>
+            </div>
+            <div class="ceo-content">
+                <h3>Saurabh Kumar</h3>
+                <div class="ceo-title">Founder & Visionary Architect, Harvion Labs</div>
+                <div class="ceo-quote">
+                    "The vision for Harvion Labs is crystal clear. We aren't just building another chatbot; we are constructing a global ecosystem that connects high-end engineering with everyday utility. Harvion Labs' true valuation lies in its premium features and unwavering user safety. The future is here, and it understands you."
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="pricing">
+        <div class="section-title">
+            <h2>Enterprise Valuation & Plans</h2>
+            <p>Transparent pricing model built for scaling from individuals to multi-million agencies.</p>
+        </div>
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <h3>Harvion Free</h3>
+                <p>For early adopters</p>
+                <div class="price">$0<span>/forever</span></div>
+                <ul class="pricing-features">
+                    <li><i class="fa-solid fa-check"></i> Access to Llama Core Engine</li>
+                    <li><i class="fa-solid fa-check"></i> Standard Jugaad Engine</li>
+                    <li><i class="fa-solid fa-check"></i> Roast & Boost (3 runs/day)</li>
+                    <li><i class="fa-solid fa-check"></i> Standard Community Support</li>
+                </ul>
+                <button onclick="openLoginGateway()" class="btn-pricing">Deploy Free</button>
+            </div>
+            <div class="pricing-card premium">
+                <h3>Harvion Pro</h3>
+                <p>For heavy creators & devs</p>
+                <div class="price">$29<span>/month</span></div>
+                <ul class="pricing-features">
+                    <li><i class="fa-solid fa-check"></i> Access to Quantum Nebula Engine</li>
+                    <li><i class="fa-solid fa-check"></i> Unlimited Roast & Boost runs</li>
+                    <li><i class="fa-solid fa-check"></i> Low-Latency Voice-First Slang AI</li>
+                    <li><i class="fa-solid fa-check"></i> Priority API Pipeline access</li>
+                    <li><i class="fa-solid fa-check"></i> Premium Dedicated Vault</li>
+                </ul>
+                <button onclick="openLoginGateway()" class="btn-pricing">Upgrade Now</button>
+            </div>
+            <div class="pricing-card">
+                <h3>Enterprise Vault</h3>
+                <p>For top-tier scale companies</p>
+                <div class="price">Custom<span>/enterprise</span></div>
+                <ul class="pricing-features">
+                    <li><i class="fa-solid fa-check"></i> Fully Air-Gapped Secure Cloud</li>
+                    <li><i class="fa-solid fa-check"></i> Custom Fine-Tuning Models</li>
+                    <li><i class="fa-solid fa-check"></i> Strict Private Data Privacy SLAs</li>
+                    <li><i class="fa-solid fa-check"></i> 24/7 Dedicated Support Core</li>
+                </ul>
+                <a href="#contact" class="btn-pricing" style="text-align: center;">Contact Executive Desk</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="download">
+        <div class="download-box">
+            <div class="section-title" style="margin-bottom: 30px;">
+                <h2>Download Core Interfaces</h2>
+                <p>Instantly deploy the Harvion Labs ecosystem across all your devices.</p>
+            </div>
+            <div class="download-apps">
+                <a href="#" class="app-btn" onclick="alert('iOS App compilation active under Developer Account.')">
+                    <i class="fa-brands fa-apple"></i>
+                    <div>
+                        <span>Download on the</span>
+                        <strong>Apple App Store</strong>
+                    </div>
+                </a>
+                <a href="#" class="app-btn" onclick="alert('Android Core APK bundle releasing soon.')">
+                    <i class="fa-brands fa-google-play"></i>
+                    <div>
+                        <span>Get it on</span>
+                        <strong>Google Play Store</strong>
+                    </div>
+                </a>
+                <a href="#" class="app-btn" onclick="alert('Chrome Web Extension undergoing security check.')">
+                    <i class="fa-brands fa-chrome"></i>
+                    <div>
+                        <span>Available inside</span>
+                        <strong>Chrome Web Store</strong>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact">
+        <div class="section-title">
+            <h2>Secure Executive Contact Desk</h2>
+            <p>Send a direct, encrypted query for investments, partnership offers, or platform support.</p>
+        </div>
+        <form class="contact-form" id="hv-contact-desk-form">
+            <div class="form-group">
+                <input type="text" id="contact-name" placeholder="Your Name" required autocomplete="off">
+            </div>
+            <div class="form-group">
+                <input type="email" id="contact-email" placeholder="Your Corporate Email" required autocomplete="off">
+            </div>
+            <div class="form-group">
+                <textarea id="contact-message" rows="5" placeholder="State your investment or deployment inquiry..." required></textarea>
+            </div>
+            <button type="submit" class="btn-submit-contact" id="contact-submit-btn">Transmit Encrypted Signal</button>
+        </form>
+    </section>
+
+    <footer>
+        <div class="footer-container">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="logo-img-container" style="width: 30px; height: 30px;">
+                    <img src="logo.png" alt="H">
+                </div>
+                <p>&copy; 2026 Harvion Labs Inc. All Neural Rights Reserved.</p>
+            </div>
+            <div class="footer-links">
+                <a href="terms.html">Terms & Conditions</a>
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="#home">Back to Top</a>
+            </div>
+        </div>
+    </footer>
 
     <div id="portal-animation-overlay">
         <canvas id="portal-canvas"></canvas>
         <div class="portal-telemetry">
-            <i class="fa-solid fa-atom fa-spin" style="font-size: 3.5rem; color: var(--neon-cyan); filter: drop-shadow(0 0 20px var(--neon-cyan));"></i>
+            <i class="fa-solid fa-atom fa-spin" style="font-size: 3.5rem; color: var(--accent-cyan); filter: drop-shadow(0 0 20px var(--accent-cyan));"></i>
             <div class="portal-status-text" id="portal-status-text">INITIALIZING QUANTUM LINK...</div>
-            <div class="portal-sub-text" id="portal-sub-text">Bypassing local data grids. Synchronizing token streams.</div>
-        </div>
-    </div>
-
-    <div id="premium-alert-overlay">
-        <div class="premium-alert-card">
-            <i class="fa-solid fa-triangle-exclamation" style="font-size: 3.2rem; color: var(--neon-purple); margin-bottom: 15px; filter: drop-shadow(0 0 15px var(--neon-purple));"></i>
-            <div class="auth-title" style="letter-spacing: 2px;">ACCESS DENIED</div>
-            <div class="auth-desc" style="margin: 15px 0; font-size: 0.95rem; line-height: 1.5; color: #e2e8f0;">This node tier is exclusive to Premium Users. Please upgrade your authorization matrix to unlock advanced logic models.</div>
-            <button class="auth-btn-submit" onclick="closePremiumAlert()" style="background: linear-gradient(90deg, var(--neon-purple), #ff0055); color: #fff; box-shadow: 0 0 15px rgba(157,0,255,0.4);">Acknowledge Directive</button>
+            <div class="portal-sub-text" id="portal-sub-text">Bypassing local data grids. Routing to Mainframe.</div>
         </div>
     </div>
 
     <div id="auth-gateway-overlay">
         <div class="auth-card">
-            <i class="fa-solid fa-xmark modal-close" onclick="closeAuthGateway()" style="font-size: 1.1rem;"></i>
+            <i class="fa-solid fa-xmark modal-close" onclick="closeAuthGateway()"></i>
             
+            <div style="width: 55px; height: 55px; margin: 0 auto 15px auto; border-radius: 10px; overflow: hidden; border: 1px solid rgba(0, 242, 254, 0.3); box-shadow: 0 0 15px rgba(0, 242, 254, 0.2);">
+                <img src="logo.png" alt="H" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+
             <div class="auth-step" id="auth-login-step">
                 <div class="auth-title">MAINFRAME LOGIN</div>
                 <div class="auth-desc">Enter your verified Gmail ID or Registered Mobile number configuration to authenticate.</div>
@@ -372,9 +485,9 @@
                     <input type="password" class="auth-field" id="login-pass" placeholder="••••••••" autocomplete="off">
                 </div>
                 <div style="display: flex; align-items: flex-start; gap: 10px; margin: 10px 0 10px 0; text-align: left;">
-                    <input type="checkbox" id="hv-login-agree-policy" checked style="margin-top: 3px; cursor: pointer; accent-color: var(--neon-cyan);">
+                    <input type="checkbox" id="hv-login-agree-policy" checked style="margin-top: 3px; cursor: pointer; accent-color: var(--accent-cyan);">
                     <label for="hv-login-agree-policy" style="font-size: 0.8rem; color: var(--text-muted); cursor: pointer; line-height: 1.4;">
-                        I agree to the <a href="terms.html" target="_blank" style="color: var(--neon-cyan); text-decoration: none; font-weight: 600;">Terms & Conditions</a> and <a href="privacy.html" target="_blank" style="color: var(--neon-cyan); text-decoration: none; font-weight: 600;">Privacy Policy</a>.
+                        I agree to the <a href="terms.html" target="_blank" style="color: var(--accent-cyan); text-decoration: none; font-weight: 600;">Terms & Conditions</a> and <a href="privacy.html" target="_blank" style="color: var(--accent-cyan); text-decoration: none; font-weight: 600;">Privacy Policy</a>.
                     </label>
                 </div>
                 
@@ -391,18 +504,15 @@
             <div class="auth-step" id="auth-signup-method">
                 <div class="auth-title">ACCOUNT PROVISION</div>
                 <div class="auth-desc">Select your root system network interface method to bind your unique token id.</div>
-                
                 <div style="display: flex; align-items: flex-start; gap: 10px; margin: 5px 0 15px 0; text-align: left;">
-                    <input type="checkbox" id="hv-agree-policy" style="margin-top: 3px; cursor: pointer; accent-color: var(--neon-cyan);">
+                    <input type="checkbox" id="hv-agree-policy" style="margin-top: 3px; cursor: pointer; accent-color: var(--accent-cyan);">
                     <label for="hv-agree-policy" style="font-size: 0.8rem; color: var(--text-muted); cursor: pointer; line-height: 1.4;">
-                        I agree to the <a href="terms.html" target="_blank" style="color: var(--neon-cyan); text-decoration: none; font-weight: 600;">Terms & Conditions</a> and <a href="privacy.html" target="_blank" style="color: var(--neon-cyan); text-decoration: none; font-weight: 600;">Privacy Policy</a>.
+                        I agree to the <a href="terms.html" target="_blank" style="color: var(--accent-cyan); text-decoration: none; font-weight: 600;">Terms & Conditions</a> and <a href="privacy.html" target="_blank" style="color: var(--accent-cyan); text-decoration: none; font-weight: 600;">Privacy Policy</a>.
                     </label>
                 </div>
-
-                <button class="auth-btn-submit" style="background: rgba(255,255,255,0.03); border:1px solid var(--neon-cyan); color:var(--neon-cyan);" onclick="verifyPolicyGate('auth-email-signup')"><i class="fa-solid fa-envelope"></i> Manual Gmail Registry</button>
+                <button class="auth-btn-submit" style="background: rgba(255,255,255,0.03); border:1px solid var(--accent-cyan); color:var(--accent-cyan);" onclick="verifyPolicyGate('auth-email-signup')"><i class="fa-solid fa-envelope"></i> Manual Gmail Registry</button>
                 <button class="auth-btn-submit" style="background: rgba(255,255,255,0.03); border:1px solid var(--neon-purple); color:var(--neon-purple);" onclick="verifyPolicyGate('auth-phone-signup')"><i class="fa-solid fa-phone"></i> Mobile Phone OTP Router</button>
                 <button class="auth-google-btn" onclick="verifyPolicyGate('GOOGLE')"><i class="fa-brands fa-google"></i> Instant Google Auth Link</button>
-                
                 <div class="auth-nav-links" style="justify-content: center;">
                     <a class="auth-link" onclick="switchAuthStep('auth-login-step')">Back to Terminal Sign-In</a>
                 </div>
@@ -419,7 +529,7 @@
                     <label>Setup Master Passcode</label>
                     <input type="password" class="auth-field" id="signup-email-pass" placeholder="••••••••" autocomplete="off">
                 </div>
-                <button class="auth-btn-submit" onclick="executeFirebaseEmailRegister()">Dispatch System Verification</button>
+                <button class="auth-btn-submit" onclick="proceedToProfileForm('EMAIL')">Proceed to Identity Setup</button>
                 <div class="auth-nav-links" style="justify-content: center;">
                     <a class="auth-link" onclick="switchAuthStep('auth-signup-method')">Change Interface Route</a>
                 </div>
@@ -427,13 +537,13 @@
 
             <div class="auth-step" id="auth-phone-signup">
                 <div class="auth-title">PHONE OTP ROUTER</div>
-                <div class="auth-desc">Input your mobile node index with country prefix (e.g. +91) to capture secure SMS OTP signals.</div>
+                <div class="auth-desc">Input your mobile node index with country prefix (e.g. +91) to capture OTP signals.</div>
                 <div class="auth-input-group">
                     <label>Cellular Endpoint Index No.</label>
                     <input type="text" class="auth-field" id="signup-phone-input" placeholder="+91XXXXXXXXXX" autocomplete="off">
                 </div>
-                <div id="recaptcha-box-container" style="margin-top: 5px;"></div>
-                <button class="auth-btn-submit" onclick="executeFirebasePhoneAuth()">By-pass Secure SMS OTP</button>
+                <div id="recaptcha-invisible-container"></div>
+                <button class="auth-btn-submit" onclick="executeFirebasePhoneAuth()">Dispatch Secure SMS OTP</button>
                 <div class="auth-nav-links" style="justify-content: center;">
                     <a class="auth-link" onclick="switchAuthStep('auth-signup-method')">Change Interface Route</a>
                 </div>
@@ -441,7 +551,7 @@
 
             <div class="auth-step" id="auth-phone-verify">
                 <div class="auth-title">SMS OTP CAPTURED</div>
-                <div class="auth-desc" style="color: var(--neon-cyan);">Enter the 6-digit numeric network tracking code sent to your device.</div>
+                <div class="auth-desc" style="color: var(--accent-cyan);">Enter the 6-digit numeric network tracking code sent to your device.</div>
                 <div class="auth-input-group">
                     <label>6-Digit Verification Token</label>
                     <input type="text" class="auth-field" id="phone-otp-input" placeholder="••••••" maxlength="6" style="text-align: center; letter-spacing: 6px; font-family:'Orbitron';" autocomplete="off">
@@ -451,10 +561,10 @@
 
             <div class="auth-step" id="auth-step-profile-form">
                 <div class="auth-title">IDENTITY METRICS REGISTRY</div>
-                <div class="auth-desc">Finalize configuration arrays to sync metadata records globally into cloud slots.</div>
+                <div class="auth-desc">Finalize your personal metrics to sync configuration vectors globally.</div>
                 <div class="auth-input-group">
                     <label>Full Name Matrix</label>
-                    <input type="text" class="auth-field" id="reg-name" placeholder="Shubham Kumar" autocomplete="off">
+                    <input type="text" class="auth-field" id="reg-name" placeholder="Your Name" autocomplete="off">
                 </div>
                 <div class="auth-input-group">
                     <label>Authorization Rank</label>
@@ -463,17 +573,17 @@
                         <option value="Apex Archon Core">Apex Archon Core (Owner)</option>
                     </select>
                 </div>
-                <button class="auth-btn-submit" onclick="compileCompletedUserProfileData()">Finalize Infrastructure Sync</button>
+                <button class="auth-btn-submit" onclick="executeSupabaseFullRegistration()">Finalize Infrastructure Sync</button>
             </div>
 
             <div class="auth-step" id="auth-forgot-1">
                 <div class="auth-title">GRID RECOVERY MATRIX</div>
-                <div class="auth-desc">Input your target registered Gmail address. System will dispatch an official password reset link.</div>
+                <div class="auth-desc">Input your target registered Gmail address. Cloud proxy will dispatch a recovery link.</div>
                 <div class="auth-input-group">
                     <label>Registered Gmail ID</label>
                     <input type="email" class="auth-field" id="forgot-email-input" placeholder="yourmail@gmail.com" autocomplete="off">
                 </div>
-                <button class="auth-btn-submit" onclick="executeFirebasePasswordResetLink()">Pipeline Recovery Link</button>
+                <button class="auth-btn-submit" onclick="executeRecoveryLinkDispatch()">Pipeline Recovery Link</button>
                 <div class="auth-nav-links" style="justify-content: center;">
                     <a class="auth-link" onclick="switchAuthStep('auth-login-step')">Back to Sign-In</a>
                 </div>
@@ -482,626 +592,163 @@
         </div>
     </div>
 
-    <div id="mainframe-modal">
-        <div class="modal-card">
-            <i class="fa-solid fa-xmark modal-close" onclick="closeMainframeModal()"></i>
-            <h3 style="font-family: 'Orbitron', sans-serif; color: var(--neon-cyan); letter-spacing: 2px;" id="modal-title">MAINFRAME CORES</h3>
-            <div class="modal-scroll-pane" id="modal-body-content"></div>
-        </div>
-    </div>
-
-    <div id="app-wrapper">
-        <aside class="sidebar" id="panel-left">
-            <div class="brand-header">
-                <img src="logo.png" alt="Harvion Mini" class="brand-logo">
-                <div class="brand-name">HARVION</div>
-            </div>
-
-            <button class="new-chat-btn" onclick="clearChat(); closeSidebarMobile();">
-                <i class="fa-solid fa-bolt-lightning"></i> New Thread
-            </button>
-
-            <div class="history-section" id="quantum-history-node">
-                <h4>Quantum History</h4>
-                <div class="history-item" onclick="loadHistorySimulation('physics')"><i class="fa-solid fa-fingerprint"></i> Physics simulation...</div>
-                <div class="history-item" onclick="loadHistorySimulation('neural')"><i class="fa-solid fa-network-wired"></i> Neural bypass script</div>
-            </div>
-
-            <div class="sidebar-footer">
-                <div class="action-item" onclick="openMainframeModal('account')"><i class="fa-regular fa-id-badge"></i> Mainframe Account</div>
-                <div class="action-item" onclick="openMainframeModal('settings')"><i class="fa-solid fa-sliders"></i> Setting and Support</div>
-            </div>
-        </aside>
-
-        <main class="main-chat" id="panel-right">
-            <header class="top-nav">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <button class="menu-toggle-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
-                    <div style="width: 35px; height: 35px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(0, 242, 254, 0.3);">
-                        <img src="logo.png" style="width: 100%; height: 100%; object-fit: cover;">
-                    </div>
-                    <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; color: #fff;" id="platform-title-version">
-                        Harvion Engine v1.5
-                    </span>
-                </div>
-
-                <div class="nav-tools">
-                    <button class="tool-icon" onclick="sharePlatform()"><i class="fa-solid fa-share-nodes"></i></button>
-                    <button class="tool-icon" onclick="downloadChat()"><i class="fa-solid fa-cloud-arrow-down"></i></button>
-                    
-                    <div class="nav-auth-container" id="nav-auth-block">
-                        <button class="auth-btn signup" onclick="openLoginGateway()"><i class="fa-solid fa-right-to-bracket"></i> Login</button>
-                    </div>
-                    
-                    <div class="user-nav-profile" id="user-profile-block" onclick="openMainframeModal('account')">
-                        <div class="user-nav-avatar" id="avatar-initial">U</div>
-                        <div class="user-nav-meta">
-                            <span id="nav-user-title">Tracking Identity</span>
-                            <small id="nav-user-uid">UID-000000</small>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <div class="chat-container" id="chat-box" onclick="closeSidebarMobile()">
-            </div>
-
-            <div class="input-dock">
-                <div class="input-box">
-                    <button class="action-btn" onclick="triggerUpload()"><i class="fa-solid fa-paperclip"></i></button>
-                    <input type="file" id="doc-upload" style="display: none;" onchange="handleFileUpload(event)">
-                    
-                    <input type="text" id="user-input" placeholder="Message Harvion..." onkeypress="handleKeyPress(event)" autocomplete="off">
-                    
-                    <div class="mode-dropdown-container">
-                        <div class="mode-dropdown-trigger" onclick="toggleModeDropdown(event)">
-                            <span id="selected-mode-text" style="color: var(--neon-cyan);">Pulse Stream</span>
-                            <i class="fa-solid fa-chevron-up" style="font-size: 10px;"></i>
-                        </div>
-                        <div class="mode-dropdown-options" id="mode-options-list">
-                            <div class="mode-option" onclick="selectMode('Pulse Stream', false)">
-                                <span>Pulse Stream</span><small style="color:#10b981; font-size:9px;">FREE</small>
-                            </div>
-                            <div class="mode-option" id="quantum-dropdown-slot" onclick="selectMode('Quantum Nebula', false)">
-                                <span>Quantum Nebula</span><small id="quantum-lock-lbl" style="color:var(--neon-cyan); font-size:9px;">10 LEFT</small>
-                            </div>
-                            <div class="mode-option locked-tier" id="supernova-dropdown-slot" onclick="selectMode('Supernova Prime', true)">
-                                <span>Supernova Prime</span><i class="fa-solid fa-lock" style="font-size:9px; color:#6b7280;"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button class="action-btn" onclick="startSpeech()"><i class="fa-solid fa-microphone"></i></button>
-                    <button class="send-btn" onclick="sendMessage()"><i class="fa-solid fa-arrow-up"></i></button>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <div id="hv-custom-alert-overlay" style="position: fixed; inset: 0; background: rgba(2, 2, 5, 0.85); backdrop-filter: blur(15px); z-index: 100005; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease;">
-        <div style="background: #040409; border: 1px solid var(--glass-border); border-radius: 16px; width: 100%; max-width: 380px; padding: 25px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.8); position: relative;">
-            <div style="width: 3px; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple)); margin: 0 auto;"></div>
-            <i class="fa-solid fa-circle-exclamation" style="font-size: 2.5rem; color: var(--neon-cyan); filter: drop-shadow(0 0 10px var(--neon-cyan)); margin-bottom: 15px; display: inline-block;"></i>
-            <p id="hv-alert-text" style="font-size: 0.95rem; color: #fff; line-height: 1.5; margin-bottom: 20px; font-weight: 500;"></p>
-            <button onclick="closeCustomAlert()" style="background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple)); border: none; color: #fff; font-weight: 700; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; width: 100%; transition: 0.2s;">Acknowledge</button>
-        </div>
-    </div>
-
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyCUSuCzsmvcHZy2YJq8G-Xhbs-A9Iy1Tn8",
-            authDomain: "harvion-labs-51ca1.firebaseapp.com",
-            projectId: "harvion-labs-51ca1",
-            storageBucket: "harvion-labs-51ca1.firebasestorage.app",
-            messagingSenderId: "908526936420",
-            appId: "1:908526936420:web:94fd6c29a53375a4175a71"
-        };
-
-        // Initialize Firebase Global Instances
+      //  Is tarah se apni asli keys daal kar save kijiye:
+const firebaseConfig = {
+    apiKey: "AIzaSyCUSuCzsmvcHZy2YJq8G-Xhbs-A9Iy1Tn8",
+    authDomain: "harvion-labs-51ca1.firebaseapp.com",
+    projectId: "harvion-labs-51ca1",
+    storageBucket: "harvion-labs-51ca1.firebasestorage.app",
+    messagingSenderId: "908526936420",
+    appId: "1:908526936420:web:94fd6c29a53375a4175a71"
+};
+        
+        // Initialize Core Node Engine
         firebase.initializeApp(firebaseConfig);
         const authEngine = firebase.auth();
         const firestoreDb = firebase.firestore();
         
         let activeRegistrationMethod = "EMAIL";
-        let currentAuthWorkflowEmail = "";
-        let hudAnimationLoopToken = null; 
+        let phoneConfirmationResultMatrix = null;
 
-        let activeUserSession = { 
-            loggedIn: false, name: '', username: '', email: '', dob: 'Not Registered', uid: '', token: '', ipAddress: '', clearance: '', location: '', credits: '', isPremium: false, isOwner: false, remaining_chats: 0
-        };
-
-        // 🧠 VISION SYSTEM MATRIX STATE SLOTS
-        let currentImageBase64 = null;
-        let currentImageMimeType = null;
-
-        // Central Welcome Initializer to cut the Looping Repetition bug completely
-        function runCentralWelcomeRefresh() {
-            const box = document.getElementById('chat-box');
-            if (!box) return;
-
-            const hasWelcomed = sessionStorage.getItem('harvion_session_welcomed');
-            
-            if (hasWelcomed === "true") {
-                box.innerHTML = `
-                    <div id="welcome-center" style="position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; pointer-events: none !important; z-index: 0 !important; opacity: 0.12 !important; width: 100% !important; margin: 0 !important; padding: 0 !important;">
-                        <img src="logo.png" alt="Harvion Labs" style="width: 120px !important; height: 120px !important; margin-bottom: 15px !important; filter: drop-shadow(0 0 25px #00f2fe) !important; object-fit: cover !important; border-radius: 16px !important;">
-                        <h2 style="font-family: 'Space Grotesk', sans-serif !important; font-size: 32px !important; color: #fff !important; margin: 0 0 5px 0 !important; font-weight: 700 !important; letter-spacing: 1px !important;">Harvion Labs</h2>
-                        <p style="font-family: 'Plus Jakarta Sans', sans-serif !important; color: #9ca3af !important; font-size: 15px !important; margin: 0 !important; letter-spacing: 0.5px !important;">Adaptive AI Ecosystem</p>
-                    </div>`;
-                return;
-            }
-
-            box.innerHTML = `
-                <div id="welcome-center" style="position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; pointer-events: none !important; z-index: 0 !important; opacity: 0.12 !important; width: 100% !important; margin: 0 !important; padding: 0 !important;">
-                    <img src="logo.png" alt="Harvion Labs" style="width: 120px !important; height: 120px !important; margin-bottom: 15px !important; filter: drop-shadow(0 0 25px #00f2fe) !important; object-fit: cover !important; border-radius: 16px !important;">
-                    <h2 style="font-family: 'Space Grotesk', sans-serif !important; font-size: 32px !important; color: #fff !important; margin: 0 0 5px 0 !important; font-weight: 700 !important; letter-spacing: 1px !important;">Harvion Labs</h2>
-                    <p style="font-family: 'Plus Jakarta Sans', sans-serif !important; color: #9ca3af !important; font-size: 15px !important; margin: 0 !important; letter-spacing: 0.5px !important;">Adaptive AI Ecosystem</p>
-                </div>
-                <div class="message" style="position: relative !important; z-index: 1 !important;">
-                    <div class="avatar ai-avatar"></div>
-                    <div class="msg-bubble ai-bubble">Harvion Neural Network Online. Adaptive AI clusters synchronized and running at maximum velocity. Welcome to the core ecosystem. How can I assist your mind and workflow today?</div>
-                </div>`;
-
-            sessionStorage.setItem('harvion_session_welcomed', "true");
-        }
-
-        // 🎵 COCKPIT SOUND SYNTH MATRIX
-        function triggerJarvisSoundMatrix(type) {
-            const savedAudioPref = localStorage.getItem('harvion-audio') !== "false";
-            if (!savedAudioPref) return;
-            try {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                if (!AudioContext) return;
-                const audioCtx = new AudioContext();
-                if (type === 'click') {
-                    let osc = audioCtx.createOscillator(); let gainNode = audioCtx.createGain();
-                    osc.type = 'sine'; osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
-                    gainNode.gain.setValueAtTime(0.06, audioCtx.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.05);
-                    osc.connect(gainNode); gainNode.connect(audioCtx.destination);
-                    osc.start(); osc.stop(audioCtx.currentTime + 0.05);
-                } else if (type === 'chime' || type === 'success') {
-                    [2200, 2800].forEach((freq, index) => {
-                        let osc = audioCtx.createOscillator(); let gainNode = audioCtx.createGain();
-                        osc.type = 'triangle'; osc.frequency.setValueAtTime(freq, audioCtx.currentTime + index * 0.06);
-                        gainNode.gain.setValueAtTime(0.04, audioCtx.currentTime + index * 0.06);
-                        gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + index * 0.06 + 0.2);
-                        osc.connect(gainNode); gainNode.connect(audioCtx.destination);
-                        osc.start(audioCtx.currentTime + index * 0.06); osc.stop(audioCtx.currentTime + index * 0.06 + 0.2);
-                    });
-                }
-            } catch (e) {}
-        }
-
-        function showPremiumAlert() {
-            triggerJarvisSoundMatrix('click');
-            const alertModal = document.getElementById('premium-alert-overlay');
-            if (alertModal) { alertModal.style.display = 'flex'; setTimeout(() => { alertModal.style.opacity = '1'; }, 10); }
-        }
-        function closePremiumAlert() {
-            triggerJarvisSoundMatrix('click');
-            const alertModal = document.getElementById('premium-alert-overlay');
-            if (alertModal) { alertModal.style.opacity = '0'; setTimeout(() => { alertModal.style.display = 'none'; }, 300); }
-        }
-
-        function showCustomAlert(msg) {
-            const overlay = document.getElementById('hv-custom-alert-overlay');
-            document.getElementById('hv-alert-text').innerText = msg;
-            overlay.style.display = 'flex';
-            setTimeout(() => { overlay.style.opacity = '1'; }, 10);
-        }
-        function closeCustomAlert() {
-            const overlay = document.getElementById('hv-custom-alert-overlay');
-            overlay.style.opacity = '0';
-            setTimeout(() => { overlay.style.display = 'none'; }, 300);
-        }
-
-        // 🔄 FIREBASE INTEGRATED SESSIONS AUTOMATIC OBSERVER GRID
+        // 🔄 FIREBASE AUTOMATIC AUTH LIFECYCLE MONITOR
         authEngine.onAuthStateChanged(async (user) => {
+            syncAuthenticationUIState(user);
+        });
+
+        async function syncAuthenticationUIState(user) {
+            const loginBtn = document.getElementById('hdr-login-btn');
+            const avatarFrame = document.getElementById('hv-user-avatar');
+            const avatarLetter = document.getElementById('hv-avatar-letter');
+            const mainCta = document.getElementById('hero-main-cta');
+            const mainframeName = document.getElementById('hv-mainframe-username');
+            const mainframeEmail = document.getElementById('hv-mainframe-email');
+
             if (user) {
-                activeUserSession.loggedIn = true;
-                activeUserSession.email = user.email || "Cellular Node Proxy";
-                activeUserSession.uid = "UID-" + user.uid.substring(0,8).toUpperCase();
-                activeUserSession.token = "TK-" + user.uid.substring(8,15).toUpperCase() + "-SLOT";
-                
+                let displayName = "Beta User Node";
+                let userRole = "Standard Beta User";
+
                 try {
-                    const snap = await firestoreDb.collection("users").doc(user.uid).get();
-                    if(snap.exists) {
-                        const d = snap.data();
-                        activeUserSession.name = d.full_name || "Core Node Developer";
-                        activeUserSession.clearance = d.role || "Standard Beta User";
-                        activeUserSession.remaining_chats = d.remaining_chats !== undefined ? d.remaining_chats : 0;
-                    } else {
-                        activeUserSession.name = localStorage.getItem('harvion_temp_name') || "Core Node Developer";
-                        activeUserSession.clearance = localStorage.getItem('harvion_clearance') || 'Standard Beta User';
-                        activeUserSession.remaining_chats = 0;
+                    const docSnap = await firestoreDb.collection("users").doc(user.uid).get();
+                    if(docSnap.exists) {
+                        const profileData = docSnap.data();
+                        displayName = profileData.full_name || "Beta User Node";
+                        userRole = profileData.role || "Standard Beta User";
                     }
                 } catch(e) {
-                    activeUserSession.name = localStorage.getItem('harvion_temp_name') || "Core Node Developer";
-                    activeUserSession.clearance = localStorage.getItem('harvion_clearance') || 'Standard Beta User';
-                    activeUserSession.remaining_chats = 0;
+                    console.log("Firestore metadata fallback triggered.");
                 }
 
-                activeUserSession.username = activeUserSession.name.toLowerCase().replace(/\s+/g, '_') + '_' + user.uid.substring(0,3);
-                activeUserSession.ipAddress = "Dynamic Cloud Routing Node";
+                if(loginBtn) loginBtn.style.display = 'none';
+                if(avatarFrame) avatarFrame.style.display = 'flex';
                 
-                if(['owner', 'archon', 'apex', 'premium', 'apex archon core'].some(keyword => activeUserSession.clearance.toLowerCase().includes(keyword))) {
-                    activeUserSession.isOwner = true; activeUserSession.isPremium = true;
-                    activeUserSession.clearance = "Apex Archon Core (Owner)";
-                    document.getElementById('platform-title-version').innerHTML = "Harvion Engine <span style='color:var(--neon-purple); font-family:\"Orbitron\"; font-size:11px; letter-spacing:1px;'>[APEX ARCHON]</span>";
-                } else {
-                    activeUserSession.isOwner = false;
-                    activeUserSession.isPremium = localStorage.getItem('harvion_premium_tier') === "true";
-                }
-                activeUserSession.location = "Primary Cloud Node Location";
-                activeUserSession.credits = activeUserSession.isPremium ? "Unlimited Credit Weights" : "5,000.00 QCR Balance";
+                if(mainframeName) mainframeName.innerText = displayName;
+                if(mainframeEmail) mainframeEmail.innerText = user.email || user.phoneNumber || "Cellular Vector Secured";
+                if(avatarLetter) avatarLetter.innerText = displayName.charAt(0).toUpperCase();
                 
-                syncPlatformPremiumUIRefresh();
-                document.getElementById('nav-auth-block').style.display = 'none';
-                const pBlock = document.getElementById('user-profile-block');
-                if (pBlock) pBlock.style.display = 'flex';
-                document.getElementById('avatar-initial').innerText = activeUserSession.name.charAt(0).toUpperCase();
-                document.getElementById('nav-user-title').innerText = activeUserSession.name;
-                document.getElementById('nav-user-uid').innerText = activeUserSession.uid;
-
-                // Fire Subcollection Map Loader for structural File backup streams
-                loadUserFileHistoryFromFirestore(user.uid);
-            } else {
-                activeUserSession.loggedIn = false;
-                activeUserSession.isPremium = false;
-                activeUserSession.isOwner = false;
-                activeUserSession.remaining_chats = 0;
-                document.getElementById('nav-auth-block').style.display = 'flex';
-                document.getElementById('user-profile-block').style.display = 'none';
-                document.getElementById('platform-title-version').innerText = "Harvion Engine v1.5";
-                
-                // 🔥 UI REFRESH IN LOGOUT STATE ATTACHED
-                syncPlatformPremiumUIRefresh();
-            }
-        });
-
-        function syncPlatformPremiumUIRefresh() {
-            const qLbl = document.getElementById('quantum-lock-lbl');
-            const qSlot = document.getElementById('quantum-dropdown-slot');
-            const sSlot = document.getElementById('supernova-dropdown-slot');
-            
-            if (!activeUserSession.loggedIn) {
-                if(qSlot) qSlot.classList.add('locked-tier');
-                if(qLbl) qLbl.innerHTML = "<i class='fa-solid fa-lock' style='color:#6b7280;'></i> LOCKED";
-                if(sSlot) {
-                    sSlot.classList.add('locked-tier');
-                    sSlot.innerHTML = "<span>Supernova Prime</span><i class='fa-solid fa-lock' style='font-size:9px; color:#6b7280;'></i>";
-                }
-                return;
-            }
-
-            if (activeUserSession.isPremium) {
-                if(qLbl) qLbl.innerHTML = "<i class='fa-solid fa-circle-check' style='color:#10b981;'></i> UNLOCKED";
-                if(qSlot) qSlot.classList.remove('locked-tier');
-                if(sSlot) { 
-                    sSlot.classList.remove('locked-tier'); 
-                    sSlot.innerHTML = "<span>Supernova Prime</span><small style='color:var(--neon-purple); font-size:9px;'>PREMIUM</small>"; 
+                if(mainCta) {
+                    mainCta.innerText = "Enter Mainframe Console";
+                    mainCta.onclick = () => { window.location.href = 'chat.html'; };
                 }
             } else {
-                let qLeft = activeUserSession.remaining_chats;
-                if (qLeft <= 0) {
-                    if(qSlot) qSlot.classList.add('locked-tier');
-                    if(qLbl) qLbl.innerHTML = "<i class='fa-solid fa-lock' style='color:#6b7280;'></i> LOCKED";
-                } else {
-                    if(qSlot) qSlot.classList.remove('locked-tier');
-                    if(qLbl) qLbl.innerText = `${qLeft} CHATS`;
-                }
-                if(sSlot) {
-                    sSlot.classList.add('locked-tier');
-                    sSlot.innerHTML = "<span>Supernova Prime</span><i class='fa-solid fa-lock' style='font-size:9px; color:#6b7280;'></i>";
+                if(loginBtn) loginBtn.style.display = 'inline-flex';
+                if(avatarFrame) avatarFrame.style.display = 'none';
+                document.getElementById('hv-mainframe-menu').classList.remove('visible');
+                
+                if(mainCta) {
+                    mainCta.innerText = "Launch Engine Free";
+                    mainCta.onclick = openLoginGateway;
                 }
             }
         }
 
-        // --- PROGRESS SYSTEM LOADER MATRIX ---
-        const isMobile = window.innerWidth <= 768;
-        window.onload = () => {
-            runCentralWelcomeRefresh();
-            
-            // 🔥 INITIAL STATE ACTIVE SYNC REFRESH
-            syncPlatformPremiumUIRefresh();
-
-            const progressBar = document.getElementById('load-progress');
-            const counterText = document.getElementById('load-counter');
-            const splashScreen = document.getElementById('genesis-splash');
-            const mainApplication = document.getElementById('app-wrapper');
-            const savedPlexus = localStorage.getItem('harvion-plexus') !== "false";
-            document.getElementById('interactive-canvas').style.display = savedPlexus ? 'block' : 'none';
-            const savedDensity = localStorage.getItem('harvion-density') || "comfortable";
-            document.getElementById('chat-box').style.padding = savedDensity === "compact" ? "12px 20px" : "30px";
-            applyThemeRoutine(localStorage.getItem('harvion-theme') || "space");
-            let count = 0;
-            const loaderInterval = setInterval(() => {
-                count += Math.floor(Math.random() * 6) + 3;
-                if (count >= 100) {
-                    count = 100; clearInterval(loaderInterval);
-                    setTimeout(() => {
-                        splashScreen.classList.add('exit');
-                        setTimeout(() => { mainApplication.classList.add('loaded'); if(!isMobile) init3DTilt(); }, 600);
-                    }, 300);
-                }
-                if (progressBar) progressBar.style.width = count + '%'; if (counterText) counterText.textContent = count;
-            }, 20);
-
-            window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-box-container', {
+        // Setup Invisible ReCaptcha for Phone Router
+        window.addEventListener('DOMContentLoaded', () => {
+            window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-invisible-container', {
                 'size': 'invisible'
             });
-        };
-
-        // --- HTML5 CANVAS INTERACTIVE BACKGROUND RENDER ---
-        const canvas = document.getElementById('interactive-canvas'); const ctx = canvas.getContext('2d'); let width, height, points = [];
-        function setupCanvas() {
-            width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; points = []; const maxP = isMobile ? 35 : 110;
-            for (let i = 0; i < maxP; i++) { points.push({ x: Math.random() * width, y: Math.random() * height, vx: (Math.random() - 0.5) * 0.7, vy: (Math.random() - 0.5) * 0.7, r: Math.random() * 1.5 + 1 }); }
-        }
-        window.addEventListener('resize', setupCanvas); setupCanvas();
-        function renderPlexus() {
-            ctx.clearRect(0, 0, width, height); const lineDist = isMobile ? 90 : 140;
-            points.forEach((p, idx) => {
-                p.x += p.vx; p.y += p.vy; if (p.x < 0 || p.x > width) p.vx *= -1; if (p.y < 0 || p.y > height) p.vy *= -1;
-                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0, 243, 255, 0.4)'; ctx.fill();
-                for (let j = idx + 1; j < points.length; j++) {
-                    const p2 = points[j]; const d = Math.hypot(p.x - p2.x, p.y - p2.y);
-                    if (d < lineDist) { ctx.beginPath(); ctx.strokeStyle = `rgba(0, 243, 255, ${0.12 - d/(lineDist*10)})`; ctx.lineWidth = 0.6; ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.stroke(); }
-                }
-            });
-            requestAnimationFrame(renderPlexus);
-        }
-        renderPlexus();
-
-        function init3DTilt() {
-            const asideS = document.getElementById('panel-left'); const mainP = document.getElementById('panel-right');
-            document.addEventListener('mousemove', (e) => {
-                let nX = (e.clientX - width / 2) / (width / 2); let nY = (e.clientY - height / 2) / (height / 2);
-                if(asideS) asideS.style.transform = `rotateY(${nX * 8}deg) rotateX(${-nY * 6}deg)`;
-                if(mainP) mainP.style.transform = `rotateY(${nX * 6}deg) rotateX(${-nY * 5}deg)`;
-            });
-        }
-
-        function toggleSidebar() { triggerJarvisSoundMatrix('click'); document.getElementById('panel-left').classList.toggle('active'); }
-        function closeSidebarMobile() { if(isMobile) document.getElementById('panel-left').classList.remove('active'); }
-
-        // --- PRODUCTION EDGE MULTI-MODAL VISION INFERENCE CHAT PIPELINE ---
-        async function sendMessage() {
-            const inputField = document.getElementById('user-input'); const message = inputField.value.trim(); 
-            if (message === '' && !currentImageBase64) return;
-            
-            const activeMode = document.getElementById('selected-mode-text').innerText;
-            if (!activeUserSession.loggedIn && activeMode !== 'Pulse Stream') {
-                showCustomAlert("Unlock the Next-Gen Cores! Sign in now to claim your 10 FREE Quantum Nebula chats, or upgrade to Premium for absolute unlimited access.");
-                return;
-            }
-
-            if (activeUserSession.loggedIn && activeMode === "Quantum Nebula" && !activeUserSession.isPremium) {
-                if (activeUserSession.remaining_chats <= 0) { showPremiumAlert(); return; }
-            }
-            triggerJarvisSoundMatrix('click'); 
-            
-            if (message !== '') {
-                addMessage(message, 'user');
-            } else if (currentImageBase64) {
-                addMessage("<i class='fa-solid fa-file-image'></i> Image Payload Vector Dispatched.", 'user');
-            }
-            
-            inputField.value = ''; closeSidebarMobile();
-            
-            const chatBox = document.getElementById('chat-box'); const messageDiv = document.createElement('div'); messageDiv.className = 'message';
-            const avatarDiv = document.createElement('div'); avatarDiv.className = 'avatar ai-avatar';
-            const bubbleDiv = document.createElement('div'); bubbleDiv.className = 'msg-bubble ai-bubble';
-            bubbleDiv.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Loading Inference Vision Clusters...`;
-            messageDiv.appendChild(avatarDiv); messageDiv.appendChild(bubbleDiv); chatBox.appendChild(messageDiv); scrollToBottom();
-            
-            try {
-                const savedTemp = localStorage.getItem('harvion-temp') || "0.7"; const savedTokens = localStorage.getItem('harvion-tokens') || "2048";
-                const harvionPersonality = `Tumhara naam Harvion hai. Tum Harvion Labs ke model arrays ho. Operational Profile: ${activeMode}. Logic configurations bounds: Temp=${savedTemp}, MaxTokens=${savedTokens}. Speak casual Hinglish. Prompt: `;
-                
-                let requestParts = [];
-                if (message !== '') {
-                    requestParts.push({ text: harvionPersonality + message });
-                } else {
-                    requestParts.push({ text: harvionPersonality + "Analyze this matrix file snapshot blueprint cleanly." });
-                }
-
-                if (currentImageBase64) {
-                    requestParts.push({
-                        inlineData: {
-                            mimeType: currentImageMimeType,
-                            data: currentImageBase64
-                        }
-                    });
-                }
-
-                currentImageBase64 = null;
-                currentImageMimeType = null;
-
-                const response = await fetch(`/api/chat`, {
-                    method: 'POST', 
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'x-harvion-shield-key': 'HarvionQuantumLabsEngineCoreSecret2026'
-                    }, 
-                    body: JSON.stringify({ contents: [{ parts: requestParts }] })
-                });
-
-                if(!response.ok) throw new Error("Server disconnect error");
-
-                const reader = response.body.getReader(); const decoder = new TextDecoder("utf-8"); 
-                let streamLiveTokenAccumulator = ""; bubbleDiv.innerHTML = "";
-                
-                while (true) {
-                    const { value, done } = await reader.read(); if (done) break; 
-                    const chunkText = decoder.decode(value, { stream: true });
-                    const lines = chunkText.split('\n');
-                    
-                    for (const line of lines) {
-                        if (line.trim() === '') continue;
-                        try {
-                            const parsedChunk = JSON.parse(line.trim());
-                            const chunkExtractedContent = parsedChunk.candidates?.[0]?.content?.parts?.[0]?.text;
-                            if (chunkExtractedContent) {
-                                streamLiveTokenAccumulator += chunkExtractedContent;
-                                let reactiveHtml = streamLiveTokenAccumulator
-                                    .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--neon-cyan);">$1</strong>')
-                                    .replace(/\n/g, '<br>');
-                                bubbleDiv.innerHTML = reactiveHtml;
-                                scrollToBottom();
-                            }
-                        } catch(jsonErr) {}
-                    }
-                }
-
-                if (!activeUserSession.loggedIn) {
-                    streamLiveTokenAccumulator += "<br><br><em style='color:var(--text-muted); font-size:13px; display:block;'><i class='fa-solid fa-right-to-bracket'></i> Login for a better experience and unlock advanced features.</em>";
-                    bubbleDiv.innerHTML = streamLiveTokenAccumulator;
-                    scrollToBottom();
-                } else {
-                    if (activeMode === "Quantum Nebula" && !activeUserSession.isPremium) {
-                        let newChatCount = Math.max(0, activeUserSession.remaining_chats - 1);
-                        activeUserSession.remaining_chats = newChatCount;
-                        
-                        await firestoreDb.collection("users").doc(authEngine.currentUser.uid).update({
-                            remaining_chats: newChatCount
-                        });
-                        syncPlatformPremiumUIRefresh();
-                    }
-                }
-                
-                triggerJarvisSoundMatrix('chime');
-            } catch (error) { 
-                bubbleDiv.innerHTML = `<span style="color:var(--neon-purple); font-weight:600;"><i class="fa-solid fa-triangle-exclamation"></i> HARD FAULT: Mainframe pipeline synchronization severed.</span>`; 
-            }
-        }
-
-        function addMessage(text, sender) {
-            const chatBox = document.getElementById('chat-box'); const messageDiv = document.createElement('div'); messageDiv.className = `message ${sender}`;
-            messageDiv.innerHTML = sender === 'user' ? `<div class="msg-bubble user-bubble">${text}</div><div class="avatar user-avatar"><i class="fa-solid fa-user-shield"></i></div>` : `<div class="avatar ai-avatar"></div><div class="msg-bubble ai-bubble">${text}</div>`;
-            chatBox.appendChild(messageDiv); scrollToBottom();
-        }
-        function scrollToBottom() { const box = document.getElementById('chat-box'); if (box) box.scrollTop = box.scrollHeight; }
-        function handleKeyPress(event) { if (event.key === 'Enter') sendMessage(); }
-        function clearChat() { triggerJarvisSoundMatrix('click'); runCentralWelcomeRefresh(); const inp = document.getElementById('user-input'); if(inp) inp.value = ''; }
-
-        // --- AUTH PORTALS AND INTERFACES OVERRIDES ---
-        function openLoginGateway() { triggerJarvisSoundMatrix('click'); document.getElementById('auth-gateway-overlay').classList.add('active'); switchAuthStep('auth-login-step'); }
-        function openSignupGateway() { triggerJarvisSoundMatrix('click'); document.getElementById('auth-gateway-overlay').classList.add('active'); switchAuthStep('auth-signup-method'); }
-        function closeAuthGateway() { document.getElementById('auth-gateway-overlay').classList.remove('active'); }
-        function switchAuthStep(stepId) { document.querySelectorAll('.auth-step').forEach(el => el.classList.remove('active')); document.getElementById(stepId).classList.add('active'); }
-
-        document.addEventListener('click', (e) => {
-            const m = document.getElementById('auth-gateway-overlay');
-            if(e.target === m) closeAuthGateway();
         });
 
-        function verifyPolicyGate(targetRoute) {
-            if (!document.getElementById('hv-agree-policy').checked) {
-                showCustomAlert("Please agree to the Terms and Privacy Policy to create a core node.");
-                return;
-            }
-            if (targetRoute === 'GOOGLE') {
-                executeGoogleOauthLink(); 
-            } else {
-                activeRegistrationMethod = (targetRoute === 'auth-email-signup') ? 'EMAIL' : 'PHONE';
-                switchAuthStep(targetRoute); 
-            }
+        /* Drawer Controllers */
+        function toggleMobileNavigation(open) {
+            const overlay = document.getElementById('hv-mobile-menu-layer');
+            if(overlay) overlay.classList.toggle('active', open);
         }
 
-        function executeFirebaseEmailRegister() {
-            const m = document.getElementById('signup-email-input').value.trim();
-            const p = document.getElementById('signup-email-pass').value;
-            if(!m || p.length < 6) { showCustomAlert("Invalid email format or master passcode structure depth criteria."); return; }
-            currentAuthWorkflowEmail = m;
-            localStorage.setItem('harvion_transit_pass_temp', p);
+        /* Modal Gateway Overlays Control */
+        function openLoginGateway() { 
+            document.getElementById('auth-gateway-overlay').classList.add('active'); 
+            switchAuthStep('auth-login-step'); 
+        }
+        function closeAuthGateway() { 
+            document.getElementById('auth-gateway-overlay').classList.remove('active'); 
+        }
+        function switchAuthStep(stepId) { 
+            document.querySelectorAll('.auth-step').forEach(el => el.classList.remove('active')); 
+            document.getElementById(stepId).classList.add('active'); 
+        }
+        
+        function toggleMainframePanel(e) {
+            e.stopPropagation();
+            document.getElementById('hv-mainframe-menu').classList.toggle('visible');
+        }
+        document.addEventListener('click', () => { 
+            const menu = document.getElementById('hv-mainframe-menu');
+            if(menu) menu.classList.remove('visible'); 
+        });
+
+        function proceedToProfileForm(method) {
+            activeRegistrationMethod = method;
             switchAuthStep('auth-step-profile-form');
         }
 
-        function executeFirebasePhoneAuth() {
-            const pNum = document.getElementById('signup-phone-input').value.trim();
-            if(!pNum) { showCustomAlert("Cellular parameter mapping vacantly registered."); return; }
-            
-            authEngine.signInWithPhoneNumber(pNum, window.recaptchaVerifier)
-                .then((result) => {
-                    window.phoneConfirmationResultMatrix = result;
-                    showCustomAlert("Secure proxy signals dispatched to your device.");
-                    switchAuthStep('auth-phone-verify');
-                }).catch((error) => {
-                    showCustomAlert(error.message);
-                });
-        }
-
-        function executePhoneOtpCodeVerification() {
-            const code = document.getElementById('phone-otp-input').value.trim();
-            if(!code || code.length !== 6) { showCustomAlert("Verification numeric array must be 6 digits."); return; }
-            
-            if(window.phoneConfirmationResultMatrix) {
-                window.phoneConfirmationResultMatrix.confirm(code)
-                    .then(() => {
-                        switchAuthStep('auth-step-profile-form');
-                    }).catch(() => {
-                        showCustomAlert("Invalid cellular tracking token verification match failure.");
-                    });
-            } else {
-                switchAuthStep('auth-step-profile-form');
-            }
-        }
-
-        function compileCompletedUserProfileData() {
-            executeSupabaseFullRegistration();
-        }
-
-        function executeFirebasePasswordResetLink() {
-            const email = document.getElementById('forgot-email-input').value.trim();
-            if(!email) { showCustomAlert("Please enter your registered email address."); return; }
-            
-            authEngine.sendPasswordResetEmail(email)
-                .then(() => {
-                    showCustomAlert("Reset link dispatched safely. Check your inbox.");
-                    switchAuthStep('auth-login-step');
-                }).catch((err) => {
-                    showCustomAlert(err.message);
-                });
-        }
-
+        /* 🔐 MAINFRAME RE-ROUTED LOGIN OPERATION */
         async function executeSupabaseAuthLogin() {
             if (!document.getElementById('hv-login-agree-policy').checked) {
                 showCustomAlert("Please agree to the Terms and Privacy Policy to sign in.");
                 return;
             }
+
             const identity = document.getElementById('login-identity').value.trim();
             const pass = document.getElementById('login-pass').value;
-            if (!identity || !pass) {
-                showCustomAlert("Please enter both your identity parameter and password.");
+
+            if(!identity || !pass) {
+                showCustomAlert("Security fields cannot be left void.");
                 return;
             }
-            authEngine.signInWithEmailAndPassword(identity, pass)
-                .then(() => {
-                    closeAuthGateway(); 
-                    triggerCinematicWarpPortal();
-                }).catch((error) => {
-                    showCustomAlert(error.message);
-                });
+
+            // Universal Identity Router (Detect Email vs Phone number)
+            if (identity.includes('@')) {
+                authEngine.signInWithEmailAndPassword(identity, pass)
+                    .then(() => {
+                        closeAuthGateway(); 
+                        triggerCinematicWarpPortal();
+                    }).catch((error) => {
+                        showCustomAlert(error.message);
+                    });
+            } else {
+                showCustomAlert("For cellular nodes, please log in via standard OTP provision link.");
+            }
         }
 
+        /* 🔐 GOOGLE POPUP AUTH LINK ENGINE */
         async function executeGoogleOauthLink() {
             if (!document.getElementById('hv-login-agree-policy').checked) {
-                showCustomAlert("You must accept the terms and conditions to continue.");
+                showCustomAlert("You must accept the terms to continue.");
                 return;
             }
+
             const provider = new firebase.auth.GoogleAuthProvider();
             authEngine.signInWithPopup(provider)
                 .then(async (result) => {
-                    const u = result.user;
-                    const docSnap = await firestoreDb.collection("users").doc(u.uid).get();
+                    // Inject basic data node into database if first-time oauth login
+                    const userNode = result.user;
+                    const docSnap = await firestoreDb.collection("users").doc(userNode.uid).get();
                     if (!docSnap.exists) {
-                        await firestoreDb.collection("users").doc(u.uid).set({
-                            full_name: u.displayName || "Google User Node",
+                        await firestoreDb.collection("users").doc(userNode.uid).set({
+                            full_name: userNode.displayName || "Google Cloud User",
                             role: "Standard Beta User",
-                            registered_at: new Date().toISOString(),
-                            remaining_chats: 10
+                            registered_at: new Date().toISOString()
                         });
                     }
                     closeAuthGateway(); 
@@ -1111,39 +758,69 @@
                 });
         }
 
+        /* 📱 CELLULAR INTEGRATED SMS INTERFACE */
+        function executeFirebasePhoneAuth() {
+            const pNum = document.getElementById('signup-phone-input').value.trim();
+            if(!pNum) { showCustomAlert("Cellular prefix vector vacant."); return; }
+
+            authEngine.signInWithPhoneNumber(pNum, window.recaptchaVerifier)
+                .then((result) => {
+                    window.phoneConfirmationResultMatrix = result;
+                    showCustomAlert("Secure cloud tokens dispatched successfully.");
+                    switchAuthStep('auth-phone-verify');
+                }).catch((err) => {
+                    showCustomAlert(err.message);
+                });
+        }
+
+        function executePhoneOtpCodeVerification() {
+            const token = document.getElementById('phone-otp-input').value.trim();
+            if(!token || token.length !== 6) { showCustomAlert("Verification array must be a 6-digit integer."); return; }
+
+            if(window.phoneConfirmationResultMatrix) {
+                window.phoneConfirmationResultMatrix.confirm(token)
+                    .then(() => {
+                        proceedToProfileForm('PHONE');
+                    }).catch(() => {
+                        showCustomAlert("Invalid cell encryption tracking token error.");
+                    });
+            } else {
+                showCustomAlert("Pipeline fault: Token response verification session terminated.");
+            }
+        }
+
+        /* 👤 REALTIME INFRASTRUCTURE CLOUD REGISTRATION */
         async function executeSupabaseFullRegistration() {
             const name = document.getElementById('reg-name').value.trim();
             const rank = document.getElementById('reg-clearance-rank').value;
-            if(!name) { showCustomAlert("Please fill in your name details parameters vector."); return; }
+            
+            if(!name) { showCustomAlert("Please fill in your name details vector."); return; }
 
-            localStorage.setItem('harvion_temp_name', name);
-            localStorage.setItem('harvion_clearance', rank);
-            if(rank.includes('Archon') || rank.includes('Apex')) { localStorage.setItem('harvion_premium_tier', "true"); }
-
-            let emailTarget = currentAuthWorkflowEmail;
-            let passTarget = localStorage.getItem('harvion_transit_pass_temp') || "MasterFallbackNodePass123!";
-
-            if (!emailTarget && authEngine.currentUser) {
-                const u = authEngine.currentUser;
-                await firestoreDb.collection("users").doc(u.uid).set({
+            // Route 1: Cellular node post profile database write update
+            if(activeRegistrationMethod === 'PHONE' && authEngine.currentUser) {
+                const activeUserNode = authEngine.currentUser;
+                await firestoreDb.collection("users").doc(activeUserNode.uid).set({
                     full_name: name,
                     role: rank,
-                    registered_at: new Date().toISOString(),
-                    remaining_chats: 10
+                    phone_linked: activeUserNode.phoneNumber,
+                    registered_at: new Date().toISOString()
                 });
-                showCustomAlert("Infrastructure synchronization complete.");
+                showCustomAlert("Infrastructure node synced cleanly.");
                 closeAuthGateway();
                 triggerCinematicWarpPortal();
                 return;
             }
+
+            // Route 2: Standard Manual Email Registry node setup
+            let emailTarget = document.getElementById('signup-email-input').value.trim();
+            let passTarget = document.getElementById('signup-email-pass').value;
 
             authEngine.createUserWithEmailAndPassword(emailTarget, passTarget)
                 .then(async (userCredential) => {
                     await firestoreDb.collection("users").doc(userCredential.user.uid).set({
                         full_name: name,
                         role: rank,
-                        registered_at: new Date().toISOString(),
-                        remaining_chats: 10
+                        registered_at: new Date().toISOString()
                     });
                     showCustomAlert("Infrastructure synchronization complete. Active node live.");
                     closeAuthGateway();
@@ -1153,79 +830,84 @@
                 });
         }
 
-        // --- 📁 PRODUCTION CLOUD FILE HISTORY SECURE STORAGE GRID TRACKING & VISION INTERFACES ---
-        async function handleFileUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const activeUser = authEngine.currentUser;
-
-            if (file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    currentImageBase64 = event.target.result.split(',')[1];
-                    currentImageMimeType = file.type;
-                    showCustomAlert(`Image "${file.name}" synchronized into system memory. Type your vision instructions signal and press Transmit!`);
-                };
-                reader.readAsDataURL(file);
-            }
-
-            if (!activeUser) {
-                if (!file.type.startsWith('image/')) {
-                    showCustomAlert(`Local Sandbox Active: ${file.name}. Sign in to save into encrypted cloud storage metadata slots.`);
-                }
-                return;
-            }
-
-            try {
-                await firestoreDb.collection("users").doc(activeUser.uid).collection("file_history").add({
-                    fileName: file.name,
-                    fileSize: file.size,
-                    uploadedAt: new Date().toISOString()
-                });
-
-                if (!file.type.startsWith('image/')) {
-                    showCustomAlert(`Encrypted backup transmission successful: ${file.name}`);
-                }
-                loadUserFileHistoryFromFirestore(activeUser.uid); 
-            } catch (err) {
-                showCustomAlert("Transmission Blocked: Target database denied structural tracking document inputs.");
-            }
-        }
-
-        function loadUserFileHistoryFromFirestore(uid) {
-            const historyBox = document.getElementById('quantum-history-node');
-            if (!historyBox) return;
-
-            firestoreDb.collection("users").doc(uid).collection("file_history")
-                .orderBy("uploadedAt", "desc").limit(10).get()
-                .then((querySnapshot) => {
-                    historyBox.innerHTML = `
-                        <h4>Quantum History</h4>
-                        <div class="history-item" onclick="loadHistorySimulation('physics')"><i class="fa-solid fa-fingerprint"></i> Physics simulation...</div>
-                        <div class="history-item" onclick="loadHistorySimulation('neural')"><i class="fa-solid fa-network-wired"></i> Neural bypass script</div>
-                    `;
-                    
-                    querySnapshot.forEach((doc) => {
-                        const fileMetadataNode = doc.data();
-                        const historyItemElementRow = document.createElement('div');
-                        historyItemElementRow.className = 'history-item';
-                        historyItemElementRow.innerHTML = `<i class="fa-solid fa-file-shield" style="color:var(--neon-cyan); font-family: 'Outfit';"></i> ${fileMetadataNode.fileName}`;
-                        historyItemElementRow.onclick = () => showCustomAlert(`Accessing node storage slot download stream -> ${fileMetadataNode.fileName}`);
-                        historyBox.appendChild(historyItemElementRow);
-                    });
-                }).catch((e) => {
-                    console.log("History network pipeline sync fault bypassed.");
+        /* 🔑 PASSCODE OVERRIDE SERVICE DISPATCHER */
+        async function executeRecoveryLinkDispatch() {
+            const email = document.getElementById('forgot-email-input').value.trim();
+            if(!email) { showCustomAlert("Provide a valid target mailbox."); return; }
+            
+            authEngine.sendPasswordResetEmail(email)
+                .then(() => {
+                    showCustomAlert("Passcode override link dispatched safely. Trace your inbox.");
+                    switchAuthStep('auth-login-step');
+                }).catch((err) => {
+                    showCustomAlert(err.message);
                 });
         }
 
-        // --- STAR CINEMATIC WARP TIME TUNNEL GRID ---
+        /* 🌐 MAINFRAME DECOMMISSION ROUTINES */
+        async function triggerClientSignOut() {
+            await authEngine.signOut();
+            window.location.reload();
+        }
+
+        async function executeDestructiveAccountPurge() {
+            if (confirm("Are you sure you want to permanently delete your account? This cannot be undone.")) {
+                const targetNodeUser = authEngine.currentUser;
+                if(targetNodeUser) {
+                    try {
+                        // Secure transactional cleanup: Firestore data node wiped first
+                        await firestoreDb.collection("users").doc(targetNodeUser.uid).delete();
+                        // Root account context erased
+                        await targetNodeUser.delete();
+                        showCustomAlert("Account core matrix decoupled and terminated safely.");
+                        window.location.reload();
+                    } catch(err) {
+                        showCustomAlert("Security restriction: Re-authenticate before executing termination node.");
+                    }
+                }
+            }
+        }
+
+        /* 📝 FIRESTORE INTEGRATED ENCRYPTED CONTACT DESK ROUTER */
+        const contactForm = document.getElementById('hv-contact-desk-form');
+        if (contactForm) {
+            contactForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const submitBtn = document.getElementById('contact-submit-btn');
+                const payloadName = document.getElementById('contact-name').value.trim();
+                const payloadEmail = document.getElementById('contact-email').value.trim();
+                const payloadMsg = document.getElementById('contact-message').value.trim();
+
+                submitBtn.innerText = "Transmitting Stream...";
+                submitBtn.disabled = true;
+
+                firestoreDb.collection('contact_queries').add({
+                    name: payloadName,
+                    email: payloadEmail,
+                    message: payloadMsg,
+                    timestamp: new Date().toISOString()
+                }).then(() => {
+                    showCustomAlert("Encrypted signal dispatched securely to Executive Desk!");
+                    contactForm.reset();
+                    submitBtn.innerText = "Transmit Encrypted Signal";
+                    submitBtn.disabled = false;
+                }).catch((error) => {
+                    showCustomAlert("Fault detected in pipeline network: " + error.message);
+                    submitBtn.innerText = "Transmit Encrypted Signal";
+                    submitBtn.disabled = false;
+                });
+            });
+        }
+
+        /* --- CINEMATIC MATRIX WARP PORTAL GRAPHICS CORE ENGINE --- */
         function triggerCinematicWarpPortal() {
-            triggerJarvisSoundMatrix('success'); const overlay = document.getElementById('portal-animation-overlay'); const pCanvas = document.getElementById('portal-canvas'); const pCtx = pCanvas.getContext('2d');
-            overlay.style.display = 'flex'; pCanvas.width = window.innerWidth; pCanvas.height = window.innerHeight; let stars = [];
+            const overlay = document.getElementById('portal-animation-overlay'); const pCanvas = document.getElementById('portal-canvas'); const pCtx = pCanvas.getContext('2d');
+            overlay.style.display = 'flex'; pCanvas.width = window.innerWidth; pCanvas.height = window.innerHeight;
+            let stars = [];
             for(let i=0; i<450; i++) { stars.push({ x: Math.random()*pCanvas.width - pCanvas.width/2, y: Math.random()*pCanvas.height - pCanvas.height/2, z: Math.random()*pCanvas.width, color: Math.random()>0.5 ? 'rgba(0, 243, 255, ' : 'rgba(157, 0, 255, ' }); }
             function draw() {
-                pCtx.fillStyle = 'rgba(2, 2, 6, 0.25)'; pCtx.fillRect(0,0,pCanvas.width,pCanvas.height); let cx = pCanvas.width/2; let cy = pCanvas.height/2;
+                pCtx.fillStyle = 'rgba(2, 2, 6, 0.25)'; pCtx.fillRect(0,0,pCanvas.width,pCanvas.height);
+                let cx = pCanvas.width/2; let cy = pCanvas.height/2;
                 stars.forEach(s => {
                     s.z -= 14; if(s.z <= 0) { s.z = pCanvas.width; s.x = Math.random()*pCanvas.width - cx; s.y = Math.random()*pCanvas.height - cy; }
                     let k = 128.0 / s.z; let px = s.x * k + cx; let py = s.y * k + cy;
@@ -1237,127 +919,46 @@
                 if(overlay.style.display === 'flex') requestAnimationFrame(draw);
             }
             draw();
-            setTimeout(() => { overlay.style.transition = "opacity 0.6s ease"; overlay.style.opacity = 0; setTimeout(() => { overlay.style.display='none'; overlay.style.opacity=1; }, 600); }, 3100);
+            setTimeout(() => { 
+                overlay.style.transition = "opacity 0.6s ease"; overlay.style.opacity = 0; 
+                setTimeout(() => { window.location.href = "chat.html"; }, 600); 
+            }, 3100);
         }
 
-        function toggleModeDropdown(event) { event.stopPropagation(); const el = document.getElementById('mode-options-list'); el.style.display = el.style.display === 'block' ? 'none' : 'block'; }
-        function selectMode(name, isLockedByDefault) {
-            triggerJarvisSoundMatrix('click');
-            
-            if (!activeUserSession.loggedIn && name !== 'Pulse Stream') {
-                showCustomAlert("Unlock the Next-Gen Cores! Sign in now to claim your 10 FREE Quantum Nebula chats, or upgrade to Premium for absolute unlimited access.");
+        function verifyPolicyGate(targetRoute) {
+            const isChecked = document.getElementById('hv-agree-policy').checked;
+            if (!isChecked) {
+                showCustomAlert("Please agree to the Terms and Privacy Policy to continue.");
                 return;
             }
-            
-            if (activeUserSession.loggedIn) {
-                if (name === "Supernova Prime" && !activeUserSession.isPremium) {
-                    showPremiumAlert();
-                    return;
-                }
-                if (name === "Quantum Nebula" && !activeUserSession.isPremium) {
-                    if (activeUserSession.remaining_chats <= 0) {
-                        showPremiumAlert();
-                        return;
-                    }
-                }
-            }
-            
-            document.getElementById('selected-mode-text').innerText = name; 
-            document.getElementById('mode-options-list').style.display = 'none';
-        }
-        document.addEventListener('click', () => { if(document.getElementById('mode-options-list')) document.getElementById('mode-options-list').style.display = 'none'; });
-
-        // --- HUD Real-Time Analytics Graph Generator ---
-        function initializeLiveCoreDiagnosticHudGraph() {
-            const hCanvas = document.getElementById('hud-canvas-vector'); if(!hCanvas) return; const hCtx = hCanvas.getContext('2d');
-            hCanvas.width = hCanvas.parentElement.clientWidth; hCanvas.height = hCanvas.parentElement.clientHeight;
-            let pointsArr = Array(40).fill(hCanvas.height / 2);
-            function animateHUD() {
-                if(!document.getElementById('mainframe-modal').classList.contains('active')) { cancelAnimationFrame(hudAnimationLoopToken); return; }
-                hCtx.clearRect(0,0,hCanvas.width,hCanvas.height); hCtx.strokeStyle = 'rgba(0, 243, 255, 0.04)'; hCtx.lineWidth = 1;
-                for(let i=0; i<hCanvas.width; i+=20) { hCtx.beginPath(); hCtx.moveTo(i,0); hCtx.lineTo(i,hCanvas.height); hCtx.stroke(); }
-                for(let j=0; j<hCanvas.height; j+=20) { hCtx.beginPath(); hCtx.moveTo(0,j); hCtx.lineTo(hCanvas.width,j); hCtx.stroke(); }
-                pointsArr.shift(); let variance = Math.random() * 35 - 17.5; if(activeUserSession.isOwner) variance = Math.random() * 8 - 4;
-                pointsArr.push((hCanvas.height / 2) + variance + Math.sin(Date.now() / 200) * 15);
-                hCtx.beginPath(); hCtx.strokeStyle = activeUserSession.isOwner ? 'rgba(157, 0, 255, 0.85)' : 'rgba(0, 243, 255, 0.85)';
-                hCtx.lineWidth = 2; hCtx.shadowBlur = 10; hCtx.shadowColor = activeUserSession.isOwner ? '#9d00ff' : '#00f3ff';
-                let sliceW = hCanvas.width / (pointsArr.length - 1);
-                for(let k=0; k<pointsArr.length; k++) { let xp = k * sliceW; let yp = pointsArr[k]; if(k === 0) hCtx.moveTo(xp, yp); else hCtx.lineTo(xp, yp); }
-                hCtx.stroke(); hCtx.shadowBlur = 0; hudAnimationLoopToken = requestAnimationFrame(animateHUD);
-            }
-            animateHUD();
-        }
-
-        function openMainframeModal(section) {
-            triggerJarvisSoundMatrix('click'); const modal = document.getElementById('mainframe-modal'); const title = document.getElementById('modal-title'); const content = document.getElementById('modal-body-content');
-            if (modal) modal.classList.add('active');
-            if (section === 'account') {
-                title.innerText = "MAINFRAME SECURITY METRICS CENTRAL";
-                if (!activeUserSession.loggedIn) {
-                    content.innerHTML = `<div style='text-align:center; padding: 25px 0;'><i class='fa-solid fa-lock' style='font-size: 3rem; color: var(--neon-purple); margin-bottom:15px;'></i><p style='margin-bottom:20px; color:#9ca3af;'>Node cluster detached. Mainframe validation keys required.</p><button class='auth-btn-submit' onclick='openLoginGateway(); closeMainframeModal();'>Initialize Database Gateway</button></div>`;
-                } else {
-                    content.innerHTML = `
-                        <div style='display:flex; align-items:center; gap:20px; margin-bottom:20px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); padding:14px; border-radius:16px;'>
-                            <div style='width:55px; height:55px; border-radius:50%; background:linear-gradient(135deg,#00f3ff,#9d00ff); display:flex; justify-content:center; align-items:center; font-size:1.4rem; font-weight:900; color:#fff;'>${activeUserSession.name.charAt(0).toUpperCase()}</div>
-                            <div><h4 style='color:#fff; font-family:"Space Grotesk"; font-size:1.2rem; margin-bottom:1px;'>${activeUserSession.name}</h4><p style='color:var(--neon-cyan); font-size:0.85rem; font-family:monospace;'>@${activeUserSession.username}</p></div>
-                        </div>
-                        <div class="settings-group-title">Hardware Identity Matrix Logs</div>
-                        <div class="settings-row"><span>Global Tracking User ID</span><span style="color:var(--neon-cyan); font-family:monospace; font-weight:700;">${activeUserSession.uid}</span></div>
-                        <div class="settings-row"><span>Secure Session Auth Token</span><span style="color:#fff; font-family:monospace; font-size:11px; background:rgba(255,255,255,0.05); padding:4px 8px; border-radius:6px;">${activeUserSession.token}</span></div>
-                        <div class="settings-row"><span>Network Gateway Link Address</span><span style="color:var(--text-muted); font-family:monospace;">${activeUserSession.ipAddress}</span></div>
-                        <div class="settings-group-title">Clearance Credentials & Core Allocation</div>
-                        <div class="settings-row"><span>Security Privilege Clear Rank</span><span style="color:var(--neon-purple); font-weight:700;">${activeUserSession.clearance}</span></div>
-                        <div class="settings-row"><span>Active Deployment Server Array</span><span>${activeUserSession.location}</span></div>
-                        <div class="settings-row"><span>Quantum Allocation Credits</span><span style="color:#10b981; font-family:'Orbitron'; font-weight:700;">${activeUserSession.credits}</span></div>
-                        <div class="settings-row"><span>Data Encryption Compliance</span><span style="color:#10b981; font-weight:700;"><i class="fa-solid fa-circle-check"></i> FIREBASE CLOUD SECURED</span></div>
-                        <div class="settings-row"><span>Mainframe Linked Mail Box</span><span style="color:var(--text-muted); font-size:13px;">${activeUserSession.email}</span></div>
-                        <div class="settings-group-title">Live Core Quantum Telemetry HUD Matrix</div>
-                        <div class="hud-diagnostic-graph-container"><canvas id="hud-canvas-vector"></canvas></div>
-                        <button onclick="localStorage.clear(); authEngine.signOut(); window.location.reload();" style="width:100%; margin-top:20px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 12px; border-radius: 12px; font-weight:700; cursor:pointer; font-size:12px;">TERMINATE MAINFRAME SESSION (SIGN OUT)</button>
-                    `;
-                    setTimeout(initializeLiveCoreDiagnosticHudGraph, 100);
-                }
-            } else if (section === 'settings') {
-                title.innerText = "SETTING AND SUPPORT ARCHITECTURE";
-                const sTemp = localStorage.getItem('harvion-temp') || "0.7"; const sTokens = localStorage.getItem('harvion-tokens') || "2048";
-                const sPlexus = localStorage.getItem('harvion-plexus') !== "false"; const sDensity = localStorage.getItem('harvion-density') || "comfortable";
-                const sMic = localStorage.getItem('harvion-mic') || "80"; const sAudio = localStorage.getItem('harvion-audio') !== "false"; const sTheme = localStorage.getItem('harvion-theme') || "space";
-                content.innerHTML = `
-                    <div class="settings-group-title">Account Node & Tiers (Testing Controls)</div>
-                    <div class="settings-row"><span>Toggle Simulated Premium Token</span><select class="settings-select" onchange="localStorage.setItem('harvion_premium_tier', this.value); window.location.reload();"><option value="false" ${localStorage.getItem('harvion_premium_tier')!=='true'?'selected':''}>Free Freemium Tier</option><option value="true" ${localStorage.getItem('harvion_premium_tier')==='true'?'selected':''}>Force Active Premium</option></select></div>
-                    <div class="settings-group-title">Theme Workspace Overrides</div>
-                    <div class="settings-row"><span>Workspace Matrix Accent</span><select class="settings-select" onchange="updateLiveSettings('theme', this.value)"><option value="space" ${sTheme==='space'?'selected':''}>Deep Space Blue</option><option value="void" ${sTheme==='void'?'selected':''}>Void Eclipse Black</option><option value="cyberpunk" ${sTheme==='cyberpunk'?'selected':''}>Cyberpunk Neon Glow</option></select></div>
-                    <div class="settings-row"><span>Interface Structural Density</span><select class="settings-select" onchange="updateLiveSettings('density', this.value)"><option value="comfortable" ${sDensity==='comfortable'?'selected':''}>Comfortable Grid</option><option value="compact" ${sDensity==='compact'?'selected':''}>Compact Matrix</option></select></div>
-                    <div class="settings-group-title">Core AI Logic Weights</div>
-                    <div class="settings-row"><span>Model Sampling Temperature</span><div style="display:flex; align-items:center; gap:10px;"><span id="temp-lbl" style="color:var(--neon-cyan); font-weight:700;">${sTemp}</span><input type="range" min="0.1" max="1.5" step="0.1" value="${sTemp}" class="settings-slider" oninput="updateLiveSettings('temp', this.value)"></div></div>
-                    <div class="settings-row"><span>Max Execution Token Bounds</span><div style="display:flex; align-items:center; gap:10px;"><span id="tokens-lbl" style="color:var(--neon-cyan); font-weight:700;">${sTokens}</span><input type="range" min="256" max="8192" step="128" value="${sTokens}" class="settings-slider" oninput="updateLiveSettings('tokens', this.value)"></div></div>
-                    <div class="settings-group-title">Hardware Audio & Particle Systems</div>
-                    <div class="settings-row"><span>WebGL Background Particles Plexus</span><input type="checkbox" ${sPlexus ? 'checked' : ''} class="settings-checkbox" onchange="updateLiveSettings('plexus', this.checked)"></div>
-                    <div class="settings-row"><span>Fluid Jarvis Audio Matrix Feedback</span><input type="checkbox" ${sAudio ? 'checked' : ''} class="settings-checkbox" onchange="localStorage.setItem('harvion-audio', this.checked)"></div>
-                    <div class="settings-row"><span>Speech Microphone Db Threshold</span><div style="display:flex; align-items:center; gap:10px;"><span id="mic-lbl" style="color:var(--neon-cyan); font-weight:700;">${sMic}%</span><input type="range" min="10" max="100" value="${sMic}" class="settings-slider" oninput="updateLiveSettings('mic', this.value)"></div></div>
-                    <div class="settings-group-title">Support Telemetry Pipeline Desk</div>
-                    <div class="settings-row" style="flex-direction:column; align-items:flex-start; gap:10px;"><span>Transmit Engine Bug Logs</span><textarea class="settings-textarea" id="feedback-text-area" placeholder="Type data log arrays stream here..."></textarea><button onclick="showCustomAlert('Telemetry Sync Packets complete.'); document.getElementById('feedback-text-area').value='';" style="background:var(--neon-cyan); border:none; padding:8px 16px; border-radius:8px; color:#000; font-weight:700; align-self:flex-end;">Transmit Payload</button></div>
-                    <button onclick="localStorage.clear(); showCustomAlert('Mainframe flushed.'); window.location.reload();" style="width:100%; margin-top:15px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 12px; border-radius: 12px; font-weight:700; cursor:pointer; font-size:12px;"><i class="fa-solid fa-dumpster-fire"></i> PURGE ALL MAINFRAME MEMORY CACHES</button>
-                `;
+            if (targetRoute === 'GOOGLE') {
+                executeGoogleOauthLink(); 
+            } else {
+                switchAuthStep(targetRoute); 
             }
         }
 
-        function applyThemeRoutine(t) { document.body.classList.remove('theme-void', 'theme-cyberpunk'); if(t==='void') document.body.classList.add('theme-void'); else if(t==='cyberpunk') document.body.classList.add('theme-cyberpunk'); }
-        function updateLiveSettings(k, v) { if(k==='theme'){ localStorage.setItem('harvion-theme', v); applyThemeRoutine(v); } else if(k==='density'){ localStorage.setItem('harvion-density', v); document.getElementById('chat-box').style.padding = v==="compact"?"12px 20px":"30px"; } else if(k==='temp'){ document.getElementById('temp-lbl').innerText = v; localStorage.setItem('harvion-temp', v); } else if(k==='tokens'){ document.getElementById('tokens-lbl').innerText = v; localStorage.setItem('harvion-tokens', v); } else if(k==='plexus'){ localStorage.setItem('harvion-plexus', v); document.getElementById('interactive-canvas').style.display = v?'block':'none'; } else if(k==='mic'){ document.getElementById('mic-lbl').innerText = v+"%"; localStorage.setItem('harvion-mic', v); } }
-        
-        function sharePlatform() { 
-            if(navigator.share) { 
-                navigator.share({ title: 'Harvion AI', url: window.location.href }); 
-            } else { 
-                navigator.clipboard.writeText(window.location.href); 
-                showCustomAlert("Mainframe link parameters cloned to system stack."); 
-            } 
+        function showCustomAlert(msg) {
+            const overlay = document.getElementById('hv-custom-alert-overlay');
+            document.getElementById('hv-alert-text').innerText = msg;
+            overlay.style.display = 'flex';
+            setTimeout(() => { overlay.style.opacity = '1'; }, 10);
         }
-        
-        function downloadChat() { const txt = Array.from(document.querySelectorAll('.msg-bubble')).map(el => el.innerText).join('\n\n'); if(!txt) return; const blob = new Blob([txt], {type:"text/plain"}); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "harvion_chat_dump.txt"; a.click(); }
-        function triggerUpload() { document.getElementById('doc-upload').click(); }
-        function startSpeech() { const Speech = window.SpeechRecognition || window.webkitSpeechRecognition; if(!Speech) return; const rec = new Speech(); rec.lang = 'hi-IN'; rec.start(); rec.onresult = (e) => { document.getElementById('user-input').value = e.results[0][0].transcript; }; }
-        function loadHistorySimulation(t) { clearChat(); setTimeout(() => { addMessage("Diagnostic network test simulation.", 'user'); addMessage("Core stabilized inference response mapped successfully under runtime variables tracking parameters layer framework.", 'ai'); }, 120); }
+
+        function closeCustomAlert() {
+            const overlay = document.getElementById('hv-custom-alert-overlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => { overlay.style.display = 'none'; }, 300);
+        }
     </script>
+
+    <div id="hv-custom-alert-overlay" style="position: fixed; inset: 0; background: rgba(2, 2, 5, 0.85); backdrop-filter: blur(15px); z-index: 10005; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease;">
+        <div style="background: #040409; border: 1px solid var(--border-glow); border-radius: 16px; width: 100%; max-width: 380px; padding: 25px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.8); position: relative;">
+            <div style="width: 3px; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); margin: 0 auto;"></div>
+            <i class="fa-solid fa-circle-exclamation" style="font-size: 2.5rem; color: var(--accent-cyan); filter: drop-shadow(0 0 10px var(--accent-cyan)); margin-bottom: 15px; display: inline-block;"></i>
+            <p id="hv-alert-text" style="font-size: 0.95rem; color: #fff; line-height: 1.5; margin-bottom: 20px; font-weight: 500;"></p>
+            <button onclick="closeCustomAlert()" style="background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); border: none; color: #000; font-weight: 700; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; width: 100%; transition: 0.2s;">Acknowledge</button>
+        </div>
+    </div>
 </body>
 </html>

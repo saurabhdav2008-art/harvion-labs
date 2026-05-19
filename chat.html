@@ -456,13 +456,7 @@
                     <label>Full Name Matrix</label>
                     <input type="text" class="auth-field" id="reg-name" placeholder="Shubham Kumar" autocomplete="off">
                 </div>
-                <div class="auth-input-group">
-                    <label>Authorization Rank</label>
-                    <select class="auth-field" id="reg-clearance-rank" style="color-scheme: dark;">
-                        <option value="Standard Beta User">Standard Beta User Node</option>
-                        <option value="Apex Archon Core">Apex Archon Core (Owner)</option>
-                    </select>
-                </div>
+                
                 <button class="auth-btn-submit" onclick="compileCompletedUserProfileData()">Finalize Infrastructure Sync</button>
             </div>
 
@@ -1066,26 +1060,36 @@
                 });
         }
 
-        async function executeSupabaseAuthLogin() {
-            if (!document.getElementById('hv-login-agree-policy').checked) {
-                showCustomAlert("Please agree to the Terms and Privacy Policy to sign in.");
-                return;
-            }
-            const identity = document.getElementById('login-identity').value.trim();
-            const pass = document.getElementById('login-pass').value;
-            if (!identity || !pass) {
-                showCustomAlert("Please enter both your identity parameter and password.");
-                return;
-            }
-            authEngine.signInWithEmailAndPassword(identity, pass)
-                .then(() => {
-                    closeAuthGateway(); 
-                    triggerCinematicWarpPortal();
-                }).catch((error) => {
-                    showCustomAlert(error.message);
-                });
-        }
+       async function executeSupabaseAuthLogin() {
+    if (!document.getElementById('hv-login-agree-policy').checked) {
+        showCustomAlert("Please agree to the Terms and Privacy Policy to sign in.");
+        return;
+    }
+    const identity = document.getElementById('login-identity').value.trim();
+    const pass = document.getElementById('login-pass').value;
 
+    if (!identity || !pass) {
+        showCustomAlert("Please enter both your identity parameter and password.");
+        return;
+    }
+    authEngine.signInWithEmailAndPassword(identity, pass)
+        .then(async (userCredential) => {
+            const user = userCredential.user;
+
+            // 🕵️ Check karein ki user verified hai ya nahi
+            if (!user.emailVerified) {
+                showCustomAlert("Access Denied: Aapka Gmail ID verified nahi hai. Pehle inbox mein jaakar link par click karein.");
+                await authEngine.signOut(); // Wapas nikaal do
+                return;
+            }
+
+            // Agar verified hai toh portal khulega
+            closeAuthGateway(); 
+            triggerCinematicWarpPortal();
+        }).catch((error) => {
+            showCustomAlert(error.message);
+        });
+}
         async function executeGoogleOauthLink() {
             if (!document.getElementById('hv-login-agree-policy').checked) {
                 showCustomAlert("You must accept the terms and conditions to continue.");
@@ -1112,47 +1116,53 @@
         }
 
         async function executeSupabaseFullRegistration() {
-            const name = document.getElementById('reg-name').value.trim();
-            const rank = document.getElementById('reg-clearance-rank').value;
-            if(!name) { showCustomAlert("Please fill in your name details parameters vector."); return; }
+    const name = document.getElementById('reg-name').value.trim();
+    
+    if(!name) { 
+        showCustomAlert("Please fill in your name details vector."); 
+        return; 
+    }
 
-            localStorage.setItem('harvion_temp_name', name);
-            localStorage.setItem('harvion_clearance', rank);
-            if(rank.includes('Archon') || rank.includes('Apex')) { localStorage.setItem('harvion_premium_tier', "true"); }
+    if(activeRegistrationMethod === 'PHONE' && authEngine.currentUser) {
+        const activeUserNode = authEngine.currentUser;
+        await firestoreDb.collection("users").doc(activeUserNode.uid).set({
+            full_name: name,
+            role: "Standard Beta User", // Secure lock
+            phone_linked: activeUserNode.phoneNumber,
+            registered_at: new Date().toISOString()
+        });
+        showCustomAlert("Infrastructure node synced cleanly.");
+        closeAuthGateway();
+        triggerCinematicWarpPortal();
+        return;
+    }
 
-            let emailTarget = currentAuthWorkflowEmail;
-            let passTarget = localStorage.getItem('harvion_transit_pass_temp') || "MasterFallbackNodePass123!";
+    let emailTarget = document.getElementById('signup-email-input').value.trim();
+    let passTarget = document.getElementById('signup-email-pass').value;
 
-            if (!emailTarget && authEngine.currentUser) {
-                const u = authEngine.currentUser;
-                await firestoreDb.collection("users").doc(u.uid).set({
-                    full_name: name,
-                    role: rank,
-                    registered_at: new Date().toISOString(),
-                    remaining_chats: 10
-                });
-                showCustomAlert("Infrastructure synchronization complete.");
-                closeAuthGateway();
-                triggerCinematicWarpPortal();
-                return;
-            }
+    authEngine.createUserWithEmailAndPassword(emailTarget, passTarget)
+        .then(async (userCredential) => {
+            const user = userCredential.user;
 
-            authEngine.createUserWithEmailAndPassword(emailTarget, passTarget)
-                .then(async (userCredential) => {
-                    await firestoreDb.collection("users").doc(userCredential.user.uid).set({
-                        full_name: name,
-                        role: rank,
-                        registered_at: new Date().toISOString(),
-                        remaining_chats: 10
-                    });
-                    showCustomAlert("Infrastructure synchronization complete. Active node live.");
-                    closeAuthGateway();
-                    triggerCinematicWarpPortal();
-                }).catch((error) => {
-                    showCustomAlert(error.message);
-                });
-        }
+            // ✉️ Verification link bhejein
+            await user.sendEmailVerification();
 
+            // 📁 Secure role save karein
+            await firestoreDb.collection("users").doc(user.uid).set({
+                full_name: name,
+                role: "Standard Beta User",
+                registered_at: new Date().toISOString()
+            });
+
+            // 🔒 Login block karne ke liye sign out
+            await authEngine.signOut();
+
+            showCustomAlert("Verification link sent! Kripya apna Gmail check karein aur verify karne ke baad hi dobara login karein.");
+            switchAuthStep('auth-login-step');
+        }).catch((error) => {
+            showCustomAlert(error.message);
+        });
+}
         // --- 📁 PRODUCTION CLOUD FILE HISTORY SECURE STORAGE GRID TRACKING & VISION INTERFACES ---
         async function handleFileUpload(e) {
             const file = e.target.files[0];

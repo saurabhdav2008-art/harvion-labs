@@ -651,8 +651,7 @@
         </div>
     </div>
 
-    <script>
-        const firebaseConfig = {
+    <script>const firebaseConfig = {
             apiKey: "AIzaSyCUSuCzsmvcHZy2YJq8G-Xhbs-A9Iy1Tn8",
             authDomain: "harvion-labs-51ca1.firebaseapp.com",
             projectId: "harvion-labs-51ca1",
@@ -664,6 +663,11 @@
         firebase.initializeApp(firebaseConfig);
         const authEngine = firebase.auth();
         const firestoreDb = firebase.firestore();
+        
+        // ✅ CORE DECLARATIONS: Inke bina script crash ho rahi thi
+        let globalConversationTree = [];
+        let activeFileUploaded = false;
+        let extractedFileTextContent = "";
         
         let activeRegistrationMethod = "EMAIL";
         let currentAuthWorkflowEmail = "";
@@ -756,12 +760,11 @@
             setTimeout(() => { overlay.style.display = 'none'; }, 300);
         }
 
-       authEngine.onAuthStateChanged(async (user) => {
+        authEngine.onAuthStateChanged(async (user) => {
             const authBlock = document.getElementById('nav-auth-block');
             const profileBlock = document.getElementById('user-profile-block');
             
             if (user) {
-                // 🛡️ SECURITY GATE: Agar email-password user verified nahi hai, toh dashboard block karo
                 if (user.providerData.some(p => p.providerId === 'password') && !user.emailVerified) {
                     activeUserSession.loggedIn = false;
                     if(authBlock) authBlock.style.display = 'flex';
@@ -769,7 +772,7 @@
                     document.getElementById('platform-title-version').innerText = "Harvion Engine v1.5";
                     
                     syncPlatformPremiumUIRefresh();
-                    return; // Yahi se baahar phenk do
+                    return; 
                 }
 
                 activeUserSession.loggedIn = true;
@@ -931,7 +934,9 @@
 
         function toggleSidebar() { triggerJarvisSoundMatrix('click'); document.getElementById('panel-left').classList.toggle('active'); }
         function closeSidebarMobile() { if(isMobile) document.getElementById('panel-left').classList.remove('active'); }
-async function sendMessage() {
+
+        // ✅ RE-ENGINEERED SEND MESSAGE ENGINE - FLAWLESS SCALABILITY
+        async function sendMessage() {
             const inputField = document.getElementById('user-input'); const message = inputField.value.trim(); 
             if (message === '' && !currentImageBase64) return;
             
@@ -984,13 +989,11 @@ async function sendMessage() {
                 currentImageBase64 = null;
                 currentImageMimeType = null;
 
-                // 🔄 Re-aligning conversation tree data to capture context array completely
                 globalConversationTree.push({
                     role: 'user',
                     parts: requestParts
                 });
 
-                // 🛠️ FIX 1: Generating standard schema variables mapping
                 const networkRequestPayload = {
                     contents: globalConversationTree,
                     userId: authEngine.currentUser ? authEngine.currentUser.uid : null,
@@ -998,7 +1001,6 @@ async function sendMessage() {
                     max_tokens: parseInt(savedTokens)
                 };
 
-                // 🛠️ FIX 2: Inject text extraction fields if document upload layer active
                 if (activeFileUploaded && extractedFileTextContent) {
                     networkRequestPayload.fileDataToken = "active_matrix_upload";
                     networkRequestPayload.fileTextContent = extractedFileTextContent;
@@ -1006,7 +1008,6 @@ async function sendMessage() {
 
                 console.log("SENDING PAYLOAD TO BACKEND:", JSON.stringify(networkRequestPayload, null, 2));
 
-                // 🛠️ FIX 3: Passing the true validated payload through body parameter stream
                 const response = await fetch(`/api/chat`, {
                     method: 'POST', 
                     headers: { 
@@ -1076,36 +1077,12 @@ async function sendMessage() {
                 activeFileUploaded = false;
                 extractedFileTextContent = "";
                 document.getElementById('doc-upload').value = "";
-
                 triggerJarvisSoundMatrix('chime');
+
             } catch (error) { 
                 bubbleDiv.innerHTML = `<span style="color:var(--neon-purple); font-weight:600;"><i class="fa-solid fa-triangle-exclamation"></i> HARD FAULT: Mainframe pipeline synchronization severed.</span>`; 
             }
         }
-                
-
-                if (!activeUserSession.loggedIn) {
-                    streamLiveTokenAccumulator += "<br><br><em style='color:var(--text-muted); font-size:13px; display:block;'><i class='fa-solid fa-right-to-bracket'></i> Login for a better experience and unlock advanced features.</em>";
-                    bubbleDiv.innerHTML = streamLiveTokenAccumulator;
-                    scrollToBottom();
-                } else {
-                    if (activeMode === "Quantum Nebula" && !activeUserSession.isPremium) {
-                        let newChatCount = Math.max(0, activeUserSession.remaining_chats - 1);
-                        activeUserSession.remaining_chats = newChatCount;
-                        
-                        await firestoreDb.collection("users").doc(authEngine.currentUser.uid).update({
-                            remaining_chats: newChatCount
-                        });
-                        syncPlatformPremiumUIRefresh();
-                    }
-                }
-                
-                triggerJarvisSoundMatrix('chime');
-            } catch (error) { 
-                bubbleDiv.innerHTML = `<span style="color:var(--neon-purple); font-weight:600;"><i class="fa-solid fa-triangle-exclamation"></i> HARD FAULT: Mainframe pipeline synchronization severed.</span>`; 
-            }
-        }
-
         function addMessage(text, sender) {
             const chatBox = document.getElementById('chat-box'); const messageDiv = document.createElement('div'); messageDiv.className = `message ${sender}`;
             messageDiv.innerHTML = sender === 'user' ? `<div class="msg-bubble user-bubble">${text}</div><div class="avatar user-avatar"><i class="fa-solid fa-user-shield"></i></div>` : `<div class="avatar ai-avatar"></div><div class="msg-bubble ai-bubble">${text}</div>`;

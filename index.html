@@ -246,6 +246,15 @@
             .footer-container { flex-direction: column !important; gap: 15px !important; }
             .back-to-top { bottom: 20px !important; right: 20px !important; width: 40px !important; height: 40px !important; }
         }
+#login-portal-modal .modal-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
+}
     </style>
 </head>
 <body>
@@ -390,7 +399,7 @@
         <h2 class="section-title">Connect Telemetry Support</h2>
         <p class="section-desc">Dispatch a dynamic packet array direct to our core engineers queue for assistance queries tracking slots.</p>
         <div class="contact-container">
-            <form onsubmit="event.preventDefault(); alert('Telemetry Sync Packets complete.');">
+            <form onsubmit="event.preventDefault(); showCustomAlert('Telemetry Sync Packets complete.');">
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Identity Name Vector</label>
@@ -416,70 +425,149 @@
                 &copy; 2026 Harvion Labs. All Rights Reserved. Mapped via Security Central Console.
             </div>
             <div class="footer-links">
-                <a href="#">Privacy Policy</a>
-                <a href="#">Terms of Service</a>
-                <a href="#home">Back to Top</a>
-            </div>
+    <a href="privacy.html" target="_blank">Privacy Policy</a>
+    <a href="terms.html" target="_blank">Terms of Service</a>
+    <a href="#home">Back to Top</a>
+</div>
         </div>
     </footer>
-
-    <div id="login-portal-modal">
-        <div class="modal-card" style="max-width: 450px; padding: 35px; background: #05050c; border: 1px solid var(--neon-cyan);">
-            <i class="fa-solid fa-xmark modal-close" onclick="closeLoginPortalGateway()"></i>
+<div id="login-portal-modal">
+    <div class="modal-card" style="max-width: 440px; padding: 25px 30px; background: #040409; border: 1px solid rgba(0, 243, 255, 0.15); display: flex !important; flex-direction: column !important; gap: 5px; position: relative; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.9); overflow: hidden !important; max-height: 92vh !important; height: auto !important;">
+        <i class="fa-solid fa-xmark modal-close" onclick="closeLoginPortalGateway()"></i>
+        
+        <div class="auth-step active" id="auth-login-step" style="flex-direction: column; gap: 10px; width: 100%;">
+            <h2 style="font-family: 'Orbitron', sans-serif; font-size: 1.65rem; font-weight: 800; color: #fff; letter-spacing: 1px; text-transform: uppercase; margin-top: 5px; margin-bottom: 0;">MAINFRAME LOGIN</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); text-align: center; line-height: 1.4; margin-bottom: 5px; padding: 0 5px;">Enter your verified Gmail ID or Registered Mobile number configuration to authenticate.</p>
             
-            <div class="auth-step active" id="auth-login-step">
-                <h2 style="font-family: 'Orbitron', sans-serif; font-size: 1.8rem; font-weight: 800; color: #fff; letter-spacing: 1px; margin-bottom: 12px; text-transform: uppercase;">MAINFRAME LOGIN</h2>
-                <p style="font-size: 0.88rem; color: var(--text-muted); text-align: center; margin-bottom: 25px; line-height: 1.4;">Enter your verified Gmail ID or Registered Mobile number configuration to authenticate.</p>
-                
-                <div class="form-group" style="margin-bottom: 18px; text-align: left;">
-                    <label style="font-size: 0.75rem; font-weight: 700; color: #fff; text-transform: uppercase; margin-bottom: 6px; display: block;">GMAIL OR PHONE IDENTITY VECTOR</label>
-                    <input type="text" class="form-field" id="login-identity" placeholder="name@gmail.com or +91XXXXXXXXXX" autocomplete="off" style="background: #0d0d14;">
-                </div>
-                
-                <div class="form-group" style="margin-bottom: 18px; text-align: left;">
-                    <label style="font-size: 0.75rem; font-weight: 700; color: #fff; text-transform: uppercase; margin-bottom: 6px; display: block;">SECURITY KEYPHRASE (PASSWORD)</label>
-                    <input type="password" class="form-field" id="login-pass" placeholder="••••••••" autocomplete="off" style="background: #0d0d14;">
-                </div>
-                
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 22px; text-align: left;">
-                    <input type="checkbox" id="hv-login-agree-policy" checked style="accent-color: var(--neon-cyan); width: 15px; height: 15px; cursor: pointer;">
-                    <label for="hv-login-agree-policy" style="font-size: 0.82rem; color: var(--text-muted); cursor: pointer; line-height: 1.4;">
-                        I agree to the <a href="#" style="color: var(--neon-cyan); text-decoration: none; font-weight: 600;">Terms & Conditions</a> and <a href="#" style="color: var(--neon-cyan); text-decoration: none; font-weight: 600;">Privacy Policy</a>.
-                    </label>
-                </div>
-                
-                <button onclick="executeSupabaseAuthLogin()" class="btn-core primary" style="width: 100%; border: none; padding: 13px; font-weight: 800; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px;">AUTHORIZE TERMINAL</button>
-                <div style="margin: 16px 0; color: var(--text-muted); font-size: 0.8rem; font-family: 'Orbitron'; letter-spacing: 1px;">OR</div>
-                <button class="btn-core secondary" onclick="executeGoogleOauthLink()" style="width:100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; border-radius: 12px; font-size: 0.9rem; background: #0c0c14;"><img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google" style="width: 16px; height: 16px;"> Continue with Google</button>
-                
-                <div class="auth-nav-links">
-                    <a class="auth-link" onclick="switchAuthStep('auth-forgot-1')">Forgot Passcode?</a>
-                    <a class="auth-link" onclick="switchAuthStep('auth-forgot-1')">Create Core Node</a>
-                </div>
+            <div class="form-group" style="text-align: left; display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 0.72rem; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 0.5px;">GMAIL OR PHONE IDENTITY VECTOR</label>
+                <input type="text" class="form-field" id="login-identity" placeholder="name@gmail.com or +91XXXXXXXXXX" autocomplete="off" style="background: #0d0d14; padding: 10px 14px; font-size: 0.9rem;">
             </div>
-
-            <div class="auth-step" id="auth-forgot-1">
-                <h2 style="font-family: 'Orbitron', sans-serif; font-size: 1.6rem; font-weight: 800; color: #fff; margin-bottom: 12px;">GRID RECOVERY MATRIX</h2>
-                <p style="font-size: 0.88rem; color: var(--text-muted); text-align: center; margin-bottom: 25px; line-height: 1.4;">Input your target registered Gmail address. System will dispatch an official password reset link.</p>
-                <div class="form-group" style="margin-bottom: 18px; text-align: left;">
-                    <label style="font-size: 0.75rem; font-weight: 700; color: #fff; display: block; margin-bottom: 6px;">REGISTERED GMAIL ID</label>
-                    <input type="email" class="form-field" id="forgot-email-input" placeholder="yourmail@gmail.com" autocomplete="off" style="background: #0d0d14;">
-                </div>
-                <button class="btn-core primary" onclick="executeFirebasePasswordResetLink()" style="width: 100%; border: none; padding: 13px; font-weight: 800;">PIPELINE RECOVERY LINK</button>
-                <div class="auth-nav-links" style="justify-content: center;">
-                    <a class="auth-link" onclick="switchAuthStep('auth-login-step')">Back to Terminal Sign-In</a>
-                </div>
+            
+            <div class="form-group" style="text-align: left; display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 0.72rem; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 0.5px;">SECURITY KEYPHRASE (PASSWORD)</label>
+                <input type="password" class="form-field" id="login-pass" placeholder="••••••••" autocomplete="off" style="background: #0d0d14; padding: 10px 14px; font-size: 0.9rem;">
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 10px; text-align: left; margin: 2px 0;">
+                <input type="checkbox" id="hv-login-agree-policy" checked style="accent-color: var(--neon-cyan); width: 14px; height: 14px; cursor: pointer;">
+                <label for="hv-login-agree-policy" style="font-size: 0.8rem; color: var(--text-muted); cursor: pointer; line-height: 1.3;">
+                    I agree to the <a href="terms.html" target="_blank" style="color: var(--neon-cyan); text-decoration: none; font-weight: 600;">Terms & Conditions</a> and <a href="privacy.html" target="_blank" style="color: var(--neon-cyan); text-decoration: none; font-weight: 600;">Privacy Policy</a>.
+                </label>
+            </div>
+            
+            <button onclick="executeSupabaseAuthLogin()" class="btn-core primary" style="width: 100%; border: none; padding: 12px; font-weight: 800; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; border-radius: 12px;">AUTHORIZE TERMINAL</button>
+            
+            <div style="margin: 4px 0; color: var(--text-muted); font-size: 0.78rem; font-family: 'Orbitron'; letter-spacing: 1px; text-align: center;">OR</div>
+            
+            <button class="btn-core secondary" onclick="executeGoogleOauthLink()" style="width:100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 11px; border-radius: 12px; font-size: 0.88rem; background: #0c0c14; border: 1px solid rgba(255,255,255,0.15); color: #fff; cursor: pointer;">
+                <i class="fa-brands fa-google" style="color: #ea4335; font-size: 0.95rem;"></i> Continue with Google
+            </button>
+            
+            <div class="auth-nav-links" style="display: flex; justify-content: space-between; width: 100%; font-size: 0.82rem; margin-top: 5px; padding: 0 2px;">
+                <a class="auth-link" onclick="switchAuthStep('auth-forgot-1')">Forgot Passcode?</a>
+                <a class="auth-link" onclick="switchAuthStep('auth-signup-method')">Create Core Node</a>
             </div>
         </div>
+
+       <div class="auth-step" id="auth-signup-method" style="flex-direction: column; gap: 10px; width: 100%;">
+    <h2 style="font-family: 'Orbitron', sans-serif; font-size: 1.6rem; font-weight: 800; color: #fff; margin-bottom: 5px; text-transform: uppercase; text-align: center;">ACCOUNT PROVISION</h2>
+    <p style="font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-bottom: 5px; line-height: 1.4; padding: 0 5px;">Select your root system network interface method to bind your unique token id.</p>
+    
+    <div style="display: flex; align-items: flex-start; gap: 10px; margin: 5px 0 10px 0; text-align: left;">
+        <input type="checkbox" id="hv-agree-policy" style="margin-top: 3px; cursor: pointer; accent-color: var(--neon-cyan); width: 14px; height: 14px;">
+        <label for="hv-agree-policy" style="font-size: 0.8rem; color: var(--text-muted); cursor: pointer; line-height: 1.4;">
+            I agree to the <a href="terms.html" target="_blank" style="color: var(--neon-cyan); text-decoration: none; font-weight: 600;">Terms & Conditions</a> and <a href="privacy.html" target="_blank" style="color: var(--neon-cyan); text-decoration: none; font-weight: 600;">Privacy Policy</a>.
+        </label>
     </div>
 
-    <div id="mainframe-modal">
-        <div class="modal-card">
+    <button class="btn-core secondary" style="width:100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15); color:#fff; background: #0c0c14; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; font-size: 0.9rem;" onclick="verifyPolicyGate('auth-email-signup')">
+        <i class="fa-solid fa-envelope" style="color: var(--neon-cyan);"></i> Manual Gmail Registry
+    </button>
+    
+    <button class="btn-core secondary" style="width:100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15); color:#fff; background: #0c0c14; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; font-size: 0.9rem;" onclick="verifyPolicyGate('auth-phone-signup')">
+        <i class="fa-solid fa-phone" style="color: var(--neon-purple);"></i> Mobile Phone OTP Router
+    </button>
+    
+    <button class="btn-core secondary" style="width:100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; border-radius: 12px; font-size: 0.9rem; background: #0c0c14; border: 1px solid rgba(255,255,255,0.15); color: #fff; cursor: pointer;" onclick="verifyPolicyGate('GOOGLE')">
+        <i class="fa-brands fa-google" style="color: #ea4335;"></i> Instant Google Auth Link
+    </button>
+    
+    <div class="auth-nav-links" style="display: flex; justify-content: center; width: 100%; font-size: 0.82rem; margin-top: 5px;">
+        <a class="auth-link" onclick="switchAuthStep('auth-login-step')">Back to Terminal Sign-In</a>
+    </div>
+</div>
+
+        <div class="auth-step" id="auth-email-signup" style="flex-direction: column; gap: 12px; width: 100%;">
+            <h2 style="font-family: 'Orbitron', sans-serif; font-size: 1.5rem; font-weight: 800; color: #fff; text-transform: uppercase; margin-top: 5px;">GMAIL MATRIX CAPTURE</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); text-align: center; line-height: 1.4; margin-bottom: 5px;">System will link configuration data slots directly to your target mailbox.</p>
+            <div class="form-group" style="text-align: left; display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 0.72rem; font-weight: 700; color: #fff;">GMAIL ENDPOINT MAIL BOX</label>
+                <input type="email" class="form-field" id="signup-email-input" placeholder="example@gmail.com" style="background: #0d0d14; padding: 10px 14px;">
+            </div>
+            <div class="form-group" style="text-align: left; display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 0.72rem; font-weight: 700; color: #fff;">SETUP MASTER PASSCODE</label>
+                <input type="password" class="form-field" id="signup-email-pass" placeholder="••••••••" style="background: #0d0d14; padding: 10px 14px;">
+            </div>
+            <button class="btn-core primary" onclick="executeFirebaseEmailRegister()" style="width:100%; border:none; padding:12px; font-weight: 800; border-radius: 12px;">Finalize Infrastructure Sync</button>
+            <div class="auth-nav-links" style="justify-content: center; width: 100%; font-size: 0.82rem; margin-top: 5px;">
+                <a class="auth-link" onclick="switchAuthStep('auth-signup-method')">Change Interface Route</a>
+            </div>
+        </div>
+<div class="auth-step" id="auth-phone-signup" style="flex-direction: column; gap: 12px; width: 100%;">
+            <h2 style="font-family: 'Orbitron', sans-serif; font-size: 1.5rem; font-weight: 800; color: #fff; text-transform: uppercase; margin-top: 5px; text-align: center;">PHONE OTP ROUTER</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); text-align: center; line-height: 1.4; margin-bottom: 5px; padding: 0 5px;">Input your mobile node index with country prefix (e.g. +91) to capture secure SMS OTP signals.</p>
+            <div class="form-group" style="text-align: left; display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 0.72rem; font-weight: 700; color: #fff; text-transform: uppercase;">CELLULAR ENDPOINT INDEX NO.</label>
+                <input type="text" class="form-field" id="signup-phone-input" placeholder="+91XXXXXXXXXX" autocomplete="off" style="background: #0d0d14; padding: 10px 14px; font-size: 0.9rem;">
+            </div>
+            <div id="recaptcha-box-container" style="margin-top: 5px;"></div>
+            <button class="btn-core primary" onclick="executeFirebasePhoneAuth()" style="width:100%; border:none; padding:12px; font-weight: 800; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.5px;">By-pass Secure SMS OTP</button>
+            <div class="auth-nav-links" style="display: flex; justify-content: center; width: 100%; font-size: 0.82rem; margin-top: 5px;">
+                <a class="auth-link" onclick="switchAuthStep('auth-signup-method')">Change Interface Route</a>
+            </div>
+        </div>
+
+        <div class="auth-step" id="auth-phone-verify" style="flex-direction: column; gap: 12px; width: 100%;">
+            <h2 style="font-family: 'Orbitron', sans-serif; font-size: 1.5rem; font-weight: 800; color: #fff; text-transform: uppercase; margin-top: 5px; text-align: center;">SMS OTP CAPTURED</h2>
+            <p style="font-size: 0.85rem; color: var(--neon-cyan); text-align: center; line-height: 1.4; margin-bottom: 5px; padding: 0 5px;">Enter the 6-digit numeric network tracking code sent to your device.</p>
+            <div class="form-group" style="text-align: left; display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 0.72rem; font-weight: 700; color: #fff; text-transform: uppercase;">6-Digit Verification Token</label>
+                <input type="text" class="form-field" id="phone-otp-input" placeholder="••••••" maxlength="6" style="background: #0d0d14; padding: 10px 14px; text-align: center; letter-spacing: 6px; font-family:'Orbitron'; font-size: 1.05rem;" autocomplete="off">
+            </div>
+            <button class="btn-core primary" onclick="executePhoneOtpCodeVerification()" style="width:100%; border:none; padding:12px; font-weight: 800; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Verify Cellular Token</button>
+        </div>
+
+<div class="auth-step" id="auth-forgot-1" style="flex-direction: column; gap: 12px; width: 100%;">
+            <h2 style="font-family: 'Orbitron', sans-serif; font-size: 1.5rem; font-weight: 800; color: #fff; text-transform: uppercase; margin-top: 5px;">GRID RECOVERY MATRIX</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); text-align: center; line-height: 1.4; margin-bottom: 5px;">Input your registered Gmail address. System will dispatch an official password reset link.</p>
+            <div class="form-group" style="text-align: left; display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 0.72rem; font-weight: 700; color: #fff;">REGISTERED GMAIL ID</label>
+                <input type="email" class="form-field" id="forgot-email-input" placeholder="yourmail@gmail.com" autocomplete="off" style="background: #0d0d14; padding: 10px 14px;">
+            </div>
+            <button class="btn-core primary" onclick="executeFirebasePasswordResetLink()" style="width: 100%; border: none; padding: 12px; font-weight: 800; border-radius: 12px;">PIPELINE RECOVERY LINK</button>
+            <div class="auth-nav-links" style="justify-content: center; width: 100%; font-size: 0.82rem; margin-top: 5px;">
+                <a class="auth-link" onclick="switchAuthStep('auth-login-step')">Back to Terminal Sign-In</a>
+            </div>
+        </div>
+        
+    </div>
+</div>    <div id="mainframe-modal">
+       <div class="modal-card" style="max-width: 440px; padding: 30px 35px; background: #040409; border: 1px solid rgba(0, 243, 255, 0.2); display: flex !important; flex-direction: column !important; height: auto !important; position: relative; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); overflow: hidden !important;">
             <i class="fa-solid fa-xmark modal-close" onclick="closeMainframeModal()"></i>
             <h3 style="font-family: 'Orbitron', sans-serif; color: var(--neon-cyan); letter-spacing: 2px;" id="modal-title">MAINFRAME SECURITY METRICS CENTRAL</h3>
             <div class="modal-scroll-pane" id="modal-body-content"></div>
         </div>
     </div>
+<div id="hv-custom-alert-overlay" style="position: fixed; inset: 0; background: rgba(2, 2, 5, 0.85); backdrop-filter: blur(15px); z-index: 100005; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease;">
+    <div style="background: #040409; border: 1px solid rgba(0, 243, 255, 0.15); border-radius: 16px; width: 100%; max-width: 380px; padding: 25px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.8); position: relative;">
+        <div style="width: 3px; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple)); margin: 0 auto;"></div>
+        <i class="fa-solid fa-circle-exclamation" style="font-size: 2.5rem; color: var(--neon-cyan); filter: drop-shadow(0 0 10px var(--neon-cyan)); margin-bottom: 15px; display: inline-block;"></i>
+        <p id="hv-alert-text" style="font-size: 0.95rem; color: #fff; line-height: 1.5; margin-bottom: 20px; font-weight: 500;"></p>
+        <button onclick="closeCustomAlert()" style="background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple)); border: none; color: #fff; font-weight: 700; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; width: 100%; transition: 0.2s;">Acknowledge</button>
+    </div>
+</div>
+
 
     <script>
         const firebaseConfig = {
@@ -498,48 +586,90 @@
         let activeUserSession = { loggedIn: false, name: '', username: '', uid: '', token: '', email: '', clearance: '', serverSlot: 'Dynamic Routing Node v1.5' };
         let hudAnimationLoopToken = null;
 
-        function openLoginPortalGateway() {
-            document.getElementById('login-portal-modal').style.display = 'flex';
+       function openLoginPortalGateway() {
+    document.getElementById('login-portal-modal').style.display = 'flex';
+    switchAuthStep('auth-login-step'); // Open default step
+}
+
+function closeLoginPortalGateway() {
+    document.getElementById('login-portal-modal').style.display = 'none';
+}
+
+// 👉 NEW: Multi-step authentication panel navigator switcher logic
+function switchAuthStep(stepId) {
+    document.querySelectorAll('.auth-step').forEach(el => el.classList.remove('active'));
+    document.getElementById(stepId).classList.add('active');
+}
+// 👉 Policy Checker logic matching AI UI system routes
+function verifyPolicyGate(targetRoute) {
+    if (!document.getElementById('hv-agree-policy').checked) {
+showCustomAlert("Please agree to the Terms and Privacy Policy to create a core node.");
+        return;
+    }
+    if (targetRoute === 'GOOGLE') {
+        executeGoogleOauthLink(); 
+    } else {
+        switchAuthStep(targetRoute); 
+    }
+}
+
+// 👉 REAL-TIME BACKEND AUTH LOGIC DIRECTLY INTERACTIVE FROM CHAT MAPPING
+async function executeSupabaseAuthLogin() {
+    if (!document.getElementById('hv-login-agree-policy').checked) {
+       showCustomAlert("Please agree to the Terms and Privacy Policy to sign in.");
+        return;
+    }
+    const identity = document.getElementById('login-identity').value.trim();
+    const pass = document.getElementById('login-pass').value;
+   if (!identity || !pass) {
+    showCustomAlert("Please enter both your identity parameter and password.");
+    return;
+}
+authEngine.signInWithEmailAndPassword(identity, pass)
+    .then(() => {
+        closeLoginPortalGateway();
+        window.location.href = "chat.html";
+    }).catch((error) => {
+        showCustomAlert(error.message);
+    });
+}
+
+async function executeFirebaseEmailRegister() {
+    const email = document.getElementById('signup-email-input').value.trim();
+    const pass = document.getElementById('signup-email-pass').value;
+   if (!email || pass.length < 6) {
+    showCustomAlert("Invalid email format or passcode structure criteria.");
+    return;
+    }
+    authEngine.createUserWithEmailAndPassword(email, pass)
+        .then(async (userCredential) => {
+            await firestoreDb.collection("users").doc(userCredential.user.uid).set({
+                full_name: "Core Node Developer",
+                role: "Standard Beta User",
+                registered_at: new Date().toISOString(),
+                remaining_chats: 10
+            });
+            closeLoginPortalGateway();
+            window.location.href = "chat.html";
+        }).catch((error) => {
+            alert(error.message);
+        });
+}
+
+function executeFirebasePasswordResetLink() {
+    const email = document.getElementById('forgot-email-input').value.trim();
+    if(!email) { 
+        showCustomAlert("Please enter your registered email address."); 
+        return; 
+    }
+    authEngine.sendPasswordResetEmail(email)
+        .then(() => {
+            showCustomAlert("Reset link dispatched safely. Check your inbox.");
             switchAuthStep('auth-login-step');
-        }
-        function closeLoginPortalGateway() {
-            document.getElementById('login-portal-modal').style.display = 'none';
-        }
-        function switchAuthStep(stepId) {
-            document.querySelectorAll('.auth-step').forEach(el => el.classList.remove('active'));
-            document.getElementById(stepId).classList.add('active');
-        }
-
-        function toggleMobileNavigationState() {
-            const menuLayer = document.getElementById('hv-mobile-menu-layer');
-            if (menuLayer.style.display === 'flex') {
-                menuLayer.style.display = 'none';
-            } else {
-                menuLayer.style.display = 'flex';
-            }
-        }
-
-        // 👉 EXACT DATABASE PROCESSING CORRESPONDING TO THE CHAT INTERFACE OVERWATCH
-        async function executeSupabaseAuthLogin() {
-            if (!document.getElementById('hv-login-agree-policy').checked) {
-                alert("Please agree to the Terms and Privacy Policy to sign in.");
-                return;
-            }
-            const identity = document.getElementById('login-identity').value.trim();
-            const pass = document.getElementById('login-pass').value;
-            if (!identity || !pass) {
-                alert("Please enter both your identity parameter and password.");
-                return;
-            }
-            authEngine.signInWithEmailAndPassword(identity, pass)
-                .then(() => {
-                    closeLoginPortalGateway();
-                    window.location.href = "chat.html"; // Mapped direct routing sequence
-                }).catch((error) => {
-                    alert(error.message);
-                });
-        }
-
+        }).catch((err) => {
+            showCustomAlert(err.message);
+        });
+}
         async function executeGoogleOauthLink() {
             const provider = new firebase.auth.GoogleAuthProvider();
             authEngine.signInWithPopup(provider)
@@ -561,18 +691,7 @@
                 });
         }
 
-        function executeFirebasePasswordResetLink() {
-            const email = document.getElementById('forgot-email-input').value.trim();
-            if(!email) { alert("Please enter your registered email address."); return; }
-            authEngine.sendPasswordResetEmail(email)
-                .then(() => {
-                    alert("Reset link dispatched safely. Check your inbox.");
-                    switchAuthStep('auth-login-step');
-                }).catch((err) => {
-                    alert(err.message);
-                });
-        }
-
+       
         authEngine.onAuthStateChanged(async (user) => {
             const authBlock = document.getElementById('nav-auth-block');
             const profileBlock = document.getElementById('user-profile-block');
@@ -673,6 +792,27 @@
         window.addEventListener('resize', setupCanvas); setupCanvas();
         function renderPlexus() { ctx.clearRect(0, 0, width, height); points.forEach((p, idx) => { p.x += p.vx; p.y += p.vy; if (p.x < 0 || p.x > width) p.vx *= -1; if (p.y < 0 || p.y > height) p.vy *= -1; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0, 243, 255, 0.2)'; ctx.fill(); for (let j = idx + 1; j < points.length; j++) { const p2 = points[j]; const d = Math.hypot(p.x - p2.x, p.y - p2.y); if (d < 120) { ctx.beginPath(); ctx.strokeStyle = `rgba(0, 243, 255, ${0.1 - d/1200})`; ctx.lineWidth = 0.5; ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.stroke(); } } }); requestAnimationFrame(renderPlexus); }
         renderPlexus();
+// Portal ke bahaar click karne par dabba close karne ka listener
+window.onclick = function(event) {
+    const loginModal = document.getElementById('login-portal-modal');
+    const mainframeModal = document.getElementById('mainframe-modal');
+    if (event.target === loginModal) { closeLoginPortalGateway(); }
+    if (event.target === mainframeModal) { closeMainframeModal(); }
+};
+// 👉 Premium Alert open karne ka dynamic matrix
+function showCustomAlert(msg) {
+    const overlay = document.getElementById('hv-custom-alert-overlay');
+    document.getElementById('hv-alert-text').innerText = msg;
+    overlay.style.display = 'flex';
+    setTimeout(() => { overlay.style.opacity = '1'; }, 10);
+}
+
+// 👉 Premium Alert close karne ka dynamic matrix
+function closeCustomAlert() {
+    const overlay = document.getElementById('hv-custom-alert-overlay');
+    overlay.style.opacity = '0';
+    setTimeout(() => { overlay.style.display = 'none'; }, 300);
+}
     </script>
 </body>
 </html>

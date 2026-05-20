@@ -63,7 +63,7 @@ CRITICAL EXECUTION PARAMETERS:
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'llama-3.1-8b-instant',
+                model: 'llama-3.2-11b-vision-preview',
                 messages: messages,
                 temperature: activeTemperature, // 0.2 Freeze Active
                 max_tokens: activeMaxTokens,    // 1500 Freeze Active

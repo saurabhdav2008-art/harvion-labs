@@ -696,28 +696,31 @@ function executeFirebasePasswordResetLink() {
             const authBlock = document.getElementById('nav-auth-block');
             const profileBlock = document.getElementById('user-profile-block');
             
-            if (user) {
-                activeUserSession.loggedIn = true;
-                activeUserSession.email = user.email || "Cellular Provider Proxy";
-                activeUserSession.uid = user.uid;
-                activeUserSession.token = "TK-" + user.uid.substring(0,8).toUpperCase() + "-NODE";
+           if (user) {
+    activeUserSession.loggedIn = true;
+    activeUserSession.email = user.email || "Cellular Node Proxy";
+    activeUserSession.uid = "UID-" + user.uid.substring(0,8).toUpperCase();
+    activeUserSession.token = "TK-" + user.uid.substring(8,15).toUpperCase() + "-SLOT";
+    activeUserSession.ipAddress = "Dynamic Cloud Routing Node";
+    activeUserSession.location = "Primary Cloud Node Location";
+    activeUserSession.credits = "5,000.00 QCR Balance"; // Agar premium automatic checked hai toh isko update kar sakte ho
 
-                try {
-                    const snap = await firestoreDb.collection("users").doc(user.uid).get();
-                    if(snap.exists) {
-                        const d = snap.data();
-                        activeUserSession.name = d.full_name || "Core Node Developer";
-                        activeUserSession.clearance = d.role || "Standard Beta User";
-                    } else {
-                        activeUserSession.name = localStorage.getItem('harvion_temp_name') || "Core Node Developer";
-                        activeUserSession.clearance = "Standard Beta User";
-                    }
-                } catch(e) {
-                    activeUserSession.name = localStorage.getItem('harvion_temp_name') || "Core Node Developer";
-                    activeUserSession.clearance = "Standard Beta User";
-                }
+    try {
+        const snap = await firestoreDb.collection("users").doc(user.uid).get();
+        if(snap.exists) {
+            const d = snap.data();
+            activeUserSession.name = d.full_name || "Core Node Developer";
+            activeUserSession.clearance = d.role || "Standard Beta User";
+        } else {
+            activeUserSession.name = localStorage.getItem('harvion_temp_name') || "Core Node Developer";
+            activeUserSession.clearance = "Standard Beta User";
+        }
+    } catch(e) {
+        activeUserSession.name = localStorage.getItem('harvion_temp_name') || "Core Node Developer";
+        activeUserSession.clearance = "Standard Beta User";
+    }
 
-                activeUserSession.username = activeUserSession.name.toLowerCase().replace(/\s+/g, '_') + '_' + user.uid.substring(0,3);
+    activeUserSession.username = activeUserSession.name.toLowerCase().replace(/\s+/g, '_') + '_' + user.uid.substring(0,3);
 
                 if(authBlock) authBlock.style.display = 'none';
                 if(profileBlock) profileBlock.style.display = 'flex';
@@ -733,36 +736,38 @@ function executeFirebasePasswordResetLink() {
             }
         });
 
-        function openMainframeModal(section) {
-            const modal = document.getElementById('mainframe-modal');
-            const content = document.getElementById('modal-body-content');
-            if (modal) modal.classList.add('active');
-            
-            const normalizedRankLabel = activeUserSession.clearance.toLowerCase().replace(/\s+/g, '_');
-
-            content.innerHTML = `
-                <div style='display:flex; align-items:center; gap:20px; margin-bottom:20px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); padding:14px; border-radius:16px;'>
-                    <div style='width:55px; height:55px; border-radius:50%; background:linear-gradient(135deg,#00f3ff,#9d00ff); display:flex; justify-content:center; align-items:center; font-size:1.4rem; font-weight:900; color:#fff;'>${activeUserSession.name.charAt(0).toUpperCase()}</div>
-                    <div>
-                        <h4 style='color:#fff; font-family:"Space Grotesk"; font-size:1.2rem;'>${activeUserSession.name}</h4>
-                        <p style='color:var(--neon-cyan); font-size:0.85rem; font-family:monospace;'>@verified_node_developer</p>
-                    </div>
+       function openMainframeModal(section) {
+    const modal = document.getElementById('mainframe-modal');
+    const content = document.getElementById('modal-body-content');
+    if (modal) modal.classList.add('active');
+    
+    if (section === 'account') {
+        document.getElementById('modal-title').innerText = "MAINFRAME SECURITY METRICS CENTRAL";
+        content.innerHTML = `
+            <div style='display:flex; align-items:center; gap:20px; margin-bottom:20px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); padding:14px; border-radius:16px;'>
+                <div style='width:55px; height:55px; border-radius:50%; background:linear-gradient(135deg,#00f3ff,#9d00ff); display:flex; justify-content:center; align-items:center; font-size:1.4rem; font-weight:900; color:#fff;'>${activeUserSession.name.charAt(0).toUpperCase()}</div>
+                <div>
+                    <h4 style='color:#fff; font-family:"Space Grotesk"; font-size:1.2rem; margin-bottom:1px;'>${activeUserSession.name}</h4>
+                    <p style='color:var(--neon-cyan); font-size:0.85rem; font-family:monospace;'>@${activeUserSession.username}</p>
                 </div>
-                <div class="settings-group-title">Hardware Identity Matrix Logs</div>
-                <div class="settings-row"><span>Global Tracking User ID</span><span style="color:var(--neon-cyan); font-family:monospace; font-weight:700; font-size:12px; word-break: break-all;">${activeUserSession.uid}</span></div>
-                <div class="settings-row"><span>Secure Session Auth Token</span><span style="color:#fff; font-family:monospace; font-size:11px; background:rgba(255,255,255,0.05); padding:4px 8px; border-radius:6px; word-break: break-all;">${activeUserSession.token}</span></div>
-                <div class="settings-row"><span>Mainframe Linked Mail Box</span><span style="color:var(--text-muted); word-break: break-all;">${activeUserSession.email}</span></div>
-                <div class="settings-group-title">Clearance Credentials & Core Allocation</div>
-                <div class="settings-row"><span>Security Privilege Clear Rank</span><span style="color:var(--neon-purple); font-weight:700;">${activeUserSession.clearance}</span></div>
-                <div class="settings-row"><span>Active Deployment Server Array</span><span>${activeUserSession.serverSlot}</span></div>
-                <div class="settings-row"><span>Data Encryption Compliance</span><span style="color:#10b981; font-weight:700;"><i class="fa-solid fa-circle-check"></i> FIREBASE SECURED</span></div>
-                <div class="settings-group-title">Live Core Quantum Telemetry HUD Matrix</div>
-                <div class="hud-diagnostic-graph-container"><canvas id="hud-canvas-vector"></canvas></div>
-                <button onclick="authEngine.signOut(); window.location.reload();" style="width:100%; margin-top:20px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 12px; border-radius: 12px; font-weight:700; cursor:pointer; font-size:12px;">TERMINATE MAINFRAME SESSION (SIGN OUT)</button>
-            `;
-            setTimeout(initializeLiveCoreDiagnosticHudGraph, 100);
-        }
-
+            </div>
+            <div class="settings-group-title">Hardware Identity Matrix Logs</div>
+            <div class="settings-row"><span>Global Tracking User ID</span><span style="color:var(--neon-cyan); font-family:monospace; font-weight:700;">${activeUserSession.uid}</span></div>
+            <div class="settings-row"><span>Secure Session Auth Token</span><span style="color:#fff; font-family:monospace; font-size:11px; background:rgba(255,255,255,0.05); padding:4px 8px; border-radius:6px;">${activeUserSession.token}</span></div>
+            <div class="settings-row"><span>Network Gateway Link Address</span><span style="color:var(--text-muted); font-family:monospace;">${activeUserSession.ipAddress}</span></div>
+            <div class="settings-group-title">Clearance Credentials & Core Allocation</div>
+            <div class="settings-row"><span>Security Privilege Clear Rank</span><span style="color:var(--neon-purple); font-weight:700;">${activeUserSession.clearance}</span></div>
+            <div class="settings-row"><span>Active Deployment Server Array</span><span>${activeUserSession.location}</span></div>
+            <div class="settings-row"><span>Quantum Allocation Credits</span><span style="color:#10b981; font-family:'Orbitron'; font-weight:700;">${activeUserSession.credits || '5,000.00 QCR Balance'}</span></div>
+            <div class="settings-row"><span>Data Encryption Compliance</span><span style="color:#10b981; font-weight:700;"><i class="fa-solid fa-circle-check"></i> FIREBASE CLOUD SECURED</span></div>
+            <div class="settings-row"><span>Mainframe Linked Mail Box</span><span style="color:var(--text-muted); font-size:13px;">${activeUserSession.email}</span></div>
+            <div class="settings-group-title">Live Core Quantum Telemetry HUD Matrix</div>
+            <div class="hud-diagnostic-graph-container"><canvas id="hud-canvas-vector"></canvas></div>
+            <button onclick="localStorage.clear(); authEngine.signOut(); window.location.reload();" style="width:100%; margin-top:20px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 12px; border-radius: 12px; font-weight:700; cursor:pointer; font-size:12px;">TERMINATE MAINFRAME SESSION (SIGN OUT)</button>
+        `;
+        setTimeout(initializeLiveCoreDiagnosticHudGraph, 100);
+    }
+}
         function closeMainframeModal() {
             document.getElementById('mainframe-modal').classList.remove('active');
             if (hudAnimationLoopToken) cancelAnimationFrame(hudAnimationLoopToken);

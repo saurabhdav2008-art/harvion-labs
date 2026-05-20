@@ -983,7 +983,7 @@
 
                 currentImageBase64 = null;
                 currentImageMimeType = null;
-
+console.log("SENDING PAYLOAD TO BACKEND:", JSON.stringify(networkRequestPayload, null, 2));
                 const response = await fetch(`/api/chat`, {
                     method: 'POST', 
                     headers: { 

@@ -1373,9 +1373,10 @@ async function executeGoogleOauthLink() {
                         historyItemElementRow.onclick = () => showCustomAlert(`Accessing node storage slot download stream -> ${fileMetadataNode.fileName}`);
                         historyBox.appendChild(historyItemElementRow);
                     });
-                }).catch((e) => {
-                    console.log("History network pipeline sync fault bypassed.");
-                });
+               4
+}).catch((e) => {
+    console.error("REAL FIREBASE ERROR:", e);
+});
         }
 
         function triggerCinematicWarpPortal() {

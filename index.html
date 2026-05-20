@@ -657,11 +657,8 @@ async function executeFirebaseEmailRegister() {
     authEngine.createUserWithEmailAndPassword(email, pass)
         .then(async (userCredential) => {
             const user = userCredential.user;
-            
-            // 📨 1. Firebase se verification link dispatch karo
             await user.sendEmailVerification();
             
-            // 🗄️ 2. Database mein records sync karo
             await firestoreDb.collection("users").doc(user.uid).set({
                 full_name: "Core Node Developer",
                 role: "Standard Beta User",
@@ -669,11 +666,41 @@ async function executeFirebaseEmailRegister() {
                 remaining_chats: 10
             });
             
-            // 🔒 3. Instantly Sign Out karo taaki bypass na ho sake
             await authEngine.signOut();
             
-            showCustomAlert("Verification link dispatched! Kripya apna Gmail check karein aur verify karne ke baad hi login portal se Sign-In karein.");
-            switchAuthStep('auth-login-step'); // Login screen par wapas bhejo
+            // 🌟 FIXED: Hinglish se English badal diya
+            showCustomAlert("Verification link dispatched! Please check your Gmail inbox and verify your email before logging in.");
+            switchAuthStep('auth-login-step');
+        }).catch((error) => {
+            showCustomAlert(error.message);
+        });
+}
+
+async function executeSupabaseAuthLogin() {
+    if (!document.getElementById('hv-login-agree-policy').checked) {
+       showCustomAlert("Please agree to the Terms and Privacy Policy to sign in.");
+        return;
+    }
+    const identity = document.getElementById('login-identity').value.trim();
+    const pass = document.getElementById('login-pass').value;
+    if (!identity || !pass) {
+        showCustomAlert("Please enter both your identity parameter and password.");
+        return;
+    }
+    
+    authEngine.signInWithEmailAndPassword(identity, pass)
+        .then(async (userCredential) => {
+            const user = userCredential.user;
+            
+            if (!user.emailVerified) {
+                // 🌟 FIXED: Hinglish se English badal diya
+                showCustomAlert("Access Denied: Your Gmail ID is not verified. Please verify the link sent to your inbox first.");
+                await authEngine.signOut();
+                return;
+            }
+            
+            closeLoginPortalGateway();
+            window.location.href = "chat.html";
         }).catch((error) => {
             showCustomAlert(error.message);
         });

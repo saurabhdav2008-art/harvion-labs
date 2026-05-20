@@ -1337,7 +1337,7 @@ async function executeGoogleOauthLink() {
             }
 
             try {
-                await firestoreDb.collection("users").doc(activeUser.uid).collection("file_history").add({
+                await firestoreDb.collection("users").doc(activeUser.uid).collection("chats_history").add({
                     fileName: file.name,
                     fileSize: file.size,
                     uploadedAt: new Date().toISOString()
@@ -1357,7 +1357,7 @@ async function executeGoogleOauthLink() {
             if (!historyBox) return;
 
             firestoreDb.collection("users").doc(uid).collection("file_history")
-                .orderBy("uploadedAt", "desc").limit(10).get()
+                .orderBy("timestamp", "desc").limit(10).get()
                 .then((querySnapshot) => {
                     historyBox.innerHTML = `
                         <h4>Quantum History</h4>
@@ -1365,12 +1365,20 @@ async function executeGoogleOauthLink() {
                         <div class="history-item" onclick="loadHistorySimulation('neural')"><i class="fa-solid fa-network-wired"></i> Neural bypass script</div>
                     `;
                     
-                    querySnapshot.forEach((doc) => {
-                        const fileMetadataNode = doc.data();
+querySnapshot.forEach((doc) => {
+                        const chatData = doc.data();
                         const historyItemElementRow = document.createElement('div');
                         historyItemElementRow.className = 'history-item';
-                        historyItemElementRow.innerHTML = `<i class="fa-solid fa-file-shield" style="color:var(--neon-cyan); font-family: 'Outfit';"></i> ${fileMetadataNode.fileName}`;
-                        historyItemElementRow.onclick = () => showCustomAlert(`Accessing node storage slot download stream -> ${fileMetadataNode.fileName}`);
+                        
+                       
+                        const shortMessage = chatData.user_payload || "Document Interaction";
+                        
+                       
+                        historyItemElementRow.innerHTML = `<i class="fa-regular fa-comment-dots" style="color:var(--neon-cyan); font-family: 'Outfit';"></i> ${shortMessage.substring(0, 20)}...`;
+                        
+                      
+                        historyItemElementRow.onclick = () => showCustomAlert(`Old Chat Log:\n\nYou: ${chatData.user_payload}\n\nAI: ${chatData.model_response}`);
+                        
                         historyBox.appendChild(historyItemElementRow);
                     });
                4

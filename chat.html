@@ -752,66 +752,80 @@
         }
 
         authEngine.onAuthStateChanged(async (user) => {
-            if (user) {
-                activeUserSession.loggedIn = true;
-                activeUserSession.email = user.email || "Cellular Node Proxy";
-                activeUserSession.uid = "UID-" + user.uid.substring(0,8).toUpperCase();
-                activeUserSession.token = "TK-" + user.uid.substring(8,15).toUpperCase() + "-SLOT";
-                
-                try {
-                    const snap = await firestoreDb.collection("users").doc(user.uid).get();
-                    if(snap.exists) {
-                        const d = snap.data();
-                        activeUserSession.name = d.full_name || "Core Node Developer";
-                        activeUserSession.clearance = d.role || "Standard Beta User";
-                        activeUserSession.remaining_chats = d.remaining_chats !== undefined ? d.remaining_chats : 0;
-                    } else {
-                        activeUserSession.name = localStorage.getItem('harvion_temp_name') || "Core Node Developer";
-                        activeUserSession.clearance = localStorage.getItem('harvion_clearance') || 'Standard Beta User';
-                        activeUserSession.remaining_chats = 0;
-                    }
-                } catch(e) {
-                    activeUserSession.name = localStorage.getItem('harvion_temp_name') || "Core Node Developer";
-                    activeUserSession.clearance = localStorage.getItem('harvion_clearance') || 'Standard Beta User';
-                    activeUserSession.remaining_chats = 0;
-                }
+    const authBlock = document.getElementById('nav-auth-block');
+    const profileBlock = document.getElementById('user-profile-block');
+    
+    if (user) {
+        // 🛡️ SECURITY GATE: Agar user Gmail se bna hai aur verified nahi hai, toh bypass mat hone do
+        if (user.providerData.some(p => p.providerId === 'password') && !user.emailVerified) {
+            activeUserSession.loggedIn = false;
+            if(authBlock) authBlock.style.display = 'flex';
+            if(profileBlock) profileBlock.style.display = 'none';
+            document.getElementById('platform-title-version').innerText = "Harvion Engine v1.5";
+            
+            // UI ko logout state mein refresh karo
+            syncPlatformPremiumUIRefresh();
+            return; // Yahi par rok do, aage ka login process mat chalao
+        }
 
-                activeUserSession.username = activeUserSession.name.toLowerCase().replace(/\s+/g, '_') + '_' + user.uid.substring(0,3);
-                activeUserSession.ipAddress = "Dynamic Cloud Routing Node";
-                
-                if(['owner', 'archon', 'apex', 'premium', 'apex archon core'].some(keyword => activeUserSession.clearance.toLowerCase().includes(keyword))) {
-                    activeUserSession.isOwner = true; activeUserSession.isPremium = true;
-                    activeUserSession.clearance = "Apex Archon Core (Owner)";
-                    document.getElementById('platform-title-version').innerHTML = "Harvion Engine <span style='color:var(--neon-purple); font-family:\"Orbitron\"; font-size:11px; letter-spacing:1px;'>[APEX ARCHON]</span>";
-                } else {
-                    activeUserSession.isOwner = false;
-                    activeUserSession.isPremium = localStorage.getItem('harvion_premium_tier') === "true";
-                }
-                activeUserSession.location = "Primary Cloud Node Location";
-                activeUserSession.credits = activeUserSession.isPremium ? "Unlimited Credit Weights" : "5,000.00 QCR Balance";
-                
-                syncPlatformPremiumUIRefresh();
-                document.getElementById('nav-auth-block').style.display = 'none';
-                const pBlock = document.getElementById('user-profile-block');
-                if (pBlock) pBlock.style.display = 'flex';
-                document.getElementById('avatar-initial').innerText = activeUserSession.name.charAt(0).toUpperCase();
-                document.getElementById('nav-user-title').innerText = activeUserSession.name;
-                document.getElementById('nav-user-uid').innerText = activeUserSession.uid;
-
-                loadUserFileHistoryFromFirestore(user.uid);
+        // 👉 Baaki ka normal login process (Verified users, Phone users aur Google users ke liye)
+        activeUserSession.loggedIn = true;
+        activeUserSession.email = user.email || "Cellular Node Proxy";
+        activeUserSession.uid = "UID-" + user.uid.substring(0,8).toUpperCase();
+        activeUserSession.token = "TK-" + user.uid.substring(8,15).toUpperCase() + "-SLOT";
+        
+        try {
+            const snap = await firestoreDb.collection("users").doc(user.uid).get();
+            if(snap.exists) {
+                const d = snap.data();
+                activeUserSession.name = d.full_name || "Core Node Developer";
+                activeUserSession.clearance = d.role || "Standard Beta User";
+                activeUserSession.remaining_chats = d.remaining_chats !== undefined ? d.remaining_chats : 0;
             } else {
-                activeUserSession.loggedIn = false;
-                activeUserSession.isPremium = false;
-                activeUserSession.isOwner = false;
+                activeUserSession.name = localStorage.getItem('harvion_temp_name') || "Core Node Developer";
+                activeUserSession.clearance = localStorage.getItem('harvion_clearance') || 'Standard Beta User';
                 activeUserSession.remaining_chats = 0;
-                document.getElementById('nav-auth-block').style.display = 'flex';
-                document.getElementById('user-profile-block').style.display = 'none';
-                document.getElementById('platform-title-version').innerText = "Harvion Engine v1.5";
-                
-                syncPlatformPremiumUIRefresh();
             }
-        });
+        } catch(e) {
+            activeUserSession.name = localStorage.getItem('harvion_temp_name') || "Core Node Developer";
+            activeUserSession.clearance = localStorage.getItem('harvion_clearance') || 'Standard Beta User';
+            activeUserSession.remaining_chats = 0;
+        }
 
+        activeUserSession.username = activeUserSession.name.toLowerCase().replace(/\s+/g, '_') + '_' + user.uid.substring(0,3);
+        activeUserSession.ipAddress = "Dynamic Cloud Routing Node";
+        
+        if(['owner', 'archon', 'apex', 'premium', 'apex archon core'].some(keyword => activeUserSession.clearance.toLowerCase().includes(keyword))) {
+            activeUserSession.isOwner = true; activeUserSession.isPremium = true;
+            activeUserSession.clearance = "Apex Archon Core (Owner)";
+            document.getElementById('platform-title-version').innerHTML = "Harvion Engine <span style='color:var(--neon-purple); font-family:\"Orbitron\"; font-size:11px; letter-spacing:1px;'>[APEX ARCHON]</span>";
+        } else {
+            activeUserSession.isOwner = false;
+            activeUserSession.isPremium = localStorage.getItem('harvion_premium_tier') === "true";
+        }
+        activeUserSession.location = "Primary Cloud Node Location";
+        activeUserSession.credits = activeUserSession.isPremium ? "Unlimited Credit Weights" : "5,000.00 QCR Balance";
+        
+        syncPlatformPremiumUIRefresh();
+        if (authBlock) authBlock.style.display = 'none';
+        if (profileBlock) profileBlock.style.display = 'flex';
+        document.getElementById('avatar-initial').innerText = activeUserSession.name.charAt(0).toUpperCase();
+        document.getElementById('nav-user-title').innerText = activeUserSession.name;
+        document.getElementById('nav-user-uid').innerText = activeUserSession.uid;
+
+        loadUserFileHistoryFromFirestore(user.uid);
+    } else {
+        activeUserSession.loggedIn = false;
+        activeUserSession.isPremium = false;
+        activeUserSession.isOwner = false;
+        activeUserSession.remaining_chats = 0;
+        if(authBlock) authBlock.style.display = 'flex';
+        if(profileBlock) profileBlock.style.display = 'none';
+        document.getElementById('platform-title-version').innerText = "Harvion Engine v1.5";
+        
+        syncPlatformPremiumUIRefresh();
+    }
+});
         function syncPlatformPremiumUIRefresh() {
             const qLbl = document.getElementById('quantum-lock-lbl');
             const qSlot = document.getElementById('quantum-dropdown-slot');

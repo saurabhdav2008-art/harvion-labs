@@ -624,41 +624,60 @@ async function executeSupabaseAuthLogin() {
     }
     const identity = document.getElementById('login-identity').value.trim();
     const pass = document.getElementById('login-pass').value;
-   if (!identity || !pass) {
-    showCustomAlert("Please enter both your identity parameter and password.");
-    return;
+    if (!identity || !pass) {
+        showCustomAlert("Please enter both your identity parameter and password.");
+        return;
+    }
+    
+    authEngine.signInWithEmailAndPassword(identity, pass)
+        .then(async (userCredential) => {
+            const user = userCredential.user;
+            
+            // 🛡️ SECURITY GATE: Check karo email verified hai ya nahi
+            if (!user.emailVerified) {
+                showCustomAlert("Access Denied: Aapka Gmail ID verified nahi hai. Kripya pehle inbox mein jaakar link par verify karein.");
+                await authEngine.signOut(); // Kick out unverified users
+                return;
+            }
+            
+            closeLoginPortalGateway();
+            window.location.href = "chat.html"; // Only verified users can enter
+        }).catch((error) => {
+            showCustomAlert(error.message);
+        });
 }
-authEngine.signInWithEmailAndPassword(identity, pass)
-    .then(() => {
-        closeLoginPortalGateway();
-        window.location.href = "chat.html";
-    }).catch((error) => {
-        showCustomAlert(error.message);
-    });
-}
-
 async function executeFirebaseEmailRegister() {
     const email = document.getElementById('signup-email-input').value.trim();
     const pass = document.getElementById('signup-email-pass').value;
-   if (!email || pass.length < 6) {
-    showCustomAlert("Invalid email format or passcode structure criteria.");
-    return;
+    if (!email || pass.length < 6) {
+        showCustomAlert("Invalid email format or passcode structure criteria.");
+        return;
     }
+    
     authEngine.createUserWithEmailAndPassword(email, pass)
         .then(async (userCredential) => {
-            await firestoreDb.collection("users").doc(userCredential.user.uid).set({
+            const user = userCredential.user;
+            
+            // 📨 1. Firebase se verification link dispatch karo
+            await user.sendEmailVerification();
+            
+            // 🗄️ 2. Database mein records sync karo
+            await firestoreDb.collection("users").doc(user.uid).set({
                 full_name: "Core Node Developer",
                 role: "Standard Beta User",
                 registered_at: new Date().toISOString(),
                 remaining_chats: 10
             });
-            closeLoginPortalGateway();
-            window.location.href = "chat.html";
+            
+            // 🔒 3. Instantly Sign Out karo taaki bypass na ho sake
+            await authEngine.signOut();
+            
+            showCustomAlert("Verification link dispatched! Kripya apna Gmail check karein aur verify karne ke baad hi login portal se Sign-In karein.");
+            switchAuthStep('auth-login-step'); // Login screen par wapas bhejo
         }).catch((error) => {
-            alert(error.message);
+            showCustomAlert(error.message);
         });
 }
-
 function executeFirebasePasswordResetLink() {
     const email = document.getElementById('forgot-email-input').value.trim();
     if(!email) { 

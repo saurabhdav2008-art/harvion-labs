@@ -1208,31 +1208,33 @@ function executeFirebasePasswordResetLink() {
 }
        
 
-        async function executeGoogleOauthLink() {
-            if (!document.getElementById('hv-login-agree-policy').checked) {
-                showCustomAlert("You must accept the terms and conditions to continue.");
-                return;
-            }
-            const provider = new firebase.auth.GoogleAuthProvider();
-            authEngine.signInWithPopup(provider)
-                .then(async (result) => {
-                    const u = result.user;
-                    const docSnap = await firestoreDb.collection("users").doc(u.uid).get();
-                    if (!docSnap.exists) {
-                        await firestoreDb.collection("users").doc(u.uid).set({
-                            full_name: u.displayName || "Google User Node",
-                            role: "Standard Beta User",
-                            registered_at: new Date().toISOString(),
-                            remaining_chats: 10
-                        });
-                    }
-                    closeAuthGateway(); 
-                    triggerCinematicWarpPortal();
-                }).catch((error) => {
-                    showCustomAlert(error.message);
-                });
-        }
+// 'A' ko chhota (lowercase) kar diya hai
+async function executeGoogleOauthLink() {
+    // 🛡️ SECURITY GATE: AI UI Console par bhi box check hona mandatory hai
+    if (!document.getElementById('hv-login-agree-policy').checked) {
+        showCustomAlert("Please agree to the Terms and Conditions and Privacy Policy to continue with Google.");
+        return;
+    }
 
+    const provider = new firebase.auth.GoogleAuthProvider();
+    authEngine.signInWithPopup(provider)
+        .then(async (result) => {
+            const u = result.user;
+            const docSnap = await firestoreDb.collection("users").doc(u.uid).get();
+            if (!docSnap.exists) {
+                await firestoreDb.collection("users").doc(u.uid).set({
+                    full_name: u.displayName || "Google User Node",
+                    role: "Standard Beta User",
+                    registered_at: new Date().toISOString(),
+                    remaining_chats: 10
+                });
+            }
+            closeAuthGateway(); 
+            triggerCinematicWarpPortal();
+        }).catch((error) => {
+            showCustomAlert(error.message);
+        });
+}
         async function handleFileUpload(e) {
             const file = e.target.files[0];
             if (!file) return;

@@ -818,6 +818,42 @@ function closeCustomAlert() {
     overlay.style.opacity = '0';
     setTimeout(() => { overlay.style.display = 'none'; }, 300);
 }
+        // 📑 NEW: Firebase reCAPTCHA initialization for Landing Page
+window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-box-container', {
+    'size': 'invisible'
+});
+
+// 📱 Phone OTP Dispatch function logic
+function executeFirebasePhoneAuth() {
+    const pNum = document.getElementById('signup-phone-input').value.trim();
+    if(!pNum) { showCustomAlert("Cellular parameter mapping vacantly registered."); return; }
+    
+    authEngine.signInWithPhoneNumber(pNum, window.recaptchaVerifier)
+        .then((result) => {
+            window.phoneConfirmationResultMatrix = result;
+            showCustomAlert("Secure proxy signals dispatched to your device.");
+            switchAuthStep('auth-phone-verify');
+        }).catch((error) => {
+            showCustomAlert(error.message);
+        });
+}
+
+// 📟 Phone OTP Verification function logic
+function executePhoneOtpCodeVerification() {
+    const code = document.getElementById('phone-otp-input').value.trim();
+    if(!code || code.length !== 6) { showCustomAlert("Verification numeric array must be 6 digits."); return; }
+    
+    if(window.phoneConfirmationResultMatrix) {
+        window.phoneConfirmationResultMatrix.confirm(code)
+            .then(() => {
+                showCustomAlert("Infrastructure synchronization complete. Active node live.");
+                closeLoginPortalGateway();
+                window.location.href = "chat.html";
+            }).catch(() => {
+                showCustomAlert("Invalid cellular tracking token verification match failure.");
+            });
+    }
+}
     </script>
 </body>
 </html>

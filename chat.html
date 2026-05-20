@@ -751,8 +751,22 @@
             setTimeout(() => { overlay.style.display = 'none'; }, 300);
         }
 
-        authEngine.onAuthStateChanged(async (user) => {
+       authEngine.onAuthStateChanged(async (user) => {
+            const authBlock = document.getElementById('nav-auth-block');
+            const profileBlock = document.getElementById('user-profile-block');
+            
             if (user) {
+                // 🛡️ SECURITY GATE: Agar email-password user verified nahi hai, toh dashboard block karo
+                if (user.providerData.some(p => p.providerId === 'password') && !user.emailVerified) {
+                    activeUserSession.loggedIn = false;
+                    if(authBlock) authBlock.style.display = 'flex';
+                    if(profileBlock) profileBlock.style.display = 'none';
+                    document.getElementById('platform-title-version').innerText = "Harvion Engine v1.5";
+                    
+                    syncPlatformPremiumUIRefresh();
+                    return; // Yahi se baahar phenk do
+                }
+
                 activeUserSession.loggedIn = true;
                 activeUserSession.email = user.email || "Cellular Node Proxy";
                 activeUserSession.uid = "UID-" + user.uid.substring(0,8).toUpperCase();
@@ -791,9 +805,8 @@
                 activeUserSession.credits = activeUserSession.isPremium ? "Unlimited Credit Weights" : "5,000.00 QCR Balance";
                 
                 syncPlatformPremiumUIRefresh();
-                document.getElementById('nav-auth-block').style.display = 'none';
-                const pBlock = document.getElementById('user-profile-block');
-                if (pBlock) pBlock.style.display = 'flex';
+                if(authBlock) authBlock.style.display = 'none';
+                if(profileBlock) profileBlock.style.display = 'flex';
                 document.getElementById('avatar-initial').innerText = activeUserSession.name.charAt(0).toUpperCase();
                 document.getElementById('nav-user-title').innerText = activeUserSession.name;
                 document.getElementById('nav-user-uid').innerText = activeUserSession.uid;
@@ -804,8 +817,8 @@
                 activeUserSession.isPremium = false;
                 activeUserSession.isOwner = false;
                 activeUserSession.remaining_chats = 0;
-                document.getElementById('nav-auth-block').style.display = 'flex';
-                document.getElementById('user-profile-block').style.display = 'none';
+                if(authBlock) authBlock.style.display = 'flex';
+                if(profileBlock) profileBlock.style.display = 'none';
                 document.getElementById('platform-title-version').innerText = "Harvion Engine v1.5";
                 
                 syncPlatformPremiumUIRefresh();

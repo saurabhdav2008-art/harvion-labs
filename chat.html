@@ -957,7 +957,7 @@
             messageDiv.appendChild(avatarDiv); messageDiv.appendChild(bubbleDiv); chatBox.appendChild(messageDiv); scrollToBottom();
             
             try {
-                const savedTemp = localStorage.getItem('harvion-temp') || "0.7"; const savedTokens = localStorage.getItem('harvion-tokens') || "2048";
+                const savedTemp = localStorage.getItem('harvion-temp') || "0.7"; const savedTokens = localStorage.getItem('harvion-tokens') || "1500";
                 const harvionPersonality = `Operational Profile: ${activeMode}. Logic configurations bounds: Temp=${savedTemp}, MaxTokens=${savedTokens}. Prompt: `;
                 
                 let requestParts = [];
@@ -1398,7 +1398,7 @@ async function executeGoogleOauthLink() {
                 }
             } else if (section === 'settings') {
                 title.innerText = "SETTING AND SUPPORT ARCHITECTURE";
-                const sTemp = localStorage.getItem('harvion-temp') || "0.7"; const sTokens = localStorage.getItem('harvion-tokens') || "2048";
+                const sTemp = localStorage.getItem('harvion-temp') || "0.2"; const sTokens = localStorage.getItem('harvion-tokens') || "2048";
                 const sPlexus = localStorage.getItem('harvion-plexus') !== "false"; const sDensity = localStorage.getItem('harvion-density') || "comfortable";
                 const sMic = localStorage.getItem('harvion-mic') || "80"; const sAudio = localStorage.getItem('harvion-audio') !== "false"; const sTheme = localStorage.getItem('harvion-theme') || "space";
                 content.innerHTML = `

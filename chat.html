@@ -1107,8 +1107,7 @@
                 switchAuthStep('auth-step-profile-form');
             }
         }
-
-        function compileCompletedUserProfileData() {
+function compileCompletedUserProfileData() {
     const name = document.getElementById('reg-name').value.trim();
     if(!name) { showCustomAlert("Please fill in your name details parameters vector."); return; }
 
@@ -1118,7 +1117,6 @@
     let emailTarget = currentAuthWorkflowEmail;
     let passTarget = localStorage.getItem('harvion_transit_pass_temp') || "MasterFallbackNodePass123!";
 
-    // 👉 Phone OTP Router Pipeline
     if (!emailTarget && authEngine.currentUser) {
         const u = authEngine.currentUser;
         firestoreDb.collection("users").doc(u.uid).set({
@@ -1127,7 +1125,6 @@
             registered_at: new Date().toISOString(),
             remaining_chats: 10
         }).then(() => {
-            // 🔄 INSTANT UI AUTO-SYNC: Bina page refresh kiye screen par naam aur avatar update karega
             activeUserSession.name = name;
             activeUserSession.clearance = "Standard Beta User";
             activeUserSession.username = name.toLowerCase().replace(/\s+/g, '_') + '_' + u.uid.substring(0,3);
@@ -1150,7 +1147,6 @@
         return;
     }
 
-    // 👉 Manual Gmail Registry Pipeline
     authEngine.createUserWithEmailAndPassword(emailTarget, passTarget)
         .then(async (userCredential) => {
             const user = userCredential.user;
@@ -1164,13 +1160,40 @@
             });
             
             await authEngine.signOut();
-            showCustomAlert("Verification link dispatched! Kripya apna Gmail check karein aur verify karne ke baad hi dobara login karein.");
+            // 🌟 FIXED: Hinglish se English badal diya
+            showCustomAlert("Verification link dispatched! Please check your Gmail inbox and verify your email before logging in again.");
             switchAuthStep('auth-login-step');
         }).catch((error) => {
             showCustomAlert(error.message);
         });
 }
 
+async function executeSupabaseAuthLogin() {
+    if (!document.getElementById('hv-login-agree-policy').checked) {
+        showCustomAlert("Please agree to the Terms and Privacy Policy to sign in.");
+        return;
+    }
+    const identity = document.getElementById('login-identity').value.trim();
+    const pass = document.getElementById('login-pass').value;
+    if (!identity || !pass) {
+        showCustomAlert("Please enter both your identity parameter and password.");
+        return;
+    }
+    authEngine.signInWithEmailAndPassword(identity, pass)
+        .then(async (userCredential) => {
+            const user = userCredential.user;
+            if (!user.emailVerified) {
+                // 🌟 FIXED: Hinglish se English badal diya
+                showCustomAlert("Access Denied: Your Gmail ID is not verified. Please verify your email first.");
+                await authEngine.signOut();
+                return;
+            }
+            closeAuthGateway(); 
+            triggerCinematicWarpPortal();
+        }).catch((error) => {
+            showCustomAlert(error.message);
+        });
+}
 function executeFirebasePasswordResetLink() {
     const email = document.getElementById('forgot-email-input').value.trim();
     if(!email) { showCustomAlert("Please enter your registered email address."); return; }

@@ -719,26 +719,33 @@ function executeFirebasePasswordResetLink() {
             showCustomAlert(err.message);
         });
 }
-        async function executeGoogleOauthLink() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            authEngine.signInWithPopup(provider)
-                .then(async (result) => {
-                    const u = result.user;
-                    const docSnap = await firestoreDb.collection("users").doc(u.uid).get();
-                    if (!docSnap.exists) {
-                        await firestoreDb.collection("users").doc(u.uid).set({
-                            full_name: u.displayName || "Google User Node",
-                            role: "Standard Beta User",
-                            registered_at: new Date().toISOString(),
-                            remaining_chats: 10
-                        });
-                    }
-                    closeLoginPortalGateway();
-                    window.location.href = "chat.html";
-                }).catch((error) => {
-                    alert(error.message);
+      // 🌟 FIXED: 'a' ko lowercase kiya aur alert ko showCustomAlert kar diya
+async function executeGoogleOauthLink() {
+    // 🛡️ SECURITY GATE: Google login par bhi ab policy check compulsory hai
+    if (!document.getElementById('hv-login-agree-policy').checked) {
+        showCustomAlert("Please agree to the Terms and Conditions and Privacy Policy to continue with Google.");
+        return;
+    }
+
+    const provider = new firebase.auth.GoogleAuthProvider();
+    authEngine.signInWithPopup(provider)
+        .then(async (result) => {
+            const u = result.user;
+            const docSnap = await firestoreDb.collection("users").doc(u.uid).get();
+            if (!docSnap.exists) {
+                await firestoreDb.collection("users").doc(u.uid).set({
+                    full_name: u.displayName || "Google User Node",
+                    role: "Standard Beta User",
+                    registered_at: new Date().toISOString(),
+                    remaining_chats: 10
                 });
-        }
+            }
+            closeLoginPortalGateway();
+            window.location.href = "chat.html";
+        }).catch((error) => {
+            showCustomAlert(error.message); // 🌟 FIXED: Custom alert laga diya
+        });
+}
 
        
         authEngine.onAuthStateChanged(async (user) => {

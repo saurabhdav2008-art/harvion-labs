@@ -931,8 +931,7 @@
 
         function toggleSidebar() { triggerJarvisSoundMatrix('click'); document.getElementById('panel-left').classList.toggle('active'); }
         function closeSidebarMobile() { if(isMobile) document.getElementById('panel-left').classList.remove('active'); }
-
-        async function sendMessage() {
+async function sendMessage() {
             const inputField = document.getElementById('user-input'); const message = inputField.value.trim(); 
             if (message === '' && !currentImageBase64) return;
             
@@ -962,7 +961,8 @@
             messageDiv.appendChild(avatarDiv); messageDiv.appendChild(bubbleDiv); chatBox.appendChild(messageDiv); scrollToBottom();
             
             try {
-                const savedTemp = localStorage.getItem('harvion-temp') || "0.7"; const savedTokens = localStorage.getItem('harvion-tokens') || "1500";
+                const savedTemp = localStorage.getItem('harvion-temp') || "0.2"; 
+                const savedTokens = localStorage.getItem('harvion-tokens') || "1500";
                 const harvionPersonality = `Operational Profile: ${activeMode}. Logic configurations bounds: Temp=${savedTemp}, MaxTokens=${savedTokens}. Prompt: `;
                 
                 let requestParts = [];
@@ -983,14 +983,37 @@
 
                 currentImageBase64 = null;
                 currentImageMimeType = null;
-console.log("SENDING PAYLOAD TO BACKEND:", JSON.stringify(networkRequestPayload, null, 2));
+
+                // 🔄 Re-aligning conversation tree data to capture context array completely
+                globalConversationTree.push({
+                    role: 'user',
+                    parts: requestParts
+                });
+
+                // 🛠️ FIX 1: Generating standard schema variables mapping
+                const networkRequestPayload = {
+                    contents: globalConversationTree,
+                    userId: authEngine.currentUser ? authEngine.currentUser.uid : null,
+                    temperature: parseFloat(savedTemp),
+                    max_tokens: parseInt(savedTokens)
+                };
+
+                // 🛠️ FIX 2: Inject text extraction fields if document upload layer active
+                if (activeFileUploaded && extractedFileTextContent) {
+                    networkRequestPayload.fileDataToken = "active_matrix_upload";
+                    networkRequestPayload.fileTextContent = extractedFileTextContent;
+                }
+
+                console.log("SENDING PAYLOAD TO BACKEND:", JSON.stringify(networkRequestPayload, null, 2));
+
+                // 🛠️ FIX 3: Passing the true validated payload through body parameter stream
                 const response = await fetch(`/api/chat`, {
                     method: 'POST', 
                     headers: { 
                         'Content-Type': 'application/json',
                         'x-harvion-shield-key': 'HarvionQuantumLabsEngineCoreSecret2026'
                     }, 
-                    body: JSON.stringify({ contents: [{ parts: requestParts }] })
+                    body: JSON.stringify(networkRequestPayload)
                 });
 
                 if(!response.ok) throw new Error("Server disconnect error");
@@ -1019,6 +1042,47 @@ console.log("SENDING PAYLOAD TO BACKEND:", JSON.stringify(networkRequestPayload,
                         } catch(jsonErr) {}
                     }
                 }
+
+                globalConversationTree.push({
+                    role: 'model',
+                    parts: [{ text: streamLiveTokenAccumulator }]
+                });
+
+                if (authEngine.currentUser) {
+                    firestoreDb.collection("users").doc(authEngine.currentUser.uid)
+                        .collection("chats_history").add({
+                            user_payload: message || "[Document Vector Interaction]",
+                            model_response: streamLiveTokenAccumulator,
+                            timestamp: new Date().toISOString()
+                        }).catch(e => console.log("History persistence deferred."));
+                }
+
+                if (!activeUserSession.loggedIn) {
+                    streamLiveTokenAccumulator += "<br><br><em style='color:var(--text-muted); font-size:13px; display:block;'><i class='fa-solid fa-right-to-bracket'></i> Login for a better experience and unlock advanced features.</em>";
+                    bubbleDiv.innerHTML = streamLiveTokenAccumulator;
+                    scrollToBottom();
+                } else {
+                    if (activeMode === "Quantum Nebula" && !activeUserSession.isPremium) {
+                        let newChatCount = Math.max(0, activeUserSession.remaining_chats - 1);
+                        activeUserSession.remaining_chats = newChatCount;
+                        
+                        await firestoreDb.collection("users").doc(authEngine.currentUser.uid).update({
+                            remaining_chats: newChatCount
+                        });
+                        syncPlatformPremiumUIRefresh();
+                    }
+                }
+                
+                activeFileUploaded = false;
+                extractedFileTextContent = "";
+                document.getElementById('doc-upload').value = "";
+
+                triggerJarvisSoundMatrix('chime');
+            } catch (error) { 
+                bubbleDiv.innerHTML = `<span style="color:var(--neon-purple); font-weight:600;"><i class="fa-solid fa-triangle-exclamation"></i> HARD FAULT: Mainframe pipeline synchronization severed.</span>`; 
+            }
+        }
+                
 
                 if (!activeUserSession.loggedIn) {
                     streamLiveTokenAccumulator += "<br><br><em style='color:var(--text-muted); font-size:13px; display:block;'><i class='fa-solid fa-right-to-bracket'></i> Login for a better experience and unlock advanced features.</em>";

@@ -7,6 +7,11 @@
     <link rel="icon" type="image/png" href="logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;800;900&family=Outfit:wght@300;400;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+<script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+</script>
     
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -1235,7 +1240,8 @@ async function executeGoogleOauthLink() {
             showCustomAlert(error.message);
         });
 }
-        async function handleFileUpload(e) {
+      // 🔥 UPDATED FUNCTION: Support for Text, Images, and PDFs cleanly
+       async function handleFileUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
 
@@ -1249,6 +1255,37 @@ async function executeGoogleOauthLink() {
                     showCustomAlert(`Image "${file.name}" synchronized into system memory. Type your vision instructions signal and press Transmit!`);
                 };
                 reader.readAsDataURL(file);
+            } 
+            else if (file.type === "application/pdf") {
+                const reader = new FileReader();
+                reader.onload = async function(event) {
+                    try {
+                        const typedarray = new Uint8Array(event.target.result);
+                        const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                        let pdfFullText = "";
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            const page = await pdf.getPage(i);
+                            const textContent = await page.getTextContent();
+                            const pageText = textContent.items.map(item => item.str).join(" ");
+                            pdfFullText += pageText + "\n";
+                        }
+                        extractedFileTextContent = pdfFullText;
+                        activeFileUploaded = true;
+                        showCustomAlert(`PDF Document Matrix "${file.name}" successfully loaded (${pdf.numPages} Pages). Type your questions relative to this document asset.`);
+                    } catch (err) {
+                        showCustomAlert("Error parsing PDF structure matrix.");
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            } 
+            else {
+                const txtReader = new FileReader();
+                txtReader.onload = function(event) {
+                    extractedFileTextContent = event.target.result;
+                    activeFileUploaded = true;
+                    showCustomAlert(`Document Matrix "${file.name}" successfully loaded into runtime memory.`);
+                };
+                txtReader.readAsText(file);
             }
 
             if (!activeUser) {
@@ -1272,7 +1309,7 @@ async function executeGoogleOauthLink() {
             } catch (err) {
                 showCustomAlert("Transmission Blocked: Target database denied structural tracking document inputs.");
             }
-        }
+        } // 👈 handleFileUpload function yahan perfectly scope lock ho gaya.
 
         function loadUserFileHistoryFromFirestore(uid) {
             const historyBox = document.getElementById('quantum-history-node');

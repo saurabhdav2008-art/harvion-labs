@@ -1206,31 +1206,7 @@ function executeFirebasePasswordResetLink() {
             showCustomAlert(err.message);
         });
 }
-        async function executeSupabaseAuthLogin() {
-            if (!document.getElementById('hv-login-agree-policy').checked) {
-                showCustomAlert("Please agree to the Terms and Privacy Policy to sign in.");
-                return;
-            }
-            const identity = document.getElementById('login-identity').value.trim();
-            const pass = document.getElementById('login-pass').value;
-            if (!identity || !pass) {
-                showCustomAlert("Please enter both your identity parameter and password.");
-                return;
-            }
-            authEngine.signInWithEmailAndPassword(identity, pass)
-                .then(async (userCredential) => {
-                    const user = userCredential.user;
-                    if (!user.emailVerified) {
-                        showCustomAlert("Access Denied: Aapka Gmail ID verified nahi hai. Kripya pehle email verify karein.");
-                        await authEngine.signOut();
-                        return;
-                    }
-                    closeAuthGateway(); 
-                    triggerCinematicWarpPortal();
-                }).catch((error) => {
-                    showCustomAlert(error.message);
-                });
-        }
+       
 
         async function executeGoogleOauthLink() {
             if (!document.getElementById('hv-login-agree-policy').checked) {

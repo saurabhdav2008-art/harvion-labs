@@ -669,8 +669,9 @@
         let activeFileUploaded = false;
         let extractedFileTextContent = "";
         
-        let activeRegistrationMethod = "EMAIL";
+       let activeRegistrationMethod = "EMAIL";
         let currentAuthWorkflowEmail = "";
+        let currentAuthWorkflowPassword = ""; 
         let hudAnimationLoopToken = null; 
 
         let activeUserSession = { 
@@ -1124,13 +1125,16 @@ if (!activeUserSession.loggedIn) {
         }
 
         function executeFirebaseEmailRegister() {
-            const m = document.getElementById('signup-email-input').value.trim();
-            const p = document.getElementById('signup-email-pass').value;
-            if(!m || p.length < 6) { showCustomAlert("Invalid email format or master passcode structure depth criteria."); return; }
-            currentAuthWorkflowEmail = m;
-            localStorage.setItem('harvion_transit_pass_temp', p);
-            switchAuthStep('auth-step-profile-form');
-        }
+    const m = document.getElementById('signup-email-input').value.trim();
+    const p = document.getElementById('signup-email-pass').value;
+    if(!m || p.length < 6) { showCustomAlert("Invalid email format or master passcode structure depth criteria."); return; }
+    currentAuthWorkflowEmail = m;
+    
+  
+    currentAuthWorkflowPassword = p; 
+    
+    switchAuthStep('auth-step-profile-form');
+}
 
         function executeFirebasePhoneAuth() {
             const pNum = document.getElementById('signup-phone-input').value.trim();
@@ -1165,11 +1169,13 @@ function compileCompletedUserProfileData() {
     const name = document.getElementById('reg-name').value.trim();
     if(!name) { showCustomAlert("Please fill in your name details parameters vector."); return; }
 
-    localStorage.setItem('harvion_temp_name', name);
+   localStorage.setItem('harvion_temp_name', name);
     localStorage.setItem('harvion_clearance', "Standard Beta User");
 
     let emailTarget = currentAuthWorkflowEmail;
-    let passTarget = localStorage.getItem('harvion_transit_pass_temp') || "MasterFallbackNodePass123!";
+    
+    
+    let passTarget = currentAuthWorkflowPassword || "MasterFallbackNodePass123!";
 
     if (!emailTarget && authEngine.currentUser) {
         const u = authEngine.currentUser;

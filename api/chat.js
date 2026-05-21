@@ -31,6 +31,7 @@ export default async function handler(req) {
         }
 
        
+        i// 2. Strict Security Gateway Rule
         if (requestedMode !== 'Pulse Stream') {
             if (!authenticatedUserId) {
                 return new Response(JSON.stringify({ error: 'ACCESS_DENIED: Active authentication token missing or invalid for premium cores.' }), { 
@@ -38,31 +39,43 @@ export default async function handler(req) {
                 });
             }
 
+            // 🌟 ULTIMATE HARVION SECURITY VALVE: Ek hi call me sab kuch verify karenge
+            const rawToken = authHeader.split('Bearer ')[1];
+            const firestoreUrl = `https://firestore.googleapis.com/v1/projects/harvion-labs-51ca1/databases/(default)/documents/users/${authenticatedUserId}`;
             
-            if (requestedMode === "Quantum Nebula") {
-                const rawToken = authHeader.split('Bearer ')[1];
-                const firestoreUrl = `https://firestore.googleapis.com/v1/projects/harvion-labs-51ca1/databases/(default)/documents/users/${authenticatedUserId}`;
+            try {
+                // 1. Database se user profile fetch karo
+                const dbCheck = await fetch(firestoreUrl, {
+                    headers: { 'Authorization': `Bearer ${rawToken}` }
+                });
                 
-                try {
-                    // 1. User ke token se database se bachi hui chats read karo
-                    const dbCheck = await fetch(firestoreUrl, {
-                        headers: { 'Authorization': `Bearer ${rawToken}` }
+                if (!dbCheck.ok) throw new Error("Database connectivity issue");
+                const userData = await dbCheck.json();
+                
+                // Firestore REST API format se data nikalna
+                const userRole = (userData.fields?.role?.stringValue || "Standard Beta User").toLowerCase();
+                const currentChats = parseInt(userData.fields?.remaining_chats?.integerValue || "0");
+                
+                // Check karo kya user sach me premium database me mapped hai?
+                const isRealPremium = ['owner', 'archon', 'apex', 'premium'].some(k => userRole.includes(k));
+
+                // 🛑 CASE A: Agar user ne Supernova Prime manga hai aur wo premium nahi hai
+                if (requestedMode === "Supernova Prime" && !isRealPremium) {
+                    return new Response(JSON.stringify({ error: 'PREMIUM_REQUIRED: Yeh mode sirf authorized Premium Archon users ke liye hai.' }), { 
+                        status: 403, headers: { 'Content-Type': 'application/json' } 
                     });
-                    
-                    if (!dbCheck.ok) throw new Error("Database connectivity issue");
-                    const userData = await dbCheck.json();
-                    
-                    
-                    const currentChats = parseInt(userData.fields?.remaining_chats?.integerValue || "0");
-                    
-                   
+                }
+
+                // 🛑 CASE B: Quantum Nebula ke liye chat logic check aur decrement (Agar premium nahi hai)
+                if (requestedMode === "Quantum Nebula" && !isRealPremium) {
+                    // Agar chats khatam ho gayi hain
                     if (currentChats <= 0) {
                         return new Response(JSON.stringify({ error: 'LIMIT_EXCEEDED: Aapki 10 free chats khatam ho chuki hain.' }), { 
                             status: 403, headers: { 'Content-Type': 'application/json' } 
                         });
                     }
 
-                    
+                    // Database me secure tarike se -1 update karo
                     const newCount = Math.max(0, currentChats - 1);
                     await fetch(`${firestoreUrl}?updateMask.fieldPaths=remaining_chats`, {
                         method: 'PATCH',
@@ -76,12 +89,12 @@ export default async function handler(req) {
                             }
                         })
                     });
-
-                } catch (dbErr) {
-                    return new Response(JSON.stringify({ error: 'DATABASE_FAULT: Security Synchronizer synchronization failed.' }), { 
-                        status: 500, headers: { 'Content-Type': 'application/json' } 
-                    });
                 }
+
+            } catch (dbErr) {
+                return new Response(JSON.stringify({ error: 'DATABASE_FAULT: Security Synchronizer failed to pull metrics.' }), { 
+                    status: 500, headers: { 'Content-Type': 'application/json' } 
+                });
             }
         }
 

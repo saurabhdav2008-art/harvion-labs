@@ -788,24 +788,27 @@
                 activeUserSession.credits = activeUserSession.isPremium ? "Unlimited Credit Weights" : "5,000.00 QCR Balance";
                 
                 syncPlatformPremiumUIRefresh();
-                if(authBlock) authBlock.style.display = 'none';
-                if(profileBlock) profileBlock.style.display = 'flex';
-                document.getElementById('avatar-initial').innerText = activeUserSession.name.charAt(0).toUpperCase();
-                document.getElementById('nav-user-title').innerText = activeUserSession.name;
-                document.getElementById('nav-user-uid').innerText = activeUserSession.uid;
+                    if(authBlock) authBlock.style.display = 'none';
+                    if(profileBlock) profileBlock.style.display = 'flex';
+                    document.getElementById('avatar-initial').innerText = activeUserSession.name.charAt(0).toUpperCase();
+                    document.getElementById('nav-user-title').innerText = activeUserSession.name;
+                    document.getElementById('nav-user-uid').innerText = activeUserSession.uid;
 
-                loadUserFileHistoryFromFirestore(user.uid);
-            } else {
-                activeUserSession.loggedIn = false;
-                activeUserSession.isPremium = false;
-                activeUserSession.isOwner = false;
-                activeUserSession.remaining_chats = 0;
-                if(authBlock) authBlock.style.display = 'flex';
-                if(profileBlock) profileBlock.style.display = 'none';
-                document.getElementById('platform-title-version').innerText = "Harvion Engine v1.5";
-                syncPlatformPremiumUIRefresh();
-            }
-        });
+                    // Safe check taaki defined hone par hi load ho
+                    if (typeof loadUserFileHistoryFromFirestore === 'function') {
+                        loadUserFileHistoryFromFirestore(user.uid);
+                    }
+                } else {
+                    activeUserSession.loggedIn = false;
+                    activeUserSession.isPremium = false;
+                    activeUserSession.isOwner = false;
+                    activeUserSession.remaining_chats = 0;
+                    if(authBlock) authBlock.style.display = 'flex';
+                    if(profileBlock) profileBlock.style.display = 'none';
+                    document.getElementById('platform-title-version').innerText = "Harvion Engine v1.5";
+                    syncPlatformPremiumUIRefresh();
+                }
+            });
 
         function syncPlatformPremiumUIRefresh() {
             const qLbl = document.getElementById('quantum-lock-lbl');
@@ -847,7 +850,7 @@
 
         const isMobile = window.innerWidth <= 768;
         window.onload = () => {
-            runCentralWelcomeRefresh();
+            if (typeof runCentralWelcomeRefresh === 'function') runCentralWelcomeRefresh();
             syncPlatformPremiumUIRefresh();
 
             const progressBar = document.getElementById('load-progress');
@@ -855,47 +858,104 @@
             const splashScreen = document.getElementById('genesis-splash');
             const mainApplication = document.getElementById('app-wrapper');
             const savedPlexus = localStorage.getItem('harvion-plexus') !== "false";
-            document.getElementById('interactive-canvas').style.display = savedPlexus ? 'block' : 'none';
-            const savedDensity = localStorage.getItem('harvion-density') || "comfortable";
-            document.getElementById('chat-box').style.padding = savedDensity === "compact" ? "12px 20px" : "30px";
-            applyThemeRoutine(localStorage.getItem('harvion-theme') || "space");
+            
+            if (document.getElementById('interactive-canvas')) {
+                document.getElementById('interactive-canvas').style.display = savedPlexus ? 'block' : 'none';
+            }
+            if (document.getElementById('chat-box')) {
+                const savedDensity = localStorage.getItem('harvion-density') || "comfortable";
+                document.getElementById('chat-box').style.padding = savedDensity === "compact" ? "12px 20px" : "30px";
+            }
+            if (typeof applyThemeRoutine === 'function') {
+                applyThemeRoutine(localStorage.getItem('harvion-theme') || "space");
+            }
+
             let count = 0;
             const loaderInterval = setInterval(() => {
                 count += Math.floor(Math.random() * 6) + 3;
                 if (count >= 100) {
-                    count = 100; clearInterval(loaderInterval);
+                    count = 100; 
+                    clearInterval(loaderInterval);
                     setTimeout(() => {
-                        splashScreen.classList.add('exit');
-                        setTimeout(() => { mainApplication.classList.add('loaded'); if(!isMobile) init3DTilt(); }, 600);
+                        if (splashScreen) splashScreen.classList.add('exit');
+                        setTimeout(() => { 
+                            if (mainApplication) mainApplication.classList.add('loaded'); 
+                            if (!isMobile && typeof init3DTilt === 'function') init3DTilt(); 
+                        }, 600);
                     }, 300);
                 }
-                if (progressBar) progressBar.style.width = count + '%'; if (counterText) counterText.textContent = count;
+                if (progressBar) progressBar.style.width = count + '%'; 
+                if (counterText) counterText.textContent = count;
             }, 20);
 
-            window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-box-container', {
-                'size': 'invisible'
-            });
+            if (typeof firebase !== 'undefined' && document.getElementById('recaptcha-box-container')) {
+                window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-box-container', {
+                    'size': 'invisible'
+                });
+            }
         };
 
-        const canvas = document.getElementById('interactive-canvas'); const ctx = canvas.getContext('2d'); let width, height, points = [];
+        const canvas = document.getElementById('interactive-canvas'); 
+        const ctx = canvas ? canvas.getContext('2d') : null; 
+        let width, height, points = [];
+
         function setupCanvas() {
-            width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; points = []; const maxP = isMobile ? 35 : 110;
-            for (let i = 0; i < maxP; i++) { points.push({ x: Math.random() * width, y: Math.random() * height, vx: (Math.random() - 0.5) * 0.7, vy: (Math.random() - 0.5) * 0.7, r: Math.random() * 1.5 + 1 }); }
+            if (!canvas) return;
+            width = canvas.width = window.innerWidth; 
+            height = canvas.height = window.innerHeight; 
+            points = []; 
+            const maxP = isMobile ? 35 : 110;
+            for (let i = 0; i < maxP; i++) { 
+                points.push({ 
+                    x: Math.random() * width, 
+                    y: Math.random() * height, 
+                    vx: (Math.random() - 0.5) * 0.7, 
+                    vy: (Math.random() - 0.5) * 0.7, 
+                    r: Math.random() * 1.5 + 1 
+                }); 
+            }
         }
-        window.addEventListener('resize', setupCanvas); setupCanvas();
+
+        if (canvas) {
+            window.addEventListener('resize', setupCanvas); 
+            setupCanvas();
+            // Animation Loop shuru karne ke liye function call
+            renderPlexus(); 
+        }
+
         function renderPlexus() {
-            ctx.clearRect(0, 0, width, height); const lineDist = isMobile ? 90 : 140;
+            if (!ctx || !canvas) return;
+            ctx.clearRect(0, 0, width, height); 
+            const lineDist = isMobile ? 90 : 140;
+            
             points.forEach((p, idx) => {
-                p.x += p.vx; p.y += p.vy; if (p.x < 0 || p.x > width) p.vx *= -1; if (p.y < 0 || p.y > height) p.vy *= -1;
-                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0, 243, 255, 0.4)'; ctx.fill();
+                p.x += p.vx; 
+                p.y += p.vy; 
+                if (p.x < 0 || p.x > width) p.vx *= -1; 
+                if (p.y < 0 || p.y > height) p.vy *= -1;
+                
+                ctx.beginPath(); 
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); 
+                ctx.fillStyle = 'rgba(0, 243, 255, 0.4)'; 
+                ctx.fill();
+                
                 for (let j = idx + 1; j < points.length; j++) {
-                    const p2 = points[j]; const d = Math.hypot(p.x - p2.x, p.y - p2.y);
-                    if (d < lineDist) { ctx.beginPath(); ctx.strokeStyle = `rgba(0, 243, 255, ${0.12 - d/(lineDist*10)})`; ctx.lineWidth = 0.6; ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.stroke(); }
+                    const p2 = points[j]; 
+                    const d = Math.hypot(p.x - p2.x, p.y - p2.y);
+                    if (d < lineDist) { 
+                        ctx.beginPath(); 
+                        ctx.strokeStyle = `rgba(0, 243, 255, ${0.12 - d/(lineDist*10)})`; 
+                        ctx.lineWidth = 0.6; 
+                        ctx.moveTo(p.x, p.y); 
+                        ctx.lineTo(p2.x, p2.y); 
+                        ctx.stroke(); 
+                    }
                 }
             });
+           
             requestAnimationFrame(renderPlexus);
         }
-        renderPlexus();
+                    renderPlexus();
 
         function init3DTilt() {
             const asideS = document.getElementById('panel-left'); const mainP = document.getElementById('panel-right');
@@ -1029,7 +1089,7 @@
                     parts: [{ text: streamLiveTokenAccumulator }]
                 });
 
-               // --- YEH WAALA GHOST CODE BINAA TRY BLOCK KE KULLA GHOOM RAHA HAI ---
+
 if (!currentImageBase64) {
     showCustomAlert(`Encrypted backup transmission successful: ${fileName}`);
 }

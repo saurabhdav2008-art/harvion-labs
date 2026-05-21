@@ -31,7 +31,7 @@ export default async function handler(req) {
         }
 
        
-        i// 2. Strict Security Gateway Rule
+        // 2. Strict Security Gateway Rule
         if (requestedMode !== 'Pulse Stream') {
             if (!authenticatedUserId) {
                 return new Response(JSON.stringify({ error: 'ACCESS_DENIED: Active authentication token missing or invalid for premium cores.' }), { 

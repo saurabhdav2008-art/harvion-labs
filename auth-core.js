@@ -36,6 +36,7 @@ function closeCustomAlert() {
 }
 
 // 3. Global Password Reset Link Pipeline
+// Global Password Reset Link Pipeline
 function executeFirebasePasswordResetLink() {
     const email = document.getElementById('forgot-email-input').value.trim();
     if(!email) { 
@@ -45,7 +46,10 @@ function executeFirebasePasswordResetLink() {
     authEngine.sendPasswordResetEmail(email)
         .then(() => {
             showCustomAlert("Reset link dispatched safely. Check your inbox.");
-            switchAuthStep('auth-login-step');
+            // ✨ Failsafe: Agar page par switchAuthStep function maujood hai, tabhi chalega
+            if (typeof switchAuthStep === 'function') {
+                switchAuthStep('auth-login-step');
+            }
         }).catch((err) => {
             showCustomAlert(err.message);
         });

@@ -208,6 +208,7 @@ ${fileContextChunk}
 ---
 User Input: `;
         if (messages.length > 0 && messages[0].role === 'user') {
+        if (messages.length > 0 && messages[0].role === 'user') {
             if (typeof messages[0].content === 'string') {
                 messages[0].content = systemText + messages[0].content;
             } else if (Array.isArray(messages[0].content)) {

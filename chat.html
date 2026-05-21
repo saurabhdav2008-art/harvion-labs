@@ -567,8 +567,6 @@
 
             <div class="history-section" id="quantum-history-node">
                 <h4>Quantum History</h4>
-                <div class="history-item" onclick="loadHistorySimulation('physics')"><i class="fa-solid fa-fingerprint"></i> Physics simulation...</div>
-                <div class="history-item" onclick="loadHistorySimulation('neural')"><i class="fa-solid fa-network-wired"></i> Neural bypass script</div>
             </div>
 
             <div class="sidebar-footer">
@@ -781,11 +779,28 @@
                     activeUserSession.clearance = "Apex Archon Core (Owner)";
                     document.getElementById('platform-title-version').innerHTML = "Harvion Engine <span style='color:var(--neon-purple); font-family:\"Orbitron\"; font-size:11px; letter-spacing:1px;'>[APEX ARCHON]</span>";
                 } else {
+                    activeUserSession.loggedIn = false;
+                    activeUserSession.isPremium = false;
                     activeUserSession.isOwner = false;
-                    activeUserSession.isPremium = false; // ✨ Fixed: Pure production logic lock (No localStorage override)
+                    activeUserSession.remaining_chats = 0;
+                    if(authBlock) authBlock.style.display = 'flex';
+                    if(profileBlock) profileBlock.style.display = 'none';
+                    document.getElementById('platform-title-version').innerText = "Harvion Engine v1.5";
+                    syncPlatformPremiumUIRefresh();
+
+                    // 🔒 LOCK INJECTION: Jab user login nahi hoga, toh ye clean premium text dikhega
+                    const historyBox = document.getElementById('quantum-history-node');
+                    if (historyBox) {
+                        historyBox.innerHTML = `
+                            <h4>Quantum History</h4>
+                            <div style="color:var(--text-muted); font-size:12px; padding:20px 10px; text-align:center; font-style:italic; line-height:1.5;">
+                                <i class="fa-solid fa-lock" style="color:var(--neon-purple); margin-bottom:8px; display:block; font-size:16px;"></i>
+                                Sign in to preserve and access your neural thread history matrix.
+                            </div>
+                        `;
+                    }
                 }
-                activeUserSession.location = "Primary Cloud Node Location";
-                activeUserSession.credits = activeUserSession.isPremium ? "Unlimited Credit Weights" : "5,000.00 QCR Balance";
+            });
                 
                 syncPlatformPremiumUIRefresh();
                     if(authBlock) authBlock.style.display = 'none';
@@ -1292,18 +1307,20 @@
             }
         }
 
-        // 🟢 HISTORY QUERIES ENGINE SLOTS
         function loadUserFileHistoryFromFirestore(uid) {
             const historyBox = document.getElementById('quantum-history-node');
             if (!historyBox) return;
             firestoreDb.collection("users").doc(uid).collection("chats_history") 
                 .orderBy("timestamp", "desc").limit(10).get()
                 .then((querySnapshot) => {
-                    historyBox.innerHTML = `
-                        <h4>Quantum History</h4>
-                        <div class="history-item" onclick="loadHistorySimulation('physics')"><i class="fa-solid fa-fingerprint"></i> Physics simulation...</div>
-                        <div class="history-item" onclick="loadHistorySimulation('neural')"><i class="fa-solid fa-network-wired"></i> Neural bypass script</div>
-                    `;
+                    historyBox.innerHTML = `<h4>Quantum History</h4>`;
+                    
+                    
+                    if (querySnapshot.empty) {
+                        historyBox.innerHTML += `<div style="color:var(--text-muted); font-size:12px; padding:10px; text-align:center; font-style:italic;">No active thread matrix found.</div>`;
+                        return;
+                    }
+                    
                     querySnapshot.forEach((doc) => {
                         const chatData = doc.data();
                         const historyItemElementRow = document.createElement('div');
@@ -1315,8 +1332,7 @@
                     });
                 }).catch((e) => { console.error("REAL FIREBASE ERROR:", e); });
         }
-
-        // 🟢 CANVAS VISUALIZERS & SYSTEM MODALS CONTROLS
+       
         function triggerCinematicWarpPortal() {
             triggerJarvisSoundMatrix('success'); const overlay = document.getElementById('portal-animation-overlay'); const pCanvas = document.getElementById('portal-canvas'); const pCtx = pCanvas.getContext('2d');
             overlay.style.display = 'flex'; pCanvas.width = window.innerWidth; pCanvas.height = window.innerHeight; let stars = [];

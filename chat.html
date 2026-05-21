@@ -788,7 +788,7 @@
                     document.getElementById('platform-title-version').innerText = "Harvion Engine v1.5";
                     syncPlatformPremiumUIRefresh();
 
-                    // 🔒 LOCK INJECTION: Jab user login nahi hoga, toh ye clean premium text dikhega
+                    
                     const historyBox = document.getElementById('quantum-history-node');
                     if (historyBox) {
                         historyBox.innerHTML = `
@@ -800,7 +800,7 @@
                         `;
                     }
                 }
-            });
+            };
                 
                 syncPlatformPremiumUIRefresh();
                     if(authBlock) authBlock.style.display = 'none';

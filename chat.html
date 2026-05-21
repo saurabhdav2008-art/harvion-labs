@@ -809,7 +809,6 @@
                     document.getElementById('nav-user-title').innerText = activeUserSession.name;
                     document.getElementById('nav-user-uid').innerText = activeUserSession.uid;
 
-                    // Safe check taaki defined hone par hi load ho
                     if (typeof loadUserFileHistoryFromFirestore === 'function') {
                         loadUserFileHistoryFromFirestore(user.uid);
                     }
@@ -822,9 +821,19 @@
                     if(profileBlock) profileBlock.style.display = 'none';
                     document.getElementById('platform-title-version').innerText = "Harvion Engine v1.5";
                     syncPlatformPremiumUIRefresh();
+
+                    const historyBox = document.getElementById('quantum-history-node');
+                    if (historyBox) {
+                        historyBox.innerHTML = `
+                            <h4>Quantum History</h4>
+                            <div style="color:var(--text-muted); font-size:12px; padding:20px 10px; text-align:center; font-style:italic; line-height:1.5;">
+                                <i class="fa-solid fa-lock" style="color:var(--neon-purple); margin-bottom:8px; display:block; font-size:16px;"></i>
+                                Sign in to preserve and access your neural thread history matrix.
+                            </div>
+                        `;
+                    }
                 }
             });
-
         function syncPlatformPremiumUIRefresh() {
             const qLbl = document.getElementById('quantum-lock-lbl');
             const qSlot = document.getElementById('quantum-dropdown-slot');

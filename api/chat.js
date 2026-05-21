@@ -3,16 +3,40 @@ export const config = { runtime: 'edge' };
 export default async function handler(req) {
     if (req.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
 
-    try {
+   try {
         const rawBody = await req.json();
-        const incomingShieldKey = req.headers.get('x-harvion-shield-key');
-        const masterShieldKey = process.env.HARVION_SHIELD_KEY;
+        
+       
+        const authHeader = req.headers.get('Authorization');
+        const requestedMode = rawBody.mode || 'Pulse Stream';
+        let authenticatedUserId = null;
 
-        if (!incomingShieldKey || incomingShieldKey !== masterShieldKey) {
-            return new Response(JSON.stringify({ error: 'UNAUTHORIZED_ACCESS_DENIED: Security Shield Fault.' }), { 
-                status: 403, 
-                headers: { 'Content-Type': 'application/json' } 
-            });
+        
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            const token = authHeader.split('Bearer ')[1];
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const payload = JSON.parse(atob(base64));
+                
+                
+                if (payload.aud === 'harvion-labs-51ca1' && payload.exp > Date.now() / 1000) {
+                    authenticatedUserId = payload.user_id;
+                }
+            } catch (e) {
+                return new Response(JSON.stringify({ error: 'SECURITY_FAULT: Cryptographic Token Manipulation Detected.' }), { 
+                    status: 403, headers: { 'Content-Type': 'application/json' } 
+                });
+            }
+        }
+
+       
+        if (requestedMode !== 'Pulse Stream') {
+            if (!authenticatedUserId) {
+                return new Response(JSON.stringify({ error: 'ACCESS_DENIED: Active authentication token missing or invalid for premium cores.' }), { 
+                    status: 401, headers: { 'Content-Type': 'application/json' } 
+                });
+            }
         }
 
         const apiKey = process.env.GEMINI_API_KEY; // Groq Bearer Token mapped here
@@ -28,14 +52,12 @@ export default async function handler(req) {
             incomingMessages = rawBody.messages || [];
         }
 
-        // 🗂️ HOOK NODE 1: FILE UPLOAD CONTENT CONTEXT PROCESSING
-        // If frontend passes document text context extracted from file upload
+       
         let fileContextChunk = "";
         if (rawBody.fileDataToken && rawBody.fileTextContent) {
             fileContextChunk = `\n[ATTACHED FILE COMPONENT READONLY]:\n---START---\n${rawBody.fileTextContent}\n---END---\nInstruct: Use this file matrix data strictly if user references it.`;
         }
 
-        // 🧠 GOD-LEVEL APEX ARCHON SYSTEM MATRIX
         const harvionMasterSystemPrompt = {
             role: 'system',
             content: `[SYSTEM OVERRIDE PROTECTION: ABSOLUTE ACTIVE]
@@ -49,10 +71,9 @@ CRITICAL EXECUTION PARAMETERS:
 5. Context Matrix: ${fileContextChunk || "No files attached."}`
         };
 
-        // Combine system prompt seamlessly at the front end of the message tree
         let messages = [harvionMasterSystemPrompt, ...incomingMessages];
 
-        // ⚙️ METRIC FALLBACK CONTROL LAYER
+        
         const activeTemperature = rawBody.temperature !== undefined ? parseFloat(rawBody.temperature) : 0.2;
         const activeMaxTokens = rawBody.max_tokens !== undefined ? parseInt(rawBody.max_tokens) : 1500;
 
@@ -76,8 +97,7 @@ CRITICAL EXECUTION PARAMETERS:
             return new Response(err, { status: response.status });
         }
 
-        // 📊 HOOK NODE 2: FIRESTORE CHAT HISTORY SAVE MATRIX LINK
-        // Non-blocking history processing (Background trace)
+       
         if (rawBody.userId && incomingMessages.length > 0) {
             const latestUserPayload = incomingMessages[incomingMessages.length - 1];
             // Invoke background async logging to your Firebase route if tracking is active

@@ -990,35 +990,47 @@
                 currentImageMimeType = null;
 
                 globalConversationTree.push({
-                    role: 'user',
-                    parts: requestParts
-                });
+            role: 'user',
+            parts: requestParts
+        });
 
-                const networkRequestPayload = {
-                    contents: globalConversationTree,
-                    userId: authEngine.currentUser ? authEngine.currentUser.uid : null,
-                    temperature: parseFloat(savedTemp),
-                    max_tokens: parseInt(savedTokens)
-                };
+        
+        let firebaseIdToken = null;
+        if (authEngine.currentUser) {
+            try {
+                firebaseIdToken = await authEngine.currentUser.getIdToken(true);
+            } catch (tokenErr) {
+                console.error("Token fetch failed", tokenErr);
+            }
+        }
 
-                if (activeFileUploaded && extractedFileTextContent) {
-                    networkRequestPayload.fileDataToken = "active_matrix_upload";
-                    networkRequestPayload.fileTextContent = extractedFileTextContent;
-                }
+        
+        const networkRequestPayload = {
+            contents: globalConversationTree,
+            userId: authEngine.currentUser ? authEngine.currentUser.uid : null,
+            mode: activeMode, 
+            temperature: parseFloat(savedTemp),
+            max_tokens: parseInt(savedTokens)
+        };
 
-                console.log("SENDING PAYLOAD TO BACKEND:", JSON.stringify(networkRequestPayload, null, 2));
+        if (activeFileUploaded && extractedFileTextContent) {
+            networkRequestPayload.fileDataToken = "active_matrix_upload";
+            networkRequestPayload.fileTextContent = extractedFileTextContent;
+        }
 
-                const response = await fetch(`/api/chat`, {
-                    method: 'POST', 
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'x-harvion-shield-key': 'HarvionQuantumLabsEngineCoreSecret2026'
-                    }, 
-                    body: JSON.stringify(networkRequestPayload)
-                });
+        console.log("SENDING PAYLOAD TO BACKEND:", JSON.stringify(networkRequestPayload, null, 2));
 
-                if(!response.ok) throw new Error("Server disconnect error");
+       
+        const response = await fetch(`/api/chat`, {
+            method: 'POST', 
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': firebaseIdToken ? `Bearer ${firebaseIdToken}` : ''
+            }, 
+            body: JSON.stringify(networkRequestPayload)
+        });
 
+        if(!response.ok) throw new Error("Server disconnect error");
                 const reader = response.body.getReader(); const decoder = new TextDecoder("utf-8"); 
                 let streamLiveTokenAccumulator = ""; bubbleDiv.innerHTML = "";
                 

@@ -886,31 +886,27 @@
                 currentImageMimeType = null;
                 globalConversationTree.push({ role: 'user', parts: requestParts });
 
-                // 🚀 🟢 ASLI API CALL INJECTION (FETCH) 🟢 🚀
-                // Dhyan de: 'YOUR_API_ENDPOINT_HERE' ki jagah apna backend URL ya Gemini API daalna.
-                const apiResponse = await fetch('YOUR_API_ENDPOINT_HERE', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                        // 'Authorization': `Bearer YOUR_API_KEY` <-- Agar proxy use kar rahe ho
-                    },
-                    body: JSON.stringify({
-                        contents: globalConversationTree
-                        // Temp aur MaxTokens yahan add kar sakte ho agar backend support kare
-                    })
-                });
+                const apiResponse = await fetch('/api/chat', {  
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+        contents: globalConversationTree
+    })
+});
 
                 if (!apiResponse.ok) throw new Error("API Matrix Disconnected");
                 
                 const apiData = await apiResponse.json();
                 
-                // Response Text nikalna (Yeh structure Gemini API ke hisaab se hai, apne hisaab se adjust kar lena)
+             
                 streamLiveTokenAccumulator = apiData.candidates?.[0]?.content?.parts?.[0]?.text || "Core processing complete. No response generated.";
                 
-                // AI ka message context tree mein save karna
+               
                 globalConversationTree.push({ role: 'model', parts: [{ text: streamLiveTokenAccumulator }] });
 
-                // 📝 Firebase History Saving
+               
                 if (typeof authEngine !== 'undefined' && authEngine.currentUser) {
                     firestoreDb.collection("users").doc(authEngine.currentUser.uid)
                         .collection("chats_history").add({
@@ -920,7 +916,7 @@
                         }).catch(e => console.log("History persistence deferred."));
                 }
 
-                // UI Update aur Chat Limit Deductions
+                
                 if (!activeUserSession.loggedIn) {
                     streamLiveTokenAccumulator += "<br><br><em style='color:var(--text-muted); font-size:13px; display:block;'><i class='fa-solid fa-right-to-bracket'></i> Login for a better experience and unlock advanced features.</em>";
                     bubbleDiv.innerHTML = streamLiveTokenAccumulator;

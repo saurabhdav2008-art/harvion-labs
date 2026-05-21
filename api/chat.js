@@ -162,7 +162,7 @@ export default async function handler(req) {
 
         const harvionMasterSystemPrompt = {
             role: 'system',
-            content: `You are HARVION v1.5, an Apex Archon super-intelligence engineered natively by Harvion Labs. Master architect: Saurabh Kumar. Mirror prompt scripts smoothly.${fileContextChunk}`
+            content: `You are HARVION v6.0, an Apex Archon super-intelligence engineered natively by Harvion Labs. Master architect: Saurabh Kumar. Mirror prompt scripts smoothly.${fileContextChunk}`
         };
 
         let messages = [harvionMasterSystemPrompt, ...incomingMessages];

@@ -800,9 +800,9 @@
                         `;
                     }
                 }
-            };
+            });
                 
-                syncPlatformPremiumUIRefresh();
+              function syncPlatformPremiumUIRefresh();
                     if(authBlock) authBlock.style.display = 'none';
                     if(profileBlock) profileBlock.style.display = 'flex';
                     document.getElementById('avatar-initial').innerText = activeUserSession.name.charAt(0).toUpperCase();
@@ -1325,7 +1325,7 @@
             }
         }
 
-       fufunction loadUserFileHistoryFromFirestore(uid) {
+       function loadUserFileHistoryFromFirestore(uid) {
             const historyBox = document.getElementById('quantum-history-node');
             if (!historyBox) return;
             firestoreDb.collection("users").doc(uid).collection("chats_history") 

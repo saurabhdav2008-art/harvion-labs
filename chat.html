@@ -1307,7 +1307,7 @@
             }
         }
 
-       function loadUserFileHistoryFromFirestore(uid) {
+       fufunction loadUserFileHistoryFromFirestore(uid) {
             const historyBox = document.getElementById('quantum-history-node');
             if (!historyBox) return;
             firestoreDb.collection("users").doc(uid).collection("chats_history") 

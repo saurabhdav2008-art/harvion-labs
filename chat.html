@@ -16,7 +16,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    
+    <script src="auth-core.js"></script>
     <style>
         :root {
             --bg-deep: #020205;
@@ -651,25 +651,13 @@
         </div>
     </div>
 
-    <script>const firebaseConfig = {
-            apiKey: "AIzaSyCUSuCzsmvcHZy2YJq8G-Xhbs-A9Iy1Tn8",
-            authDomain: "harvion-labs-51ca1.firebaseapp.com",
-            projectId: "harvion-labs-51ca1",
-            storageBucket: "harvion-labs-51ca1.firebasestorage.app",
-            messagingSenderId: "908526936420",
-            appId: "1:908526936420:web:94fd6c29a53375a4175a71"
-        };
-
-        firebase.initializeApp(firebaseConfig);
-        const authEngine = firebase.auth();
-        const firestoreDb = firebase.firestore();
-        
-        // ✅ CORE DECLARATIONS: Inke bina script crash ho rahi thi
+    <script>
+        // CORE INTEGRATION PARAMETERS
         let globalConversationTree = [];
         let activeFileUploaded = false;
         let extractedFileTextContent = "";
         
-      let activeRegistrationMethod = "EMAIL";
+        let activeRegistrationMethod = "EMAIL";
         let currentAuthWorkflowEmail = "";
         let currentAuthWorkflowPassword = ""; 
         let hudAnimationLoopToken = null;
@@ -749,18 +737,6 @@
             if (alertModal) { alertModal.style.opacity = '0'; setTimeout(() => { alertModal.style.display = 'none'; }, 300); }
         }
 
-        function showCustomAlert(msg) {
-            const overlay = document.getElementById('hv-custom-alert-overlay');
-            document.getElementById('hv-alert-text').innerText = msg;
-            overlay.style.display = 'flex';
-            setTimeout(() => { overlay.style.opacity = '1'; }, 10);
-        }
-        function closeCustomAlert() {
-            const overlay = document.getElementById('hv-custom-alert-overlay');
-            overlay.style.opacity = '0';
-            setTimeout(() => { overlay.style.display = 'none'; }, 300);
-        }
-
         authEngine.onAuthStateChanged(async (user) => {
             const authBlock = document.getElementById('nav-auth-block');
             const profileBlock = document.getElementById('user-profile-block');
@@ -771,7 +747,6 @@
                     if(authBlock) authBlock.style.display = 'flex';
                     if(profileBlock) profileBlock.style.display = 'none';
                     document.getElementById('platform-title-version').innerText = "Harvion Engine v1.5";
-                    
                     syncPlatformPremiumUIRefresh();
                     return; 
                 }
@@ -785,30 +760,29 @@
                     const snap = await firestoreDb.collection("users").doc(user.uid).get();
                     if(snap.exists) {
                         const d = snap.data();
-                        activeUserSession.name = d.full_name || "Core Node Developer";
+                        activeUserSession.name = d.full_name || user.displayName || "Core Node Developer";
                         activeUserSession.clearance = d.role || "Standard Beta User";
                         activeUserSession.remaining_chats = d.remaining_chats !== undefined ? d.remaining_chats : 0;
                     } else {
-                        activeUserSession.name = localStorage.getItem('harvion_temp_name') || "Core Node Developer";
+                        activeUserSession.name = localStorage.getItem('harvion_temp_name') || user.displayName || "Core Node Developer";
                         activeUserSession.clearance = localStorage.getItem('harvion_clearance') || 'Standard Beta User';
                         activeUserSession.remaining_chats = 0;
                     }
                 } catch(e) {
-                    activeUserSession.name = localStorage.getItem('harvion_temp_name') || "Core Node Developer";
+                    activeUserSession.name = localStorage.getItem('harvion_temp_name') || user.displayName || "Core Node Developer";
                     activeUserSession.clearance = localStorage.getItem('harvion_clearance') || 'Standard Beta User';
                     activeUserSession.remaining_chats = 0;
                 }
 
                 activeUserSession.username = activeUserSession.name.toLowerCase().replace(/\s+/g, '_') + '_' + user.uid.substring(0,3);
                 activeUserSession.ipAddress = "Dynamic Cloud Routing Node";
-                
-                if(['owner', 'archon', 'apex', 'premium', 'apex archon core'].some(keyword => activeUserSession.clearance.toLowerCase().includes(keyword))) {
+               if(['owner', 'archon', 'apex', 'premium', 'apex archon core'].some(keyword => activeUserSession.clearance.toLowerCase().includes(keyword))) {
                     activeUserSession.isOwner = true; activeUserSession.isPremium = true;
                     activeUserSession.clearance = "Apex Archon Core (Owner)";
                     document.getElementById('platform-title-version').innerHTML = "Harvion Engine <span style='color:var(--neon-purple); font-family:\"Orbitron\"; font-size:11px; letter-spacing:1px;'>[APEX ARCHON]</span>";
                 } else {
                     activeUserSession.isOwner = false;
-                    activeUserSession.isPremium = localStorage.getItem('harvion_premium_tier') === "true";
+                    activeUserSession.isPremium = false; // ✨ Fixed: Pure production logic lock (No localStorage override)
                 }
                 activeUserSession.location = "Primary Cloud Node Location";
                 activeUserSession.credits = activeUserSession.isPremium ? "Unlimited Credit Weights" : "5,000.00 QCR Balance";
@@ -829,7 +803,6 @@
                 if(authBlock) authBlock.style.display = 'flex';
                 if(profileBlock) profileBlock.style.display = 'none';
                 document.getElementById('platform-title-version').innerText = "Harvion Engine v1.5";
-                
                 syncPlatformPremiumUIRefresh();
             }
         });
@@ -936,7 +909,6 @@
         function toggleSidebar() { triggerJarvisSoundMatrix('click'); document.getElementById('panel-left').classList.toggle('active'); }
         function closeSidebarMobile() { if(isMobile) document.getElementById('panel-left').classList.remove('active'); }
 
-        // ✅ RE-ENGINEERED SEND MESSAGE ENGINE - FLAWLESS SCALABILITY
         async function sendMessage() {
             const inputField = document.getElementById('user-input'); const message = inputField.value.trim(); 
             if (message === '' && !currentImageBase64) return;
@@ -991,47 +963,42 @@
                 currentImageMimeType = null;
 
                 globalConversationTree.push({
-            role: 'user',
-            parts: requestParts
-        });
+                    role: 'user',
+                    parts: requestParts
+                });
 
-        
-        let firebaseIdToken = null;
-        if (authEngine.currentUser) {
-            try {
-                firebaseIdToken = await authEngine.currentUser.getIdToken(true);
-            } catch (tokenErr) {
-                console.error("Token fetch failed", tokenErr);
-            }
-        }
+                let firebaseIdToken = null;
+                if (authEngine.currentUser) {
+                    try {
+                        firebaseIdToken = await authEngine.currentUser.getIdToken(true);
+                    } catch (tokenErr) {
+                        console.error("Token fetch failed", tokenErr);
+                    }
+                }
 
-        
-        const networkRequestPayload = {
-            contents: globalConversationTree,
-            userId: authEngine.currentUser ? authEngine.currentUser.uid : null,
-            mode: activeMode, 
-            temperature: parseFloat(savedTemp),
-            max_tokens: parseInt(savedTokens)
-        };
+                const networkRequestPayload = {
+                    contents: globalConversationTree,
+                    userId: authEngine.currentUser ? authEngine.currentUser.uid : null,
+                    mode: activeMode, 
+                    temperature: parseFloat(savedTemp),
+                    max_tokens: parseInt(savedTokens)
+                };
 
-        if (activeFileUploaded && extractedFileTextContent) {
-            networkRequestPayload.fileDataToken = "active_matrix_upload";
-            networkRequestPayload.fileTextContent = extractedFileTextContent;
-        }
+                if (activeFileUploaded && extractedFileTextContent) {
+                    networkRequestPayload.fileDataToken = "active_matrix_upload";
+                    networkRequestPayload.fileTextContent = extractedFileTextContent;
+                }
 
-        console.log("SENDING PAYLOAD TO BACKEND:", JSON.stringify(networkRequestPayload, null, 2));
+                const response = await fetch(`/api/chat`, {
+                    method: 'POST', 
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': firebaseIdToken ? `Bearer ${firebaseIdToken}` : ''
+                    }, 
+                    body: JSON.stringify(networkRequestPayload)
+                });
 
-       
-        const response = await fetch(`/api/chat`, {
-            method: 'POST', 
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': firebaseIdToken ? `Bearer ${firebaseIdToken}` : ''
-            }, 
-            body: JSON.stringify(networkRequestPayload)
-        });
-
-        if(!response.ok) throw new Error("Server disconnect error");
+                if(!response.ok) throw new Error("Server disconnect error");
                 const reader = response.body.getReader(); const decoder = new TextDecoder("utf-8"); 
                 let streamLiveTokenAccumulator = ""; bubbleDiv.innerHTML = "";
                 
@@ -1070,17 +1037,16 @@
                             timestamp: new Date().toISOString()
                         }).catch(e => console.log("History persistence deferred."));
                 }
-if (!activeUserSession.loggedIn) {
+
+                if (!activeUserSession.loggedIn) {
                     streamLiveTokenAccumulator += "<br><br><em style='color:var(--text-muted); font-size:13px; display:block;'><i class='fa-solid fa-right-to-bracket'></i> Login for a better experience and unlock advanced features.</em>";
                     bubbleDiv.innerHTML = streamLiveTokenAccumulator;
                     scrollToBottom();
-                } else {
-                    if (activeMode === "Quantum Nebula" && !activeUserSession.isPremium) {
-                        
-                        let newChatCount = Math.max(0, activeUserSession.remaining_chats - 1);
-                        activeUserSession.remaining_chats = newChatCount;
-                        syncPlatformPremiumUIRefresh();
-                    }
+                } elif (activeMode === "Quantum Nebula" && !activeUserSession.isPremium) {
+    let newChatCount = Math.max(0, activeUserSession.remaining_chats - 1);
+    activeUserSession.remaining_chats = newChatCount; 
+    syncPlatformPremiumUIRefresh();
+}
                 }
                 
                 activeFileUploaded = false;
@@ -1092,6 +1058,7 @@ if (!activeUserSession.loggedIn) {
                 bubbleDiv.innerHTML = `<span style="color:var(--neon-purple); font-weight:600;"><i class="fa-solid fa-triangle-exclamation"></i> HARD FAULT: Mainframe pipeline synchronization severed.</span>`; 
             }
         }
+
         function addMessage(text, sender) {
             const chatBox = document.getElementById('chat-box'); const messageDiv = document.createElement('div'); messageDiv.className = `message ${sender}`;
             messageDiv.innerHTML = sender === 'user' ? `<div class="msg-bubble user-bubble">${text}</div><div class="avatar user-avatar"><i class="fa-solid fa-user-shield"></i></div>` : `<div class="avatar ai-avatar"></div><div class="msg-bubble ai-bubble">${text}</div>`;
@@ -1124,21 +1091,27 @@ if (!activeUserSession.loggedIn) {
             }
         }
 
-       function executeFirebaseEmailRegister() {
-    const m = document.getElementById('signup-email-input').value.trim();
-    const p = document.getElementById('signup-email-pass').value;
-    if(!m || p.length < 6) { showCustomAlert("Invalid email format or master passcode structure depth criteria."); return; }
-    currentAuthWorkflowEmail = m;
-    
-    
-    currentAuthWorkflowPassword = p; 
-    
-    switchAuthStep('auth-step-profile-form');
-}
+        function executeFirebaseEmailRegister() {
+            const m = document.getElementById('signup-email-input').value.trim();
+            const p = document.getElementById('signup-email-pass').value;
+            if(!m || p.length < 6) { showCustomAlert("Invalid email format or master passcode structure depth criteria."); return; }
+            currentAuthWorkflowEmail = m;
+            currentAuthWorkflowPassword = p; 
+            switchAuthStep('auth-step-profile-form');
+        }
 
         function executeFirebasePhoneAuth() {
-            const pNum = document.getElementById('signup-phone-input').value.trim();
+            let pNum = document.getElementById('signup-phone-input').value.trim();
             if(!pNum) { showCustomAlert("Cellular parameter mapping vacantly registered."); return; }
+            
+            if (!pNum.startsWith('+')) {
+                if (pNum.length === 10 && /^\d+$/.test(pNum)) {
+                    pNum = '+91' + pNum;
+                } else {
+                    showCustomAlert("Invalid Format: Kripya sahi mobile number ya country code (e.g. +91) lagayein.");
+                    return;
+                }
+            }
             
             authEngine.signInWithPhoneNumber(pNum, window.recaptchaVerifier)
                 .then((result) => {
@@ -1165,141 +1138,149 @@ if (!activeUserSession.loggedIn) {
                 switchAuthStep('auth-step-profile-form');
             }
         }
-function compileCompletedUserProfileData() {
-    const name = document.getElementById('reg-name').value.trim();
-    if(!name) { showCustomAlert("Please fill in your name details parameters vector."); return; }
 
-    localStorage.setItem('harvion_temp_name', name);
-    localStorage.setItem('harvion_clearance', "Standard Beta User");
+        function compileCompletedUserProfileData() {
+            const name = document.getElementById('reg-name').value.trim();
+            if(!name) { showCustomAlert("Please fill in your name details parameters vector."); return; }
 
-    let emailTarget = currentAuthWorkflowEmail;
-    
-    
-    let passTarget = currentAuthWorkflowPassword || "MasterFallbackNodePass123!";
+            localStorage.setItem('harvion_temp_name', name);
+            localStorage.setItem('harvion_clearance', "Standard Beta User");
 
-    if (!emailTarget && authEngine.currentUser) {
-        const u = authEngine.currentUser;
-        firestoreDb.collection("users").doc(u.uid).set({
-            full_name: name,
-            role: "Standard Beta User",
-            registered_at: new Date().toISOString(),
-            remaining_chats: 10
-        }).then(() => {
-            activeUserSession.name = name;
-            activeUserSession.clearance = "Standard Beta User";
-            activeUserSession.username = name.toLowerCase().replace(/\s+/g, '_') + '_' + u.uid.substring(0,3);
+            let emailTarget = currentAuthWorkflowEmail;
+            let passTarget = currentAuthWorkflowPassword || "MasterFallbackNodePass123!";
 
-            const av = document.getElementById('avatar-initial');
-            const title = document.getElementById('nav-user-title');
-            const uidLbl = document.getElementById('nav-user-uid');
-            if(av) av.innerText = name.charAt(0).toUpperCase();
-            if(title) title.innerText = name;
-            if(uidLbl) uidLbl.innerText = "UID-" + u.uid.substring(0,8).toUpperCase();
-
-            syncPlatformPremiumUIRefresh();
-            
-            showCustomAlert("Infrastructure synchronization complete.");
-            closeAuthGateway();
-            triggerCinematicWarpPortal();
-        }).catch((error) => {
-            showCustomAlert(error.message);
-        });
-        return;
-    }
-
-    authEngine.createUserWithEmailAndPassword(emailTarget, passTarget)
-        .then(async (userCredential) => {
-          const user = userCredential.user;
-            await user.sendEmailVerification();
-            
-            await firestoreDb.collection("users").doc(user.uid).set({
-                full_name: name,
-                role: "Standard Beta User",
-                registered_at: new Date().toISOString(),
-                remaining_chats: 10
-            });
-            
-            await authEngine.signOut();
-            
-            
-            currentAuthWorkflowPassword = ""; 
-            currentAuthWorkflowEmail = "";
-            
-            showCustomAlert("Verification link dispatched! Please check your Gmail inbox and verify your email before logging in again.");
-            switchAuthStep('auth-login-step');
-        }).catch((error) => {
-            showCustomAlert(error.message);
-        });
-}
-async function executeSupabaseAuthLogin() {
-    if (!document.getElementById('hv-login-agree-policy').checked) {
-        showCustomAlert("Please agree to the Terms and Privacy Policy to sign in.");
-        return;
-    }
-    const identity = document.getElementById('login-identity').value.trim();
-    const pass = document.getElementById('login-pass').value;
-    if (!identity || !pass) {
-        showCustomAlert("Please enter both your identity parameter and password.");
-        return;
-    }
-    authEngine.signInWithEmailAndPassword(identity, pass)
-        .then(async (userCredential) => {
-            const user = userCredential.user;
-            if (!user.emailVerified) {
-                // 🌟 FIXED: Hinglish se English badal diya
-                showCustomAlert("Access Denied: Your Gmail ID is not verified. Please verify your email first.");
-                await authEngine.signOut();
-                return;
-            }
-            closeAuthGateway(); 
-            triggerCinematicWarpPortal();
-        }).catch((error) => {
-            showCustomAlert(error.message);
-        });
-}
-function executeFirebasePasswordResetLink() {
-    const email = document.getElementById('forgot-email-input').value.trim();
-    if(!email) { showCustomAlert("Please enter your registered email address."); return; }
-    
-    authEngine.sendPasswordResetEmail(email)
-        .then(() => {
-            showCustomAlert("Reset link dispatched safely. Check your inbox.");
-            switchAuthStep('auth-login-step');
-        }).catch((err) => {
-            showCustomAlert(err.message);
-        });
-}
-       
-
-// 'A' ko chhota (lowercase) kar diya hai
-async function executeGoogleOauthLink() {
-    // 🛡️ SECURITY GATE: AI UI Console par bhi box check hona mandatory hai
-    if (!document.getElementById('hv-login-agree-policy').checked) {
-        showCustomAlert("Please agree to the Terms and Conditions and Privacy Policy to continue with Google.");
-        return;
-    }
-
-    const provider = new firebase.auth.GoogleAuthProvider();
-    authEngine.signInWithPopup(provider)
-        .then(async (result) => {
-            const u = result.user;
-            const docSnap = await firestoreDb.collection("users").doc(u.uid).get();
-            if (!docSnap.exists) {
-                await firestoreDb.collection("users").doc(u.uid).set({
-                    full_name: u.displayName || "Google User Node",
+            if (!emailTarget && authEngine.currentUser) {
+                const u = authEngine.currentUser;
+                firestoreDb.collection("users").doc(u.uid).set({
+                    full_name: name,
                     role: "Standard Beta User",
                     registered_at: new Date().toISOString(),
                     remaining_chats: 10
+                }).then(() => {
+                    activeUserSession.name = name;
+                    activeUserSession.clearance = "Standard Beta User";
+                    activeUserSession.username = name.toLowerCase().replace(/\s+/g, '_') + '_' + u.uid.substring(0,3);
+
+
+                    const av = document.getElementById('avatar-initial');
+                    const title = document.getElementById('nav-user-title');
+                    const uidLbl = document.getElementById('nav-user-uid');
+                    if(av) av.innerText = name.charAt(0).toUpperCase();
+                    if(title) title.innerText = name;
+                    if(uidLbl) uidLbl.innerText = "UID-" + u.uid.substring(0,8).toUpperCase();
+
+                    syncPlatformPremiumUIRefresh();
+                    showCustomAlert("Infrastructure synchronization complete.");
+                    closeAuthGateway();
+                    triggerCinematicWarpPortal();
+                }).catch((error) => {
+                    showCustomAlert(error.message);
                 });
+                return;
             }
-            closeAuthGateway(); 
-            triggerCinematicWarpPortal();
-        }).catch((error) => {
-            showCustomAlert(error.message);
-        });
-}
-      // 🔥 UPDATED FUNCTION: Support for Text, Images, and PDFs cleanly
-       async function handleFileUpload(e) {
+
+            authEngine.createUserWithEmailAndPassword(emailTarget, passTarget)
+                .then(async (userCredential) => {
+                    const user = userCredential.user;
+                    await user.sendEmailVerification();
+                    
+                    await firestoreDb.collection("users").doc(user.uid).set({
+                        full_name: name,
+                        role: "Standard Beta User",
+                        registered_at: new Date().toISOString(),
+                        remaining_chats: 10
+                    });
+                    
+                    await authEngine.signOut();
+                    currentAuthWorkflowPassword = ""; 
+                    currentAuthWorkflowEmail = "";
+                    
+                    showCustomAlert("Verification link dispatched! Please check your Gmail inbox and verify your email before logging in again.");
+                    switchAuthStep('auth-login-step');
+                }).catch((error) => {
+                    showCustomAlert(error.message);
+                });
+        }
+
+        async function executeSupabaseAuthLogin() {
+            if (!document.getElementById('hv-login-agree-policy').checked) {
+                showCustomAlert("Please agree to the Terms and Privacy Policy to sign in.");
+                return;
+            }
+            const identity = document.getElementById('login-identity').value.trim();
+            const pass = document.getElementById('login-pass').value;
+            if (!identity || !pass) {
+                showCustomAlert("Please enter both your identity parameter and password.");
+                return;
+            }
+            authEngine.signInWithEmailAndPassword(identity, pass)
+                .then(async (userCredential) => {
+                    const user = userCredential.user;
+                    if (!user.emailVerified) {
+                        showCustomAlert("Access Denied: Your Gmail ID is not verified. Please verify your email first.");
+                        await authEngine.signOut();
+                        return;
+                    }
+                    closeAuthGateway(); 
+                    triggerCinematicWarpPortal();
+                }).catch((error) => {
+                    showCustomAlert(error.message);
+                });
+        }
+
+        async function executeGoogleOauthLink() {
+            if (!document.getElementById('hv-login-agree-policy').checked) {
+                showCustomAlert("Please agree to the Terms and Conditions and Privacy Policy to continue with Google.");
+                return;
+            }
+
+            const provider = new firebase.auth.GoogleAuthProvider();
+            authEngine.signInWithPopup(provider)
+                .then(async (result) => {
+                    const u = result.user;
+                    const docSnap = await firestoreDb.collection("users").doc(u.uid).get();
+                    if (!docSnap.exists) {
+                        await firestoreDb.collection("users").doc(u.uid).set({
+                            full_name: u.displayName || "Google User Node",
+                            role: "Standard Beta User",
+                            registered_at: new Date().toISOString(),
+                            remaining_chats: 10
+                        });
+                    }
+                    closeAuthGateway(); 
+                    triggerCinematicWarpPortal();
+                }).catch((error) => {
+                    showCustomAlert(error.message);
+                });
+        }
+
+       async function commitFileMetadataToFirestore(fileName, fileSize) {
+            const activeUser = authEngine.currentUser;
+            if (!activeUser) return;
+            try {
+                await firestoreDb.collection("users").doc(activeUser.uid).collection("chats_history").add({
+                    user_payload: `📁 [Uploaded File]: ${fileName} (${(fileSize / 1024).toFixed(1)} KB)`,
+                    model_response: "Document vector matrix successfully synchronized into system memory assets.",
+                    timestamp: new Date().toISOString() 
+                });
+                if (!currentImageBase64) {
+                    showCustomAlert(`Encrypted backup transmission successful: ${fileName}`);
+                }
+                loadUserFileHistoryFromFirestore(activeUser.uid); 
+            } catch (err) {
+                showCustomAlert("Transmission Blocked: Target database denied structural tracking document inputs.");
+            }
+        }
+                if (!currentImageBase64) {
+                    showCustomAlert(`Encrypted backup transmission successful: ${fileName}`);
+                }
+                loadUserFileHistoryFromFirestore(activeUser.uid); 
+            } catch (err) {
+                showCustomAlert("Transmission Blocked: Target database denied structural tracking document inputs.");
+            }
+        }
+
+        async function handleFileUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
 
@@ -1311,6 +1292,8 @@ async function executeGoogleOauthLink() {
                     currentImageBase64 = event.target.result.split(',')[1];
                     currentImageMimeType = file.type;
                     showCustomAlert(`Image "${file.name}" synchronized into system memory. Type your vision instructions signal and press Transmit!`);
+                    
+                    if (activeUser) commitFileMetadataToFirestore(file.name, file.size);
                 };
                 reader.readAsDataURL(file);
             } 
@@ -1327,9 +1310,18 @@ async function executeGoogleOauthLink() {
                             const pageText = textContent.items.map(item => item.str).join(" ");
                             pdfFullText += pageText + "\n";
                         }
+                    
+                        if (pdfFullText.length > 40000) {
+                            showCustomAlert(`🛑 Document Too Large: Yeh PDF bohot bada hai (${pdf.numPages} Pages). Context window crash se bachne ke liye kripya chhota document use karein.`);
+                            document.getElementById('doc-upload').value = ""; 
+                            return;
+                        }
+
                         extractedFileTextContent = pdfFullText;
                         activeFileUploaded = true;
                         showCustomAlert(`PDF Document Matrix "${file.name}" successfully loaded (${pdf.numPages} Pages). Type your questions relative to this document asset.`);
+                        
+                        if (activeUser) commitFileMetadataToFirestore(file.name, file.size);
                     } catch (err) {
                         showCustomAlert("Error parsing PDF structure matrix.");
                     }
@@ -1342,39 +1334,25 @@ async function executeGoogleOauthLink() {
                     extractedFileTextContent = event.target.result;
                     activeFileUploaded = true;
                     showCustomAlert(`Document Matrix "${file.name}" successfully loaded into runtime memory.`);
+                    
+                    if (activeUser) commitFileMetadataToFirestore(file.name, file.size);
                 };
                 txtReader.readAsText(file);
             }
 
-            if (!activeUser) {
-                if (!file.type.startsWith('image/')) {
-                    showCustomAlert(`Local Sandbox Active: ${file.name}. Sign in to save into encrypted cloud storage metadata slots.`);
-                }
-                return;
+            if (!activeUser && !file.type.startsWith('image/')) {
+                showCustomAlert(`Local Sandbox Active: ${file.name}. Sign in to save into encrypted cloud storage metadata slots.`);
             }
-
-            try {
-                await firestoreDb.collection("users").doc(activeUser.uid).collection("chats_history").add({
-                    fileName: file.name,
-                    fileSize: file.size,
-                    uploadedAt: new Date().toISOString()
-                });
-
-                if (!file.type.startsWith('image/')) {
-                    showCustomAlert(`Encrypted backup transmission successful: ${file.name}`);
-                }
-                loadUserFileHistoryFromFirestore(activeUser.uid); 
-            } catch (err) {
-                showCustomAlert("Transmission Blocked: Target database denied structural tracking document inputs.");
-            }
-        } // 👈 handleFileUpload function yahan perfectly scope lock ho gaya.
+        }
+    </script>
+       
 
         function loadUserFileHistoryFromFirestore(uid) {
             const historyBox = document.getElementById('quantum-history-node');
             if (!historyBox) return;
 
-            firestoreDb.collection("users").doc(uid).collection("file_history")
-                .orderBy("timestamp", "desc").limit(10).get()
+           firestoreDb.collection("users").doc(uid).collection("chats_history") 
+    .orderBy("timestamp", "desc").limit(10).get()
                 .then((querySnapshot) => {
                     historyBox.innerHTML = `
                         <h4>Quantum History</h4>
@@ -1396,10 +1374,9 @@ querySnapshot.forEach((doc) => {
                       
                         historyItemElementRow.onclick = () => showCustomAlert(`Old Chat Log:\n\nYou: ${chatData.user_payload}\n\nAI: ${chatData.model_response}`);
                         
-                        historyBox.appendChild(historyItemElementRow);
-                    });
-               4
-}).catch((e) => {
+                       historyBox.appendChild(historyItemElementRow);
+    });
+}).catch((e) => { 
     console.error("REAL FIREBASE ERROR:", e);
 });
         }
@@ -1546,7 +1523,18 @@ querySnapshot.forEach((doc) => {
         
         function downloadChat() { const txt = Array.from(document.querySelectorAll('.msg-bubble')).map(el => el.innerText).join('\n\n'); if(!txt) return; const blob = new Blob([txt], {type:"text/plain"}); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "harvion_chat_dump.txt"; a.click(); }
         function triggerUpload() { document.getElementById('doc-upload').click(); }
-        function startSpeech() { const Speech = window.SpeechRecognition || window.webkitSpeechRecognition; if(!Speech) return; const rec = new Speech(); rec.lang = 'hi-IN'; rec.start(); rec.onresult = (e) => { document.getElementById('user-input').value = e.results[0][0].transcript; }; }
+        function startSpeech() { 
+    const Speech = window.SpeechRecognition || window.webkitSpeechRecognition; 
+    if(!Speech) return; 
+    const rec = new Speech(); 
+    rec.lang = 'hi-IN'; 
+    rec.start(); 
+    rec.onresult = (e) => { 
+        const input = document.getElementById('user-input');
+        
+        input.value = input.value.trim() ? input.value + " " + e.results[0][0].transcript : e.results[0][0].transcript; 
+    }; 
+}
         function loadHistorySimulation(t) { clearChat(); setTimeout(() => { addMessage("Diagnostic network test simulation.", 'user'); addMessage("Core stabilized inference response mapped successfully under runtime variables tracking parameters layer framework.", 'ai'); }, 120); }
     </script>
 </body>

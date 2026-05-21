@@ -143,14 +143,36 @@ export default async function handler(req) {
             }
         }
 
-        // 🛡️ SYSTEM INFERENCE & MODEL DISPATCH
+        // 🛡️ SYSTEM INFERENCE & MULTIMODAL (VISION) DISPATCH
         const apiKey = process.env.GEMINI_API_KEY; 
         let incomingMessages = [];
+
         if (rawBody.contents) {
-            incomingMessages = rawBody.contents.map(c => ({
-                role: c.role === 'model' ? 'assistant' : 'user',
-                content: c.parts[0].text
-            }));
+            // 👁️ GROQ VISION FORMATTER: Yahan images aur text dono process honge
+            incomingMessages = rawBody.contents.map(c => {
+                let contentArray = [];
+                
+                if (c.parts) {
+                    c.parts.forEach(part => {
+                        if (part.text) {
+                            contentArray.push({ type: "text", text: part.text });
+                        }
+                        if (part.inlineData) {
+                            contentArray.push({
+                                type: "image_url",
+                                image_url: {
+                                    url: `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`
+                                }
+                            });
+                        }
+                    });
+                }
+
+                return {
+                    role: c.role === 'model' ? 'assistant' : 'user',
+                    content: contentArray
+                };
+            });
         } else {
             incomingMessages = rawBody.messages || [];
         }
@@ -167,6 +189,7 @@ export default async function handler(req) {
 
         let messages = [harvionMasterSystemPrompt, ...incomingMessages];
 
+        // 🚀 GROQ VISION MODEL CALL
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -174,60 +197,35 @@ export default async function handler(req) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'llama-3.3-70b-versatile',
+                model: 'llama-3.2-90b-vision-preview', // 🔥 Groq's Advanced Vision Model
                 messages: messages,
                 temperature: rawBody.temperature !== undefined ? parseFloat(rawBody.temperature) : 0.2,
                 max_tokens: rawBody.max_tokens !== undefined ? parseInt(rawBody.max_tokens) : 1500,
-                stream: true
+                stream: false // 🛑 Taki tumhare Frontend ke JSON parser se match kare
             })
         });
 
-        if (!response.ok) return new Response(await response.text(), { status: response.status });
+        if (!response.ok) {
+            const errData = await response.text();
+            console.error("Groq Engine Error:", errData);
+            return new Response(JSON.stringify({ error: "Upstream API Error" }), { status: response.status });
+        }
 
-        const encoder = new TextEncoder();
-        const decoder = new TextDecoder();
-        let leftover = ''; 
+        const data = await response.json();
+        const aiText = data.choices[0].message.content;
 
-        const transformStream = new TransformStream({
-            transform(chunk, controller) {
-                const text = decoder.decode(chunk, { stream: true });
-                const lines = (leftover + text).split('\n');
-                leftover = lines.pop() || ''; 
-                for (const line of lines) {
-                    const trimmed = line.trim();
-                    if (!trimmed || trimmed === 'data: [DONE]') continue; 
-                    if (trimmed.startsWith('data: ')) {
-                        try {
-                            const jsonStr = trimmed.slice(6);
-                            const parsed = JSON.parse(jsonStr);
-                            const content = parsed.choices?.[0]?.delta?.content;
-                            if (content) {
-                                const geminiChunk = { candidates: [{ content: { parts: [{ text: content }] } }] };
-                                controller.enqueue(encoder.encode(JSON.stringify(geminiChunk) + '\n'));
-                            }
-                        } catch (e) {}
+        // Wapas Frontend ko Gemini style JSON format me bhejenge
+        return new Response(JSON.stringify({
+            candidates: [
+                {
+                    content: {
+                        parts: [{ text: aiText }]
                     }
                 }
-            },
-            flush(controller) {
-                if (leftover) {
-                    const trimmed = leftover.trim();
-                    if (!trimmed || trimmed === 'data: [DONE]') return;
-                    if (trimmed.startsWith('data: ')) {
-                        try {
-                            const content = JSON.parse(trimmed.slice(6)).choices?.[0]?.delta?.content;
-                            if (content) {
-                                const geminiChunk = { candidates: [{ content: { parts: [{ text: content }] } }] };
-                                controller.enqueue(encoder.encode(JSON.stringify(geminiChunk) + '\n'));
-                            }
-                        } catch (e) {}
-                    }
-                }
-            }
-        });
-
-        return new Response(transformStream.readable, {
-            headers: { 'Content-Type': 'text/event-stream' }
+            ]
+        }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
         });
 
     } catch (error) {

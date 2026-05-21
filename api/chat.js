@@ -97,7 +97,6 @@ export default async function handler(req) {
             const serverAdminToken = await getGoogleAuthToken(serviceAccountEmail, serviceAccountKey);
 
             try {
-                // Fetch user metrics securely using server admin key
                 const dbCheck = await fetch(firestoreUrl, {
                     headers: { 'Authorization': `Bearer ${serverAdminToken}` }
                 });
@@ -124,7 +123,6 @@ export default async function handler(req) {
 
                     const newCount = Math.max(0, currentChats - 1);
                     
-                    // Database PATCH executed behind server environment rules
                     await fetch(`${firestoreUrl}?updateMask.fieldPaths=remaining_chats`, {
                         method: 'PATCH',
                         headers: { 
@@ -143,21 +141,25 @@ export default async function handler(req) {
             }
         }
 
-        // 🛡️ SYSTEM INFERENCE & MULTIMODAL (VISION) DISPATCH
+        // 🛡️ SYSTEM INFERENCE & MULTIMODAL DISPATCH
         const apiKey = process.env.GEMINI_API_KEY; 
         let incomingMessages = [];
 
         if (rawBody.contents) {
-            // 👁️ GROQ VISION FORMATTER: Yahan images aur text dono process honge
+            // 👁️ GROQ SMART FORMATTER (Fix for 400 Bad Request)
             incomingMessages = rawBody.contents.map(c => {
+                let hasImage = false;
                 let contentArray = [];
+                let pureText = "";
                 
                 if (c.parts) {
                     c.parts.forEach(part => {
                         if (part.text) {
                             contentArray.push({ type: "text", text: part.text });
+                            pureText += part.text + "\n";
                         }
                         if (part.inlineData) {
+                            hasImage = true;
                             contentArray.push({
                                 type: "image_url",
                                 image_url: {
@@ -170,7 +172,8 @@ export default async function handler(req) {
 
                 return {
                     role: c.role === 'model' ? 'assistant' : 'user',
-                    content: contentArray
+                    // 🛑 GROQ FIX: Agar image NAHI hai, toh sirf string bhejo. Image hai toh array.
+                    content: hasImage ? contentArray : pureText.trim()
                 };
             });
         } else {
@@ -197,18 +200,18 @@ export default async function handler(req) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'llama-3.2-90b-vision-preview', // 🔥 Groq's Advanced Vision Model
+                model: 'llama-3.2-90b-vision-preview', 
                 messages: messages,
                 temperature: rawBody.temperature !== undefined ? parseFloat(rawBody.temperature) : 0.2,
                 max_tokens: rawBody.max_tokens !== undefined ? parseInt(rawBody.max_tokens) : 1500,
-                stream: false // 🛑 Taki tumhare Frontend ke JSON parser se match kare
+                stream: false 
             })
         });
 
         if (!response.ok) {
             const errData = await response.text();
             console.error("Groq Engine Error:", errData);
-            return new Response(JSON.stringify({ error: "Upstream API Error" }), { status: response.status });
+            return new Response(JSON.stringify({ error: "Upstream API Error", details: errData }), { status: response.status });
         }
 
         const data = await response.json();

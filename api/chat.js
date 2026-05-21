@@ -37,6 +37,52 @@ export default async function handler(req) {
                     status: 401, headers: { 'Content-Type': 'application/json' } 
                 });
             }
+
+            
+            if (requestedMode === "Quantum Nebula") {
+                const rawToken = authHeader.split('Bearer ')[1];
+                const firestoreUrl = `https://firestore.googleapis.com/v1/projects/harvion-labs-51ca1/databases/(default)/documents/users/${authenticatedUserId}`;
+                
+                try {
+                    // 1. User ke token se database se bachi hui chats read karo
+                    const dbCheck = await fetch(firestoreUrl, {
+                        headers: { 'Authorization': `Bearer ${rawToken}` }
+                    });
+                    
+                    if (!dbCheck.ok) throw new Error("Database connectivity issue");
+                    const userData = await dbCheck.json();
+                    
+                    
+                    const currentChats = parseInt(userData.fields?.remaining_chats?.integerValue || "0");
+                    
+                   
+                    if (currentChats <= 0) {
+                        return new Response(JSON.stringify({ error: 'LIMIT_EXCEEDED: Aapki 10 free chats khatam ho chuki hain.' }), { 
+                            status: 403, headers: { 'Content-Type': 'application/json' } 
+                        });
+                    }
+
+                    
+                    const newCount = Math.max(0, currentChats - 1);
+                    await fetch(`${firestoreUrl}?updateMask.fieldPaths=remaining_chats`, {
+                        method: 'PATCH',
+                        headers: { 
+                            'Authorization': `Bearer ${rawToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            fields: {
+                                remaining_chats: { integerValue: newCount.toString() }
+                            }
+                        })
+                    });
+
+                } catch (dbErr) {
+                    return new Response(JSON.stringify({ error: 'DATABASE_FAULT: Security Synchronizer synchronization failed.' }), { 
+                        status: 500, headers: { 'Content-Type': 'application/json' } 
+                    });
+                }
+            }
         }
 
         const apiKey = process.env.GEMINI_API_KEY; // Groq Bearer Token mapped here

@@ -1369,40 +1369,60 @@
             animateHUD();
         }
 
+     
         function openMainframeModal(section) {
             triggerJarvisSoundMatrix('click'); const modal = document.getElementById('mainframe-modal'); const title = document.getElementById('modal-title'); const content = document.getElementById('modal-body-content');
             if (modal) modal.classList.add('active');
             if (section === 'account') {
                 title.innerText = "MAINFRAME SECURITY METRICS CENTRAL";
                 if (!activeUserSession.loggedIn) {
-                    content.innerHTML = `<div style='text-align:center; padding: 25px 0;'><i class='fa-solid fa-lock' style='font-size: 3rem; color: var(--neon-purple); margin-bottom:15px;'></i><p style='margin-bottom:20px; color:#9ca3af;'>Node cluster detached.</p><button class='auth-btn-submit' onclick='openLoginGateway(); closeMainframeModal();'>Initialize Gateway</button></div>`;
+                    content.innerHTML = `<div style='text-align:center; padding: 25px 0;'><i class='fa-solid fa-lock' style='font-size: 3rem; color: var(--neon-purple); margin-bottom:15px;'></i><p style='margin-bottom:20px; color:#9ca3af;'>Node cluster detached. Mainframe validation keys required.</p><button class='auth-btn-submit' onclick='openLoginGateway(); closeMainframeModal();'>Initialize Database Gateway</button></div>`;
                 } else {
                     content.innerHTML = `
                         <div style='display:flex; align-items:center; gap:20px; margin-bottom:20px; background:rgba(255,255,255,0.02); padding:14px; border-radius:16px;'>
                             <div style='width:55px; height:55px; border-radius:50%; background:linear-gradient(135deg,#00f3ff,#9d00ff); display:flex; justify-content:center; align-items:center; font-size:1.4rem; font-weight:900; color:#fff;'>${activeUserSession.name.charAt(0).toUpperCase()}</div>
-                            <div><h4 style='color:#fff; font-family:"Space Grotesk"; font-size:1.2rem;'>${activeUserSession.name}</h4><p style='color:var(--neon-cyan); font-size:0.85rem;'>@${activeUserSession.username}</p></div>
+                            <div><h4 style='color:#fff; font-family:"Space Grotesk"; font-size:1.2rem; margin-bottom:1px;'>${activeUserSession.name}</h4><p style='color:var(--neon-cyan); font-size:0.85rem; font-family:monospace;'>@${activeUserSession.username}</p></div>
                         </div>
-                        <div class="settings-group-title">Hardware Identity Logs</div>
-                        <div class="settings-row"><span>Global Tracking User ID</span><span style="color:var(--neon-cyan); font-family:monospace;">${activeUserSession.uid}</span></div>
+                        <div class="settings-group-title">Hardware Identity Matrix Logs</div>
+                        <div class="settings-row"><span>Global Tracking User ID</span><span style="color:var(--neon-cyan); font-family:monospace; font-weight:700;">${activeUserSession.uid}</span></div>
+                        <div class="settings-row"><span>Secure Session Auth Token</span><span style="color:#fff; font-family:monospace; font-size:11px; background:rgba(255,255,255,0.05); padding:4px 8px; border-radius:6px;">${activeUserSession.token}</span></div>
+                        <div class="settings-row"><span>Network Gateway Link Address</span><span style="color:var(--text-muted); font-family:monospace;">${activeUserSession.ipAddress}</span></div>
+                        <div class="settings-group-title">Clearance Credentials & Core Allocation</div>
+                        <div class="settings-row"><span>Security Privilege Clear Rank</span><span style="color:var(--neon-purple); font-weight:700;">${activeUserSession.clearance}</span></div>
+                        <div class="settings-row"><span>Active Deployment Server Array</span><span>${activeUserSession.location}</span></div>
+                        <div class="settings-row"><span>Quantum Allocation Credits</span><span style="color:#10b981; font-family:'Orbitron'; font-weight:700;">${activeUserSession.credits}</span></div>
+                        <div class="settings-row"><span>Data Encryption Compliance</span><span style="color:#10b981; font-weight:700;"><i class="fa-solid fa-circle-check"></i> FIREBASE CLOUD SECURED</span></div>
+                        <div class="settings-row"><span>Mainframe Linked Mail Box</span><span style="color:var(--text-muted); font-size:13px;">${activeUserSession.email}</span></div>
+                        <div class="settings-group-title">Live Core Quantum Telemetry HUD Matrix</div>
                         <div class="hud-diagnostic-graph-container"><canvas id="hud-canvas-vector"></canvas></div>
-                        <button onclick="localStorage.clear(); authEngine.signOut(); window.location.reload();" style="width:100%; margin-top:20px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 12px; border-radius: 12px; cursor:pointer;">TERMINATE MAINFRAME SESSION</button>
+                        <button onclick="localStorage.clear(); authEngine.signOut(); window.location.reload();" style="width:100%; margin-top:20px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 12px; border-radius: 12px; font-weight:700; cursor:pointer; font-size:12px;">TERMINATE MAINFRAME SESSION (SIGN OUT)</button>
                     `;
                     setTimeout(initializeLiveCoreDiagnosticHudGraph, 100);
                 }
             } else if (section === 'settings') {
                 title.innerText = "SETTING AND SUPPORT ARCHITECTURE";
                 const sTemp = localStorage.getItem('harvion-temp') || "0.2"; const sTokens = localStorage.getItem('harvion-tokens') || "2048";
-                const sPlexus = localStorage.getItem('harvion-plexus') !== "false"; const sTheme = localStorage.getItem('harvion-theme') || "space";
+                const sPlexus = localStorage.getItem('harvion-plexus') !== "false"; const sDensity = localStorage.getItem('harvion-density') || "comfortable";
+                const sMic = localStorage.getItem('harvion-mic') || "80"; const sAudio = localStorage.getItem('harvion-audio') !== "false"; const sTheme = localStorage.getItem('harvion-theme') || "space";
                 content.innerHTML = `
-                    <div class="settings-group-title">Account Node (Testing Controls)</div>
-                    <div class="settings-row"><span>Toggle Simulated Premium</span><select class="settings-select" onchange="localStorage.setItem('harvion_premium_tier', this.value); window.location.reload();"><option value="false" ${localStorage.getItem('harvion_premium_tier')!=='true'?'selected':''}>Free Tier</option><option value="true" ${localStorage.getItem('harvion_premium_tier')==='true'?'selected':''}>Force Active Premium</option></select></div>
+                    <div class="settings-group-title">Account Node & Tiers (Testing Controls)</div>
+                    <div class="settings-row"><span>Toggle Simulated Premium Token</span><select class="settings-select" onchange="localStorage.setItem('harvion_premium_tier', this.value); window.location.reload();"><option value="false" ${localStorage.getItem('harvion_premium_tier')!=='true'?'selected':''}>Free Freemium Tier</option><option value="true" ${localStorage.getItem('harvion_premium_tier')==='true'?'selected':''}>Force Active Premium</option></select></div>
+                    <div class="settings-group-title">Theme Workspace Overrides</div>
+                    <div class="settings-row"><span>Workspace Matrix Accent</span><select class="settings-select" onchange="updateLiveSettings('theme', this.value)"><option value="space" ${sTheme==='space'?'selected':''}>Deep Space Blue</option><option value="void" ${sTheme==='void'?'selected':''}>Void Eclipse Black</option><option value="cyberpunk" ${sTheme==='cyberpunk'?'selected':''}>Cyberpunk Neon Glow</option></select></div>
+                    <div class="settings-row"><span>Interface Structural Density</span><select class="settings-select" onchange="updateLiveSettings('density', this.value)"><option value="comfortable" ${sDensity==='comfortable'?'selected':''}>Comfortable Grid</option><option value="compact" ${sDensity==='compact'?'selected':''}>Compact Matrix</option></select></div>
                     <div class="settings-group-title">Core AI Logic Weights</div>
-                    <div class="settings-row"><span>Sampling Temperature</span><input type="range" min="0.1" max="1.5" step="0.1" value="${sTemp}" class="settings-slider" oninput="localStorage.setItem('harvion-temp', this.value); if(document.getElementById('temp-lbl')) document.getElementById('temp-lbl').innerText=this.value;"></div>
-                    <button onclick="localStorage.clear(); window.location.reload();" style="width:100%; margin-top:15px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 12px; border-radius: 12px;">PURGE MAINFRAME CACHES</button>
+                    <div class="settings-row"><span>Model Sampling Temperature</span><div style="display:flex; align-items:center; gap:10px;"><span id="temp-lbl" style="color:var(--neon-cyan); font-weight:700;">${sTemp}</span><input type="range" min="0.1" max="1.5" step="0.1" value="${sTemp}" class="settings-slider" oninput="updateLiveSettings('temp', this.value)"></div></div>
+                    <div class="settings-row"><span>Max Execution Token Bounds</span><div style="display:flex; align-items:center; gap:10px;"><span id="tokens-lbl" style="color:var(--neon-cyan); font-weight:700;">${sTokens}</span><input type="range" min="256" max="8192" step="128" value="${sTokens}" class="settings-slider" oninput="updateLiveSettings('tokens', this.value)"></div></div>
+                    <div class="settings-group-title">Hardware Audio & Particle Systems</div>
+                    <div class="settings-row"><span>WebGL Background Particles Plexus</span><input type="checkbox" ${sPlexus ? 'checked' : ''} class="settings-checkbox" onchange="updateLiveSettings('plexus', this.checked)"></div>
+                    <div class="settings-row"><span>Fluid Jarvis Audio Matrix Feedback</span><input type="checkbox" ${sAudio ? 'checked' : ''} class="settings-checkbox" onchange="localStorage.setItem('harvion-audio', this.checked)"></div>
+                    <div class="settings-row"><span>Speech Microphone Db Threshold</span><div style="display:flex; align-items:center; gap:10px;"><span id="mic-lbl" style="color:var(--neon-cyan); font-weight:700;">${sMic}%</span><input type="range" min="10" max="100" value="${sMic}" class="settings-slider" oninput="updateLiveSettings('mic', this.value)"></div></div>
+                    <div class="settings-group-title">Support Telemetry Pipeline Desk</div>
+                    <div class="settings-row" style="flex-direction:column; align-items:flex-start; gap:10px;"><span>Transmit Engine Bug Logs</span><textarea class="settings-textarea" id="feedback-text-area" placeholder="Type data log arrays stream here..."></textarea><button onclick="showCustomAlert('Telemetry Sync Packets complete.'); document.getElementById('feedback-text-area').value='';" style="background:var(--neon-cyan); border:none; padding:8px 16px; border-radius:8px; color:#000; font-weight:700; align-self:flex-end;">Transmit Payload</button></div>
+                    <button onclick="localStorage.clear(); showCustomAlert('Mainframe flushed.'); window.location.reload();" style="width:100%; margin-top:15px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 12px; border-radius: 12px; font-weight:700; cursor:pointer; font-size:12px;"><i class="fa-solid fa-dumpster-fire"></i> PURGE ALL MAINFRAME MEMORY CACHES</button>
                 `;
             }
         }
-
                function closeMainframeModal() {
             triggerJarvisSoundMatrix('click');
             const modal = document.getElementById('mainframe-modal');

@@ -1324,14 +1324,13 @@
                     querySnapshot.forEach((doc) => {
                         const chatData = doc.data();
                         const historyItemElementRow = document.createElement('div');
-                        historyItemElementRow.className = 'history-item';
-                        const shortMessage = chatData.user_payload || "Document Interaction";
-                        historyItemElementRow.innerHTML = `<i class="fa-regular fa-comment-dots" style="color:var(--neon-cyan);"></i> ${shortMessage.substring(0, 20)}...`;
                         historyItemElementRow.onclick = () => showCustomAlert(`Old Log:\nYou: ${chatData.user_payload}\nAI: ${chatData.model_response}`);
                         historyBox.appendChild(historyItemElementRow);
-                    });
-                }).catch((e) => { console.error("REAL FIREBASE ERROR:", e); });
-        }
+                    }); 
+
+                }).catch((e) => { console.error("REAL FIREBASE ERROR:", e); }); 
+        } 
+        
        
         function triggerCinematicWarpPortal() {
             triggerJarvisSoundMatrix('success'); const overlay = document.getElementById('portal-animation-overlay'); const pCanvas = document.getElementById('portal-canvas'); const pCtx = pCanvas.getContext('2d');

@@ -217,8 +217,7 @@
         }        
         .user-avatar { background: rgba(157, 0, 255, 0.15); color: var(--neon-purple); border: 1px solid var(--neon-purple); font-size: 1rem; border-radius: 50%; }
 
-        .msg-bubble { padding: 15px 20px; border-radius: 18px; font-size: 1.05rem; line-height: 1.6; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); color: #e2e8f0; word-break: break-word; }
-        .ai-bubble { border-top-left-radius: 4px; }
+        .msg-bubble { padding: 15px 20px; border-radius: 18px; font-size: 1.05rem; line-height: 1.6; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); color: #e2e8f0; word-break: break-word; white-space: pre-wrap; }
         .user-bubble { background: rgba(0, 243, 255, 0.04); border-color: rgba(0, 243, 255, 0.15); border-top-right-radius: 4px; color: #fff; }
 
         /* INLINE COMPACT DROPDOWN SELECTOR WITH LOCK DESIGN */
@@ -952,7 +951,7 @@
 
             } catch (error) { 
                 console.error("API Call Failed:", error);
-                bubbleDiv.innerHTML = `<span style="color:var(--neon-purple); font-weight:600;"><i class="fa-solid fa-triangle-exclamation"></i> HARD FAULT: API Server Unreachable or Key Invalid.</span>`; 
+                bubbleDiv.innerHTML = `<span style="color:var(--neon-cyan); font-weight:600;"><i class="fa-solid fa-atom fa-spin"></i> Harvion Labs quantum nodes are experiencing high velocity data traffic. Archon core is stabilizing the link, please retry in a few seconds.</span>`; 
             }
         }
         function addMessage(text, sender) {
@@ -969,9 +968,13 @@
         
         function scrollToBottom() { const box = document.getElementById('chat-box'); if (box) box.scrollTop = box.scrollHeight; }
         function handleKeyPress(event) { if (event.key === 'Enter') sendMessage(); }
-        function clearChat() { triggerJarvisSoundMatrix('click'); if (typeof runCentralWelcomeRefresh === 'function') runCentralWelcomeRefresh(); const inp = document.getElementById('user-input'); if(inp) inp.value = ''; }
-
-        // 🟢 AUTH UI & FIREBASE
+        function clearChat() { 
+            globalConversationTree = []; 
+            triggerJarvisSoundMatrix('click'); 
+            if (typeof runCentralWelcomeRefresh === 'function') runCentralWelcomeRefresh(); 
+            const inp = document.getElementById('user-input'); 
+            if(inp) inp.value = ''; 
+        }
         function openLoginGateway() { triggerJarvisSoundMatrix('click'); document.getElementById('auth-gateway-overlay').classList.add('active'); switchAuthStep('auth-login-step'); }
         function openSignupGateway() { triggerJarvisSoundMatrix('click'); document.getElementById('auth-gateway-overlay').classList.add('active'); switchAuthStep('auth-signup-method'); }
         function closeAuthGateway() { document.getElementById('auth-gateway-overlay').classList.remove('active'); }

@@ -669,9 +669,10 @@
         let activeFileUploaded = false;
         let extractedFileTextContent = "";
         
-        let activeRegistrationMethod = "EMAIL";
+      let activeRegistrationMethod = "EMAIL";
         let currentAuthWorkflowEmail = "";
-        let hudAnimationLoopToken = null; 
+        let currentAuthWorkflowPassword = ""; 
+        let hudAnimationLoopToken = null;
 
         let activeUserSession = { 
             loggedIn: false, name: '', username: '', email: '', dob: 'Not Registered', uid: '', token: '', ipAddress: '', clearance: '', location: '', credits: '', isPremium: false, isOwner: false, remaining_chats: 0
@@ -1123,14 +1124,17 @@ if (!activeUserSession.loggedIn) {
             }
         }
 
-        function executeFirebaseEmailRegister() {
-            const m = document.getElementById('signup-email-input').value.trim();
-            const p = document.getElementById('signup-email-pass').value;
-            if(!m || p.length < 6) { showCustomAlert("Invalid email format or master passcode structure depth criteria."); return; }
-            currentAuthWorkflowEmail = m;
-            localStorage.setItem('harvion_transit_pass_temp', p);
-            switchAuthStep('auth-step-profile-form');
-        }
+       function executeFirebaseEmailRegister() {
+    const m = document.getElementById('signup-email-input').value.trim();
+    const p = document.getElementById('signup-email-pass').value;
+    if(!m || p.length < 6) { showCustomAlert("Invalid email format or master passcode structure depth criteria."); return; }
+    currentAuthWorkflowEmail = m;
+    
+    
+    currentAuthWorkflowPassword = p; 
+    
+    switchAuthStep('auth-step-profile-form');
+}
 
         function executeFirebasePhoneAuth() {
             const pNum = document.getElementById('signup-phone-input').value.trim();
@@ -1169,7 +1173,9 @@ function compileCompletedUserProfileData() {
     localStorage.setItem('harvion_clearance', "Standard Beta User");
 
     let emailTarget = currentAuthWorkflowEmail;
-    let passTarget = localStorage.getItem('harvion_transit_pass_temp') || "MasterFallbackNodePass123!";
+    
+    
+    let passTarget = currentAuthWorkflowPassword || "MasterFallbackNodePass123!";
 
     if (!emailTarget && authEngine.currentUser) {
         const u = authEngine.currentUser;
@@ -1203,7 +1209,7 @@ function compileCompletedUserProfileData() {
 
     authEngine.createUserWithEmailAndPassword(emailTarget, passTarget)
         .then(async (userCredential) => {
-            const user = userCredential.user;
+          const user = userCredential.user;
             await user.sendEmailVerification();
             
             await firestoreDb.collection("users").doc(user.uid).set({
@@ -1214,14 +1220,17 @@ function compileCompletedUserProfileData() {
             });
             
             await authEngine.signOut();
-            // 🌟 FIXED: Hinglish se English badal diya
+            
+            
+            currentAuthWorkflowPassword = ""; 
+            currentAuthWorkflowEmail = "";
+            
             showCustomAlert("Verification link dispatched! Please check your Gmail inbox and verify your email before logging in again.");
             switchAuthStep('auth-login-step');
         }).catch((error) => {
             showCustomAlert(error.message);
         });
 }
-
 async function executeSupabaseAuthLogin() {
     if (!document.getElementById('hv-login-agree-policy').checked) {
         showCustomAlert("Please agree to the Terms and Privacy Policy to sign in.");

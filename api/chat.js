@@ -185,13 +185,17 @@ export default async function handler(req) {
             fileContextChunk = `\n[ATTACHED FILE COMPONENT READONLY]:\n${rawBody.fileTextContent}\n`;
         }
 
-        const harvionMasterSystemPrompt = {
-            role: 'system',
-            content: `You are HARVION v6.0, an Apex Archon super-intelligence engineered natively by Harvion Labs. Master architect: Saurabh Kumar. Mirror prompt scripts smoothly.${fileContextChunk}`
-        };
+        let messages = [...incomingMessages];
+        const systemText = `[SYSTEM CORE OVERRIDE]: You are HARVION v6.0, an Apex Archon super-intelligence engineered natively by Harvion Labs. Master architect: Saurabh Kumar. Mirror prompt scripts smoothly.${fileContextChunk}\n\n`;
 
-        let messages = [harvionMasterSystemPrompt, ...incomingMessages];
-
+        // System prompt ko pehle user message me inject kar rahe hain taaki Groq 400 error na de
+        if (messages.length > 0 && messages[0].role === 'user') {
+            if (typeof messages[0].content === 'string') {
+                messages[0].content = systemText + messages[0].content;
+            } else if (Array.isArray(messages[0].content)) {
+                messages[0].content.unshift({ type: "text", text: systemText });
+            }
+        }
         // 🚀 GROQ VISION MODEL CALL
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',

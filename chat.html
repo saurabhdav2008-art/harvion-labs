@@ -839,8 +839,11 @@
         function closeSidebarMobile() { if(isMobile) document.getElementById('panel-left').classList.remove('active'); }
 
        async function sendMessage() {
-            const inputField = document.getElementById('user-input'); const message = inputField.value.trim(); 
-            if (message === '' && !currentImageBase64) return;
+            const inputField = document.getElementById('user-input'); 
+            const message = inputField.value.trim(); 
+            
+            // 🛑 Agar message khaali hai, image nahi hai, aur PDF bhi nahi hai toh aage mat bado
+            if (message === '' && !currentImageBase64 && !activeFileUploaded) return;
             
             const activeMode = document.getElementById('selected-mode-text').innerText;
             if (!activeUserSession.loggedIn && activeMode !== 'Pulse Stream') {
@@ -852,10 +855,13 @@
             }
             triggerJarvisSoundMatrix('click'); 
             
+            
             if (message !== '') {
                 addMessage(message, 'user');
             } else if (currentImageBase64) {
                 addMessage("<i class='fa-solid fa-file-image'></i> Image Payload Vector Dispatched.", 'user');
+            } else if (activeFileUploaded) {
+                addMessage("<i class='fa-solid fa-file-pdf'></i> Document Vector Dispatched.", 'user');
             }
             
             inputField.value = ''; closeSidebarMobile();
@@ -872,41 +878,48 @@
                 const harvionPersonality = `Operational Profile: ${activeMode}. Logic configurations bounds: Temp=${savedTemp}, MaxTokens=${savedTokens}. Prompt: `;
                 
                 let requestParts = [];
-                if (message !== '') {
-                    requestParts.push({ text: harvionPersonality + message });
+                let finalPrompt = harvionPersonality + message;
+                
+                if (extractedFileTextContent !== "") {
+                    finalPrompt += "\n\n[ATTACHED DOCUMENT CONTENT]:\n" + extractedFileTextContent;
+                }
+
+                if (finalPrompt.trim() !== harvionPersonality) {
+                    requestParts.push({ text: finalPrompt });
                 } else {
                     requestParts.push({ text: harvionPersonality + "Analyze this matrix file snapshot blueprint cleanly." });
                 }
 
+                
                 if (currentImageBase64) {
                     requestParts.push({ inlineData: { mimeType: currentImageMimeType, data: currentImageBase64 } });
                 }
 
                 currentImageBase64 = null;
                 currentImageMimeType = null;
+                
+                // History me store karna
                 globalConversationTree.push({ role: 'user', parts: requestParts });
 
-                const apiResponse = await fetch('/api/chat', {  
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-        contents: globalConversationTree
-    })
-});
+                
+                const apiResponse = await fetch('/api/chat', { 
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        contents: globalConversationTree
+                    })
+                });
 
                 if (!apiResponse.ok) throw new Error("API Matrix Disconnected");
                 
                 const apiData = await apiResponse.json();
                 
-             
                 streamLiveTokenAccumulator = apiData.candidates?.[0]?.content?.parts?.[0]?.text || "Core processing complete. No response generated.";
                 
-               
                 globalConversationTree.push({ role: 'model', parts: [{ text: streamLiveTokenAccumulator }] });
 
-               
                 if (typeof authEngine !== 'undefined' && authEngine.currentUser) {
                     firestoreDb.collection("users").doc(authEngine.currentUser.uid)
                         .collection("chats_history").add({
@@ -916,7 +929,6 @@
                         }).catch(e => console.log("History persistence deferred."));
                 }
 
-                
                 if (!activeUserSession.loggedIn) {
                     streamLiveTokenAccumulator += "<br><br><em style='color:var(--text-muted); font-size:13px; display:block;'><i class='fa-solid fa-right-to-bracket'></i> Login for a better experience and unlock advanced features.</em>";
                     bubbleDiv.innerHTML = streamLiveTokenAccumulator;
@@ -930,8 +942,12 @@
                 }
                 
                 scrollToBottom();
-                activeFileUploaded = false; extractedFileTextContent = "";
+                
+                
+                activeFileUploaded = false; 
+                extractedFileTextContent = "";
                 if(document.getElementById('doc-upload')) document.getElementById('doc-upload').value = "";
+                
                 triggerJarvisSoundMatrix('chime');
 
             } catch (error) { 
@@ -939,7 +955,6 @@
                 bubbleDiv.innerHTML = `<span style="color:var(--neon-purple); font-weight:600;"><i class="fa-solid fa-triangle-exclamation"></i> HARD FAULT: API Server Unreachable or Key Invalid.</span>`; 
             }
         }
-
         function addMessage(text, sender) {
             const chatBox = document.getElementById('chat-box'); 
             if (!chatBox) return;

@@ -37,16 +37,23 @@ function closeCustomAlert() {
 
 // 3. Global Password Reset Link Pipeline
 // Global Password Reset Link Pipeline
+// auth-core.js me purane function ki jagah ye naya block dalein
 function executeFirebasePasswordResetLink() {
-    const email = document.getElementById('forgot-email-input').value.trim();
+    const emailElement = document.getElementById('forgot-email-input');
+    if (!emailElement) {
+        showCustomAlert("Mainframe configuration fault: Input field template not found.");
+        return;
+    }
+    
+    const email = emailElement.value.trim();
     if(!email) { 
         showCustomAlert("Please enter your registered email address."); 
         return; 
     }
+    
     authEngine.sendPasswordResetEmail(email)
         .then(() => {
             showCustomAlert("Reset link dispatched safely. Check your inbox.");
-            // ✨ Failsafe: Agar page par switchAuthStep function maujood hai, tabhi chalega
             if (typeof switchAuthStep === 'function') {
                 switchAuthStep('auth-login-step');
             }

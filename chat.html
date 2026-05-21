@@ -1069,19 +1069,15 @@
                             timestamp: new Date().toISOString()
                         }).catch(e => console.log("History persistence deferred."));
                 }
-
-                if (!activeUserSession.loggedIn) {
+if (!activeUserSession.loggedIn) {
                     streamLiveTokenAccumulator += "<br><br><em style='color:var(--text-muted); font-size:13px; display:block;'><i class='fa-solid fa-right-to-bracket'></i> Login for a better experience and unlock advanced features.</em>";
                     bubbleDiv.innerHTML = streamLiveTokenAccumulator;
                     scrollToBottom();
                 } else {
                     if (activeMode === "Quantum Nebula" && !activeUserSession.isPremium) {
+                        
                         let newChatCount = Math.max(0, activeUserSession.remaining_chats - 1);
                         activeUserSession.remaining_chats = newChatCount;
-                        
-                        await firestoreDb.collection("users").doc(authEngine.currentUser.uid).update({
-                            remaining_chats: newChatCount
-                        });
                         syncPlatformPremiumUIRefresh();
                     }
                 }

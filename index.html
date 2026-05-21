@@ -537,6 +537,15 @@
                 <a class="auth-link" onclick="switchAuthStep('auth-signup-method')">Change Interface Route</a>
             </div>
         </div>
+        <div class="auth-step" id="auth-phone-verify" style="flex-direction: column; gap: 12px; width: 100%;">
+    <h2 style="font-family: 'Orbitron', sans-serif; font-size: 1.5rem; font-weight: 800; color: #fff; text-transform: uppercase; text-align: center;">SMS OTP CAPTURED</h2>
+    <p style="font-size: 0.85rem; color: var(--neon-cyan); text-align: center; line-height: 1.4;">Enter the 6-digit numeric network tracking code sent to your device.</p>
+    <div class="form-group" style="text-align: left; display: flex; flex-direction: column; gap: 4px;">
+        <label style="font-size: 0.72rem; font-weight: 700; color: #fff;">6-Digit Verification Token</label>
+        <input type="text" class="form-field" id="phone-otp-input" placeholder="••••••" maxlength="6" style="text-align: center; letter-spacing: 6px; font-family:'Orbitron';" autocomplete="off">
+    </div>
+    <button class="btn-core primary" onclick="executePhoneOtpCodeVerification()" style="width:100%; border:none; padding:12px; font-weight: 800; border-radius: 12px;">Verify Cellular Token</button>
+</div>
 
 
         <div class="auth-step" id="auth-step-profile-form" style="flex-direction: column; gap: 12px; width: 100%;">

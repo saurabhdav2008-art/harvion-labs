@@ -1,1 +1,8 @@
-{ "name": "harvion-engine", "version": "1.5.0", "type": "module" }
+{
+  "name": "harvion-engine",
+  "version": "1.5.0",
+  "type": "module",
+  "dependencies": {
+    "jose": "^5.9.6"
+  }
+}

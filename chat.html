@@ -10,7 +10,9 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+    if (typeof pdfjsLib !== 'undefined') {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+    }
 </script>
     
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -650,57 +652,55 @@
     </div>
 
     <script>
-        // CORE INTEGRATION PARAMETERS
+        // CORE VARIABLES
         let globalConversationTree = [];
         let activeFileUploaded = false;
         let extractedFileTextContent = "";
-        
         let activeRegistrationMethod = "EMAIL";
         let currentAuthWorkflowEmail = "";
         let currentAuthWorkflowPassword = ""; 
         let hudAnimationLoopToken = null;
-
+        let streamLiveTokenAccumulator = "Awaiting AI Network Response...";
         let activeUserSession = { 
             loggedIn: false, name: '', username: '', email: '', dob: 'Not Registered', uid: '', token: '', ipAddress: '', clearance: '', location: '', credits: '', isPremium: false, isOwner: false, remaining_chats: 0
         };
-
         let currentImageBase64 = null;
         let currentImageMimeType = null;
 
-        function runCentralWelcomeRefresh() {
-            const box = document.getElementById('chat-box');
-            if (!box) return;
-
-            const hasWelcomed = sessionStorage.getItem('harvion_session_welcomed');
-            
-            if (hasWelcomed === "true") {
-                box.innerHTML = `
-                    <div id="welcome-center" style="position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; pointer-events: none !important; z-index: 0 !important; opacity: 0.12 !important; width: 100% !important; margin: 0 !important; padding: 0 !important;">
-                        <img src="logo.png" alt="Harvion Labs" style="width: 120px !important; height: 120px !important; margin-bottom: 15px !important; filter: drop-shadow(0 0 25px #00f2fe) !important; object-fit: cover !important; border-radius: 16px !important;">
-                        <h2 style="font-family: 'Space Grotesk', sans-serif !important; font-size: 32px !important; color: #fff !important; margin: 0 0 5px 0 !important; font-weight: 700 !important; letter-spacing: 1px !important;">Harvion Labs</h2>
-                        <p style="font-family: 'Plus Jakarta Sans', sans-serif !important; color: #9ca3af !important; font-size: 15px !important; margin: 0 !important; letter-spacing: 0.5px !important;">Adaptive AI Ecosystem</p>
-                    </div>`;
-                return;
+        // ALERTS
+        function showCustomAlert(msg) {
+            document.getElementById('hv-alert-text').innerText = msg;
+            const alertOverlay = document.getElementById('hv-custom-alert-overlay');
+            if(alertOverlay) {
+                alertOverlay.style.display = 'flex';
+                setTimeout(() => { alertOverlay.style.opacity = '1'; }, 10);
             }
-
-            box.innerHTML = `
-                <div id="welcome-center" style="position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; pointer-events: none !important; z-index: 0 !important; opacity: 0.12 !important; width: 100% !important; margin: 0 !important; padding: 0 !important;">
-                    <img src="logo.png" alt="Harvion Labs" style="width: 120px !important; height: 120px !important; margin-bottom: 15px !important; filter: drop-shadow(0 0 25px #00f2fe) !important; object-fit: cover !important; border-radius: 16px !important;">
-                    <h2 style="font-family: 'Space Grotesk', sans-serif !important; font-size: 32px !important; color: #fff !important; margin: 0 0 5px 0 !important; font-weight: 700 !important; letter-spacing: 1px !important;">Harvion Labs</h2>
-                    <p style="font-family: 'Plus Jakarta Sans', sans-serif !important; color: #9ca3af !important; font-size: 15px !important; margin: 0 !important; letter-spacing: 0.5px !important;">Adaptive AI Ecosystem</p>
-                </div>
-                <div class="message" style="position: relative !important; z-index: 1 !important;">
-                    <div class="avatar ai-avatar"></div>
-                    <div class="msg-bubble ai-bubble">Harvion Neural Network Online. Adaptive AI clusters synchronized and running at maximum velocity. Welcome to the core ecosystem. How can I assist your mind and workflow today?</div>
-                </div>`;
-
-            sessionStorage.setItem('harvion_session_welcomed', "true");
+            triggerJarvisSoundMatrix('chime');
+        }
+        function closeCustomAlert() {
+            const alertOverlay = document.getElementById('hv-custom-alert-overlay');
+            if(alertOverlay) {
+                alertOverlay.style.opacity = '0';
+                setTimeout(() => { alertOverlay.style.display = 'none'; }, 300);
+            }
+            triggerJarvisSoundMatrix('click');
+        }
+        function showPremiumAlert() {
+            triggerJarvisSoundMatrix('click');
+            const alertModal = document.getElementById('premium-alert-overlay');
+            if (alertModal) { alertModal.style.display = 'flex'; setTimeout(() => { alertModal.style.opacity = '1'; }, 10); }
+        }
+        function closePremiumAlert() {
+            triggerJarvisSoundMatrix('click');
+            const alertModal = document.getElementById('premium-alert-overlay');
+            if (alertModal) { alertModal.style.opacity = '0'; setTimeout(() => { alertModal.style.display = 'none'; }, 300); }
         }
 
+        // SOUND
         function triggerJarvisSoundMatrix(type) {
-            const savedAudioPref = localStorage.getItem('harvion-audio') !== "false";
-            if (!savedAudioPref) return;
             try {
+                const savedAudioPref = localStorage.getItem('harvion-audio');
+                if (savedAudioPref === "false") return;
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 if (!AudioContext) return;
                 const audioCtx = new AudioContext();
@@ -724,165 +724,25 @@
             } catch (e) {}
         }
 
-        function showPremiumAlert() {
-            triggerJarvisSoundMatrix('click');
-            const alertModal = document.getElementById('premium-alert-overlay');
-            if (alertModal) { alertModal.style.display = 'flex'; setTimeout(() => { alertModal.style.opacity = '1'; }, 10); }
-        }
-        function closePremiumAlert() {
-            triggerJarvisSoundMatrix('click');
-            const alertModal = document.getElementById('premium-alert-overlay');
-            if (alertModal) { alertModal.style.opacity = '0'; setTimeout(() => { alertModal.style.display = 'none'; }, 300); }
-        }
-
-        authEngine.onAuthStateChanged(async (user) => {
-            const authBlock = document.getElementById('nav-auth-block');
-            const profileBlock = document.getElementById('user-profile-block');
-            
-            if (user) {
-                if (user.providerData.some(p => p.providerId === 'password') && !user.emailVerified) {
-                    activeUserSession.loggedIn = false;
-                    if(authBlock) authBlock.style.display = 'flex';
-                    if(profileBlock) profileBlock.style.display = 'none';
-                    document.getElementById('platform-title-version').innerText = "Harvion Engine v1.5";
-                    syncPlatformPremiumUIRefresh();
-                    return; 
+        // WELCOME MSG
+        function runCentralWelcomeRefresh() {
+            const box = document.getElementById('chat-box');
+            if (!box) return;
+            try {
+                const hasWelcomed = sessionStorage.getItem('harvion_session_welcomed');
+                if (hasWelcomed === "true") {
+                    box.innerHTML = `<div id="welcome-center" style="position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; pointer-events: none !important; z-index: 0 !important; opacity: 0.12 !important; width: 100% !important; margin: 0 !important; padding: 0 !important;"><img src="logo.png" alt="Harvion Labs" style="width: 120px !important; height: 120px !important; margin-bottom: 15px !important; filter: drop-shadow(0 0 25px #00f2fe) !important; object-fit: cover !important; border-radius: 16px !important;"><h2 style="font-family: 'Space Grotesk', sans-serif !important; font-size: 32px !important; color: #fff !important; margin: 0 0 5px 0 !important; font-weight: 700 !important; letter-spacing: 1px !important;">Harvion Labs</h2><p style="font-family: 'Plus Jakarta Sans', sans-serif !important; color: #9ca3af !important; font-size: 15px !important; margin: 0 !important; letter-spacing: 0.5px !important;">Adaptive AI Ecosystem</p></div>`;
+                    return;
                 }
-
-                activeUserSession.loggedIn = true;
-                activeUserSession.email = user.email || "Cellular Node Proxy";
-                activeUserSession.uid = "UID-" + user.uid.substring(0,8).toUpperCase();
-                activeUserSession.token = "TK-" + user.uid.substring(8,15).toUpperCase() + "-SLOT";
-                
-                try {
-                    const snap = await firestoreDb.collection("users").doc(user.uid).get();
-                    if(snap.exists) {
-                        const d = snap.data();
-                        activeUserSession.name = d.full_name || user.displayName || "Core Node Developer";
-                        activeUserSession.clearance = d.role || "Standard Beta User";
-                        activeUserSession.remaining_chats = d.remaining_chats !== undefined ? d.remaining_chats : 0;
-                    } else {
-                        activeUserSession.name = localStorage.getItem('harvion_temp_name') || user.displayName || "Core Node Developer";
-                        activeUserSession.clearance = localStorage.getItem('harvion_clearance') || 'Standard Beta User';
-                        activeUserSession.remaining_chats = 0;
-                    }
-                } catch(e) {
-                    activeUserSession.name = localStorage.getItem('harvion_temp_name') || user.displayName || "Core Node Developer";
-                    activeUserSession.clearance = localStorage.getItem('harvion_clearance') || 'Standard Beta User';
-                    activeUserSession.remaining_chats = 0;
-                }
-
-                activeUserSession.username = activeUserSession.name.toLowerCase().replace(/\s+/g, '_') + '_' + user.uid.substring(0,3);
-                activeUserSession.ipAddress = "Dynamic Cloud Routing Node";
-               if(['owner', 'archon', 'apex', 'premium', 'apex archon core'].some(keyword => activeUserSession.clearance.toLowerCase().includes(keyword))) {
-                    activeUserSession.isOwner = true; activeUserSession.isPremium = true;
-                    activeUserSession.clearance = "Apex Archon Core (Owner)";
-                    document.getElementById('platform-title-version').innerHTML = "Harvion Engine <span style='color:var(--neon-purple); font-family:\"Orbitron\"; font-size:11px; letter-spacing:1px;'>[APEX ARCHON]</span>";
-                } else {
-                    activeUserSession.loggedIn = false;
-                    activeUserSession.isPremium = false;
-                    activeUserSession.isOwner = false;
-                    activeUserSession.remaining_chats = 0;
-                    if(authBlock) authBlock.style.display = 'flex';
-                    if(profileBlock) profileBlock.style.display = 'none';
-                    document.getElementById('platform-title-version').innerText = "Harvion Engine v1.5";
-                    syncPlatformPremiumUIRefresh();
-
-                    
-                    const historyBox = document.getElementById('quantum-history-node');
-                    if (historyBox) {
-                        historyBox.innerHTML = `
-                            <h4>Quantum History</h4>
-                            <div style="color:var(--text-muted); font-size:12px; padding:20px 10px; text-align:center; font-style:italic; line-height:1.5;">
-                                <i class="fa-solid fa-lock" style="color:var(--neon-purple); margin-bottom:8px; display:block; font-size:16px;"></i>
-                                Sign in to preserve and access your neural thread history matrix.
-                            </div>
-                        `;
-                    }
-                }
-            });
-                
-              function syncPlatformPremiumUIRefresh();
-                    if(authBlock) authBlock.style.display = 'none';
-                    if(profileBlock) profileBlock.style.display = 'flex';
-                    document.getElementById('avatar-initial').innerText = activeUserSession.name.charAt(0).toUpperCase();
-                    document.getElementById('nav-user-title').innerText = activeUserSession.name;
-                    document.getElementById('nav-user-uid').innerText = activeUserSession.uid;
-
-                    if (typeof loadUserFileHistoryFromFirestore === 'function') {
-                        loadUserFileHistoryFromFirestore(user.uid);
-                    }
-                } else {
-                    activeUserSession.loggedIn = false;
-                    activeUserSession.isPremium = false;
-                    activeUserSession.isOwner = false;
-                    activeUserSession.remaining_chats = 0;
-                    if(authBlock) authBlock.style.display = 'flex';
-                    if(profileBlock) profileBlock.style.display = 'none';
-                    document.getElementById('platform-title-version').innerText = "Harvion Engine v1.5";
-                    syncPlatformPremiumUIRefresh();
-
-                    const historyBox = document.getElementById('quantum-history-node');
-                    if (historyBox) {
-                        historyBox.innerHTML = `
-                            <h4>Quantum History</h4>
-                            <div style="color:var(--text-muted); font-size:12px; padding:20px 10px; text-align:center; font-style:italic; line-height:1.5;">
-                                <i class="fa-solid fa-lock" style="color:var(--neon-purple); margin-bottom:8px; display:block; font-size:16px;"></i>
-                                Sign in to preserve and access your neural thread history matrix.
-                            </div>
-                        `;
-                    }
-                }
-            });historyBox.innerHTML = `
-                            <h4>Quantum History</h4>
-                            <div style="color:var(--text-muted); font-size:12px; padding:20px 10px; text-align:center; font-style:italic; line-height:1.5;">
-                                <i class="fa-solid fa-lock" style="color:var(--neon-purple); margin-bottom:8px; display:block; font-size:16px;"></i>
-                                Sign in to preserve and access your neural thread history matrix.
-                            </div>
-                        `;
-                    }
-                }
-            });
-        function syncPlatformPremiumUIRefresh() {
-            const qLbl = document.getElementById('quantum-lock-lbl');
-            const qSlot = document.getElementById('quantum-dropdown-slot');
-            const sSlot = document.getElementById('supernova-dropdown-slot');
-            
-            if (!activeUserSession.loggedIn) {
-                if(qSlot) qSlot.classList.add('locked-tier');
-                if(qLbl) qLbl.innerHTML = "<i class='fa-solid fa-lock' style='color:#6b7280;'></i> LOCKED";
-                if(sSlot) {
-                    sSlot.classList.add('locked-tier');
-                    sSlot.innerHTML = "<span>Supernova Prime</span><i class='fa-solid fa-lock' style='font-size:9px; color:#6b7280;'></i>";
-                }
-                return;
-            }
-
-            if (activeUserSession.isPremium) {
-                if(qLbl) qLbl.innerHTML = "<i class='fa-solid fa-circle-check' style='color:#10b981;'></i> UNLOCKED";
-                if(qSlot) qSlot.classList.remove('locked-tier');
-                if(sSlot) { 
-                    sSlot.classList.remove('locked-tier'); 
-                    sSlot.innerHTML = "<span>Supernova Prime</span><small style='color:var(--neon-purple); font-size:9px;'>PREMIUM</small>"; 
-                }
-            } else {
-                let qLeft = activeUserSession.remaining_chats;
-                if (qLeft <= 0) {
-                    if(qSlot) qSlot.classList.add('locked-tier');
-                    if(qLbl) qLbl.innerHTML = "<i class='fa-solid fa-lock' style='color:#6b7280;'></i> LOCKED";
-                } else {
-                    if(qSlot) qSlot.classList.remove('locked-tier');
-                    if(qLbl) qLbl.innerText = `${qLeft} CHATS`;
-                }
-                if(sSlot) {
-                    sSlot.classList.add('locked-tier');
-                    sSlot.innerHTML = "<span>Supernova Prime</span><i class='fa-solid fa-lock' style='font-size:9px; color:#6b7280;'></i>";
-                }
-            }
+                sessionStorage.setItem('harvion_session_welcomed', "true");
+            } catch(e) {}
+            box.innerHTML = `<div id="welcome-center" style="position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; pointer-events: none !important; z-index: 0 !important; opacity: 0.12 !important; width: 100% !important; margin: 0 !important; padding: 0 !important;"><img src="logo.png" alt="Harvion Labs" style="width: 120px !important; height: 120px !important; margin-bottom: 15px !important; filter: drop-shadow(0 0 25px #00f2fe) !important; object-fit: cover !important; border-radius: 16px !important;"><h2 style="font-family: 'Space Grotesk', sans-serif !important; font-size: 32px !important; color: #fff !important; margin: 0 0 5px 0 !important; font-weight: 700 !important; letter-spacing: 1px !important;">Harvion Labs</h2><p style="font-family: 'Plus Jakarta Sans', sans-serif !important; color: #9ca3af !important; font-size: 15px !important; margin: 0 !important; letter-spacing: 0.5px !important;">Adaptive AI Ecosystem</p></div><div class="message" style="position: relative !important; z-index: 1 !important;"><div class="avatar ai-avatar"></div><div class="msg-bubble ai-bubble">Harvion Neural Network Online. Adaptive AI clusters synchronized and running at maximum velocity. Welcome to the core ecosystem. How can I assist your mind and workflow today?</div></div>`;
         }
 
         const isMobile = window.innerWidth <= 768;
-        window.onload = () => {
+
+        // LOADER ENGINE (Using DOMContentLoaded to guarantee execution)
+        document.addEventListener('DOMContentLoaded', () => {
             if (typeof runCentralWelcomeRefresh === 'function') runCentralWelcomeRefresh();
             syncPlatformPremiumUIRefresh();
 
@@ -890,18 +750,16 @@
             const counterText = document.getElementById('load-counter');
             const splashScreen = document.getElementById('genesis-splash');
             const mainApplication = document.getElementById('app-wrapper');
-            const savedPlexus = localStorage.getItem('harvion-plexus') !== "false";
             
-            if (document.getElementById('interactive-canvas')) {
-                document.getElementById('interactive-canvas').style.display = savedPlexus ? 'block' : 'none';
-            }
-            if (document.getElementById('chat-box')) {
-                const savedDensity = localStorage.getItem('harvion-density') || "comfortable";
-                document.getElementById('chat-box').style.padding = savedDensity === "compact" ? "12px 20px" : "30px";
-            }
-            if (typeof applyThemeRoutine === 'function') {
-                applyThemeRoutine(localStorage.getItem('harvion-theme') || "space");
-            }
+            try {
+                const savedPlexus = localStorage.getItem('harvion-plexus') !== "false";
+                if (document.getElementById('interactive-canvas')) { document.getElementById('interactive-canvas').style.display = savedPlexus ? 'block' : 'none'; }
+                if (document.getElementById('chat-box')) {
+                    const savedDensity = localStorage.getItem('harvion-density') || "comfortable";
+                    document.getElementById('chat-box').style.padding = savedDensity === "compact" ? "12px 20px" : "30px";
+                }
+                if (typeof applyThemeRoutine === 'function') { applyThemeRoutine(localStorage.getItem('harvion-theme') || "space"); }
+            } catch(e) {}
 
             let count = 0;
             const loaderInterval = setInterval(() => {
@@ -921,12 +779,12 @@
                 if (counterText) counterText.textContent = count;
             }, 20);
 
-            if (typeof firebase !== 'undefined' && document.getElementById('recaptcha-box-container')) {
-                window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-box-container', {
-                    'size': 'invisible'
-                });
-            }
-        };
+            try {
+                if (typeof firebase !== 'undefined' && typeof firebase.auth === 'function' && document.getElementById('recaptcha-box-container')) {
+                    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-box-container', { 'size': 'invisible' });
+                }
+            } catch(e) {}
+        });
 
         const canvas = document.getElementById('interactive-canvas'); 
         const ctx = canvas ? canvas.getContext('2d') : null; 
@@ -939,20 +797,13 @@
             points = []; 
             const maxP = isMobile ? 35 : 110;
             for (let i = 0; i < maxP; i++) { 
-                points.push({ 
-                    x: Math.random() * width, 
-                    y: Math.random() * height, 
-                    vx: (Math.random() - 0.5) * 0.7, 
-                    vy: (Math.random() - 0.5) * 0.7, 
-                    r: Math.random() * 1.5 + 1 
-                }); 
+                points.push({ x: Math.random() * width, y: Math.random() * height, vx: (Math.random() - 0.5) * 0.7, vy: (Math.random() - 0.5) * 0.7, r: Math.random() * 1.5 + 1 }); 
             }
         }
 
         if (canvas) {
             window.addEventListener('resize', setupCanvas); 
             setupCanvas();
-            // Animation Loop shuru karne ke liye function call
             renderPlexus(); 
         }
 
@@ -960,35 +811,20 @@
             if (!ctx || !canvas) return;
             ctx.clearRect(0, 0, width, height); 
             const lineDist = isMobile ? 90 : 140;
-            
             points.forEach((p, idx) => {
-                p.x += p.vx; 
-                p.y += p.vy; 
+                p.x += p.vx; p.y += p.vy; 
                 if (p.x < 0 || p.x > width) p.vx *= -1; 
                 if (p.y < 0 || p.y > height) p.vy *= -1;
-                
-                ctx.beginPath(); 
-                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); 
-                ctx.fillStyle = 'rgba(0, 243, 255, 0.4)'; 
-                ctx.fill();
-                
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0, 243, 255, 0.4)'; ctx.fill();
                 for (let j = idx + 1; j < points.length; j++) {
-                    const p2 = points[j]; 
-                    const d = Math.hypot(p.x - p2.x, p.y - p2.y);
+                    const p2 = points[j]; const d = Math.hypot(p.x - p2.x, p.y - p2.y);
                     if (d < lineDist) { 
-                        ctx.beginPath(); 
-                        ctx.strokeStyle = `rgba(0, 243, 255, ${0.12 - d/(lineDist*10)})`; 
-                        ctx.lineWidth = 0.6; 
-                        ctx.moveTo(p.x, p.y); 
-                        ctx.lineTo(p2.x, p2.y); 
-                        ctx.stroke(); 
+                        ctx.beginPath(); ctx.strokeStyle = `rgba(0, 243, 255, ${0.12 - d/(lineDist*10)})`; ctx.lineWidth = 0.6; ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.stroke(); 
                     }
                 }
             });
-           
             requestAnimationFrame(renderPlexus);
         }
-                    renderPlexus();
 
         function init3DTilt() {
             const asideS = document.getElementById('panel-left'); const mainP = document.getElementById('panel-right');
@@ -1002,7 +838,7 @@
         function toggleSidebar() { triggerJarvisSoundMatrix('click'); document.getElementById('panel-left').classList.toggle('active'); }
         function closeSidebarMobile() { if(isMobile) document.getElementById('panel-left').classList.remove('active'); }
 
-        async function sendMessage() {
+       async function sendMessage() {
             const inputField = document.getElementById('user-input'); const message = inputField.value.trim(); 
             if (message === '' && !currentImageBase64) return;
             
@@ -1011,7 +847,6 @@
                 showCustomAlert("Unlock the Next-Gen Cores! Sign in now to claim your 10 FREE Quantum Nebula chats, or upgrade to Premium for absolute unlimited access.");
                 return;
             }
-
             if (activeUserSession.loggedIn && activeMode === "Quantum Nebula" && !activeUserSession.isPremium) {
                 if (activeUserSession.remaining_chats <= 0) { showPremiumAlert(); return; }
             }
@@ -1044,24 +879,39 @@
                 }
 
                 if (currentImageBase64) {
-                    requestParts.push({
-                        inlineData: {
-                            mimeType: currentImageMimeType,
-                            data: currentImageBase64
-                        }
-                    });
+                    requestParts.push({ inlineData: { mimeType: currentImageMimeType, data: currentImageBase64 } });
                 }
 
                 currentImageBase64 = null;
                 currentImageMimeType = null;
+                globalConversationTree.push({ role: 'user', parts: requestParts });
 
-                globalConversationTree.push({
-                    role: 'user',
-                    parts: requestParts
+                // 🚀 🟢 ASLI API CALL INJECTION (FETCH) 🟢 🚀
+                // Dhyan de: 'YOUR_API_ENDPOINT_HERE' ki jagah apna backend URL ya Gemini API daalna.
+                const apiResponse = await fetch('YOUR_API_ENDPOINT_HERE', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                        // 'Authorization': `Bearer YOUR_API_KEY` <-- Agar proxy use kar rahe ho
+                    },
+                    body: JSON.stringify({
+                        contents: globalConversationTree
+                        // Temp aur MaxTokens yahan add kar sakte ho agar backend support kare
+                    })
                 });
 
-              
-                if (authEngine.currentUser) {
+                if (!apiResponse.ok) throw new Error("API Matrix Disconnected");
+                
+                const apiData = await apiResponse.json();
+                
+                // Response Text nikalna (Yeh structure Gemini API ke hisaab se hai, apne hisaab se adjust kar lena)
+                streamLiveTokenAccumulator = apiData.candidates?.[0]?.content?.parts?.[0]?.text || "Core processing complete. No response generated.";
+                
+                // AI ka message context tree mein save karna
+                globalConversationTree.push({ role: 'model', parts: [{ text: streamLiveTokenAccumulator }] });
+
+                // 📝 Firebase History Saving
+                if (typeof authEngine !== 'undefined' && authEngine.currentUser) {
                     firestoreDb.collection("users").doc(authEngine.currentUser.uid)
                         .collection("chats_history").add({
                             user_payload: message || "[Document Vector Interaction]",
@@ -1070,27 +920,30 @@
                         }).catch(e => console.log("History persistence deferred."));
                 }
 
+                // UI Update aur Chat Limit Deductions
                 if (!activeUserSession.loggedIn) {
                     streamLiveTokenAccumulator += "<br><br><em style='color:var(--text-muted); font-size:13px; display:block;'><i class='fa-solid fa-right-to-bracket'></i> Login for a better experience and unlock advanced features.</em>";
                     bubbleDiv.innerHTML = streamLiveTokenAccumulator;
-                    scrollToBottom();
                 } else if (activeMode === "Quantum Nebula" && !activeUserSession.isPremium) {
                     let newChatCount = Math.max(0, activeUserSession.remaining_chats - 1);
                     activeUserSession.remaining_chats = newChatCount; 
                     syncPlatformPremiumUIRefresh();
+                    bubbleDiv.innerHTML = streamLiveTokenAccumulator;
+                } else {
+                    bubbleDiv.innerHTML = streamLiveTokenAccumulator;
                 }
                 
-                activeFileUploaded = false;
-                extractedFileTextContent = "";
+                scrollToBottom();
+                activeFileUploaded = false; extractedFileTextContent = "";
                 if(document.getElementById('doc-upload')) document.getElementById('doc-upload').value = "";
                 triggerJarvisSoundMatrix('chime');
 
             } catch (error) { 
-                bubbleDiv.innerHTML = `<span style="color:var(--neon-purple); font-weight:600;"><i class="fa-solid fa-triangle-exclamation"></i> HARD FAULT: Mainframe pipeline synchronization severed.</span>`; 
+                console.error("API Call Failed:", error);
+                bubbleDiv.innerHTML = `<span style="color:var(--neon-purple); font-weight:600;"><i class="fa-solid fa-triangle-exclamation"></i> HARD FAULT: API Server Unreachable or Key Invalid.</span>`; 
             }
         }
 
-        // 🟢 CORE UI MESSAGE STREAMS MAPPING
         function addMessage(text, sender) {
             const chatBox = document.getElementById('chat-box'); 
             if (!chatBox) return;
@@ -1103,254 +956,142 @@
             scrollToBottom();
         }
         
-        function scrollToBottom() { 
-            const box = document.getElementById('chat-box'); 
-            if (box) box.scrollTop = box.scrollHeight; 
-        }
-        
-        function handleKeyPress(event) { 
-            if (event.key === 'Enter') sendMessage(); 
-        }
-        
-        function clearChat() { 
-            triggerJarvisSoundMatrix('click'); 
-            if (typeof runCentralWelcomeRefresh === 'function') runCentralWelcomeRefresh(); 
-            const inp = document.getElementById('user-input'); 
-            if(inp) inp.value = ''; 
-        }
+        function scrollToBottom() { const box = document.getElementById('chat-box'); if (box) box.scrollTop = box.scrollHeight; }
+        function handleKeyPress(event) { if (event.key === 'Enter') sendMessage(); }
+        function clearChat() { triggerJarvisSoundMatrix('click'); if (typeof runCentralWelcomeRefresh === 'function') runCentralWelcomeRefresh(); const inp = document.getElementById('user-input'); if(inp) inp.value = ''; }
 
-        // 🟢 MAINFRAME SECURITY IDENTITY GATEWAYS
+        // 🟢 AUTH UI & FIREBASE
         function openLoginGateway() { triggerJarvisSoundMatrix('click'); document.getElementById('auth-gateway-overlay').classList.add('active'); switchAuthStep('auth-login-step'); }
         function openSignupGateway() { triggerJarvisSoundMatrix('click'); document.getElementById('auth-gateway-overlay').classList.add('active'); switchAuthStep('auth-signup-method'); }
         function closeAuthGateway() { document.getElementById('auth-gateway-overlay').classList.remove('active'); }
         function switchAuthStep(stepId) { document.querySelectorAll('.auth-step').forEach(el => el.classList.remove('active')); document.getElementById(stepId).classList.add('active'); }
 
         function verifyPolicyGate(targetRoute) {
-            if (!document.getElementById('hv-agree-policy').checked) {
-                showCustomAlert("Please agree to the Terms and Privacy Policy to create a core node.");
-                return;
-            }
-            if (targetRoute === 'GOOGLE') {
-                executeGoogleOauthLink(); 
-            } else {
-                activeRegistrationMethod = (targetRoute === 'auth-email-signup') ? 'EMAIL' : 'PHONE';
-                switchAuthStep(targetRoute); 
-            }
+            if (!document.getElementById('hv-agree-policy').checked) { showCustomAlert("Please agree to the Terms and Privacy Policy to create a core node."); return; }
+            if (targetRoute === 'GOOGLE') { executeGoogleOauthLink(); } else { activeRegistrationMethod = (targetRoute === 'auth-email-signup') ? 'EMAIL' : 'PHONE'; switchAuthStep(targetRoute); }
         }
 
         function executeFirebaseEmailRegister() {
-            const m = document.getElementById('signup-email-input').value.trim();
-            const p = document.getElementById('signup-email-pass').value;
+            const m = document.getElementById('signup-email-input').value.trim(); const p = document.getElementById('signup-email-pass').value;
             if(!m || p.length < 6) { showCustomAlert("Invalid email format or master passcode structure depth criteria."); return; }
-            currentAuthWorkflowEmail = m;
-            currentAuthWorkflowPassword = p; 
-            switchAuthStep('auth-step-profile-form');
+            currentAuthWorkflowEmail = m; currentAuthWorkflowPassword = p; switchAuthStep('auth-step-profile-form');
         }
 
         function executeFirebasePhoneAuth() {
             let pNum = document.getElementById('signup-phone-input').value.trim();
             if(!pNum) { showCustomAlert("Cellular parameter mapping vacantly registered."); return; }
             if (!pNum.startsWith('+')) {
-                if (pNum.length === 10 && /^\d+$/.test(pNum)) {
-                    pNum = '+91' + pNum;
-                } else {
-                    showCustomAlert("Invalid Format: Kripya sahi mobile number ya country code (e.g. +91) lagayein.");
-                    return;
-                }
+                if (pNum.length === 10 && /^\d+$/.test(pNum)) { pNum = '+91' + pNum; } else { showCustomAlert("Invalid Format: Kripya sahi mobile number ya country code (e.g. +91) lagayein."); return; }
             }
-            authEngine.signInWithPhoneNumber(pNum, window.recaptchaVerifier)
-                .then((result) => {
-                    window.phoneConfirmationResultMatrix = result;
-                    showCustomAlert("Secure proxy signals dispatched to your device.");
-                    switchAuthStep('auth-phone-verify');
-                }).catch((error) => {
-                    showCustomAlert(error.message);
-                });
+            if (typeof authEngine !== 'undefined') {
+                authEngine.signInWithPhoneNumber(pNum, window.recaptchaVerifier).then((result) => { window.phoneConfirmationResultMatrix = result; showCustomAlert("Secure proxy signals dispatched to your device."); switchAuthStep('auth-phone-verify'); }).catch((error) => { showCustomAlert(error.message); });
+            }
         }
 
         function executePhoneOtpCodeVerification() {
             const code = document.getElementById('phone-otp-input').value.trim();
             if(!code || code.length !== 6) { showCustomAlert("Verification numeric array must be 6 digits."); return; }
             if(window.phoneConfirmationResultMatrix) {
-                window.phoneConfirmationResultMatrix.confirm(code)
-                    .then(() => { switchAuthStep('auth-step-profile-form'); })
-                    .catch(() => { showCustomAlert("Invalid cellular tracking token verification match failure."); });
-            } else {
-                switchAuthStep('auth-step-profile-form');
-            }
+                window.phoneConfirmationResultMatrix.confirm(code).then(() => { switchAuthStep('auth-step-profile-form'); }).catch(() => { showCustomAlert("Invalid cellular tracking token verification match failure."); });
+            } else { switchAuthStep('auth-step-profile-form'); }
         }
 
         function compileCompletedUserProfileData() {
             const name = document.getElementById('reg-name').value.trim();
             if(!name) { showCustomAlert("Please fill in your name details parameters vector."); return; }
-            localStorage.setItem('harvion_temp_name', name);
-            localStorage.setItem('harvion_clearance', "Standard Beta User");
-            let emailTarget = currentAuthWorkflowEmail;
-            let passTarget = currentAuthWorkflowPassword || "MasterFallbackNodePass123!";
+            localStorage.setItem('harvion_temp_name', name); localStorage.setItem('harvion_clearance', "Standard Beta User");
+            let emailTarget = currentAuthWorkflowEmail; let passTarget = currentAuthWorkflowPassword || "MasterFallbackNodePass123!";
 
-            if (!emailTarget && authEngine.currentUser) {
+            if (!emailTarget && typeof authEngine !== 'undefined' && authEngine.currentUser) {
                 const u = authEngine.currentUser;
-                firestoreDb.collection("users").doc(u.uid).set({
-                    full_name: name,
-                    role: "Standard Beta User",
-                    registered_at: new Date().toISOString(),
-                    remaining_chats: 10
-                }).then(() => {
-                    activeUserSession.name = name;
-                    activeUserSession.clearance = "Standard Beta User";
-                    activeUserSession.username = name.toLowerCase().replace(/\s+/g, '_') + '_' + u.uid.substring(0,3);
-                    const av = document.getElementById('avatar-initial');
-                    const title = document.getElementById('nav-user-title');
-                    const uidLbl = document.getElementById('nav-user-uid');
-                    if(av) av.innerText = name.charAt(0).toUpperCase();
-                    if(title) title.innerText = name;
-                    if(uidLbl) uidLbl.innerText = "UID-" + u.uid.substring(0,8).toUpperCase();
-                    syncPlatformPremiumUIRefresh();
-                    showCustomAlert("Infrastructure synchronization complete.");
-                    closeAuthGateway();
-                    triggerCinematicWarpPortal();
-                }).catch((error) => { showCustomAlert(error.message); });
-                return;
+                firestoreDb.collection("users").doc(u.uid).set({ full_name: name, role: "Standard Beta User", registered_at: new Date().toISOString(), remaining_chats: 10 }).then(() => {
+                    activeUserSession.name = name; activeUserSession.clearance = "Standard Beta User"; activeUserSession.username = name.toLowerCase().replace(/\s+/g, '_') + '_' + u.uid.substring(0,3);
+                    const av = document.getElementById('avatar-initial'); const title = document.getElementById('nav-user-title'); const uidLbl = document.getElementById('nav-user-uid');
+                    if(av) av.innerText = name.charAt(0).toUpperCase(); if(title) title.innerText = name; if(uidLbl) uidLbl.innerText = "UID-" + u.uid.substring(0,8).toUpperCase();
+                    syncPlatformPremiumUIRefresh(); showCustomAlert("Infrastructure synchronization complete."); closeAuthGateway(); triggerCinematicWarpPortal();
+                }).catch((error) => { showCustomAlert(error.message); }); return;
             }
 
-            authEngine.createUserWithEmailAndPassword(emailTarget, passTarget)
-                .then(async (userCredential) => {
-                    const user = userCredential.user;
-                    await user.sendEmailVerification();
-                    await firestoreDb.collection("users").doc(user.uid).set({
-                        full_name: name,
-                        role: "Standard Beta User",
-                        registered_at: new Date().toISOString(),
-                        remaining_chats: 10
-                    });
-                    await authEngine.signOut();
-                    currentAuthWorkflowPassword = ""; currentAuthWorkflowEmail = "";
-                    showCustomAlert("Verification link dispatched! Check your email before logging in.");
-                    switchAuthStep('auth-login-step');
+            if (typeof authEngine !== 'undefined') {
+                authEngine.createUserWithEmailAndPassword(emailTarget, passTarget).then(async (userCredential) => {
+                    const user = userCredential.user; await user.sendEmailVerification();
+                    await firestoreDb.collection("users").doc(user.uid).set({ full_name: name, role: "Standard Beta User", registered_at: new Date().toISOString(), remaining_chats: 10 });
+                    await authEngine.signOut(); currentAuthWorkflowPassword = ""; currentAuthWorkflowEmail = "";
+                    showCustomAlert("Verification link dispatched! Check your email before logging in."); switchAuthStep('auth-login-step');
                 }).catch((error) => { showCustomAlert(error.message); });
+            }
         }
 
         async function executeSupabaseAuthLogin() {
             if (!document.getElementById('hv-login-agree-policy').checked) { showCustomAlert("Please agree to the Terms and Privacy Policy."); return; }
-            const identity = document.getElementById('login-identity').value.trim();
-            const pass = document.getElementById('login-pass').value;
+            const identity = document.getElementById('login-identity').value.trim(); const pass = document.getElementById('login-pass').value;
             if (!identity || !pass) { showCustomAlert("Please enter both identity and password."); return; }
-            authEngine.signInWithEmailAndPassword(identity, pass)
-                .then(async (userCredential) => {
-                    const user = userCredential.user;
-                    if (!user.emailVerified) { showCustomAlert("Access Denied: Verify your email first."); await authEngine.signOut(); return; }
+            if (typeof authEngine !== 'undefined') {
+                authEngine.signInWithEmailAndPassword(identity, pass).then(async (userCredential) => {
+                    const user = userCredential.user; if (!user.emailVerified) { showCustomAlert("Access Denied: Verify your email first."); await authEngine.signOut(); return; }
                     closeAuthGateway(); triggerCinematicWarpPortal();
                 }).catch((error) => { showCustomAlert(error.message); });
+            }
         }
 
         async function executeGoogleOauthLink() {
             if (!document.getElementById('hv-login-agree-policy').checked) { showCustomAlert("Please agree to the Terms and Conditions."); return; }
-            const provider = new firebase.auth.GoogleAuthProvider();
-            authEngine.signInWithPopup(provider)
-                .then(async (result) => {
-                    const u = result.user;
-                    const docSnap = await firestoreDb.collection("users").doc(u.uid).get();
-                    if (!docSnap.exists) {
-                        await firestoreDb.collection("users").doc(u.uid).set({
-                            full_name: u.displayName || "Google User Node",
-                            role: "Standard Beta User",
-                            registered_at: new Date().toISOString(),
-                            remaining_chats: 10
-                        });
-                    }
+            if (typeof authEngine !== 'undefined' && typeof firebase !== 'undefined') {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                authEngine.signInWithPopup(provider).then(async (result) => {
+                    const u = result.user; const docSnap = await firestoreDb.collection("users").doc(u.uid).get();
+                    if (!docSnap.exists) { await firestoreDb.collection("users").doc(u.uid).set({ full_name: u.displayName || "Google User Node", role: "Standard Beta User", registered_at: new Date().toISOString(), remaining_chats: 10 }); }
                     closeAuthGateway(); triggerCinematicWarpPortal();
                 }).catch((error) => { showCustomAlert(error.message); });
+            }
         }
 
-        // 🟢 ASSET FILES HANDLING ARRAYS
         async function commitFileMetadataToFirestore(fileName, fileSize) {
-            const activeUser = authEngine.currentUser;
-            if (!activeUser) return;
+            if (typeof authEngine === 'undefined') return;
+            const activeUser = authEngine.currentUser; if (!activeUser) return;
             try {
-                await firestoreDb.collection("users").doc(activeUser.uid).collection("chats_history").add({
-                    user_payload: `📁 [Uploaded File]: ${fileName} (${(fileSize / 1024).toFixed(1)} KB)`,
-                    model_response: "Document vector matrix successfully synchronized.",
-                    timestamp: new Date().toISOString() 
-                });
+                await firestoreDb.collection("users").doc(activeUser.uid).collection("chats_history").add({ user_payload: `📁 [Uploaded File]: ${fileName} (${(fileSize / 1024).toFixed(1)} KB)`, model_response: "Document vector matrix successfully synchronized.", timestamp: new Date().toISOString() });
                 if (!currentImageBase64) showCustomAlert(`Encrypted backup transmission successful: ${fileName}`);
                 loadUserFileHistoryFromFirestore(activeUser.uid); 
             } catch (err) { showCustomAlert("Transmission Blocked by Cloud Cluster."); }
         }
 
         async function handleFileUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const activeUser = authEngine.currentUser;
-
+            const file = e.target.files[0]; if (!file) return; 
+            const activeUser = (typeof authEngine !== 'undefined') ? authEngine.currentUser : null;
             if (file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    currentImageBase64 = event.target.result.split(',')[1];
-                    currentImageMimeType = file.type;
-                    showCustomAlert(`Image "${file.name}" synchronized. Type vision signals and Transmit!`);
-                    if (activeUser) commitFileMetadataToFirestore(file.name, file.size);
-                };
-                reader.readAsDataURL(file);
-            } 
-            else if (file.type === "application/pdf") {
+                const reader = new FileReader(); reader.onload = function(event) { currentImageBase64 = event.target.result.split(',')[1]; currentImageMimeType = file.type; showCustomAlert(`Image "${file.name}" synchronized. Type vision signals and Transmit!`); if (activeUser) commitFileMetadataToFirestore(file.name, file.size); }; reader.readAsDataURL(file);
+            } else if (file.type === "application/pdf") {
                 const reader = new FileReader();
                 reader.onload = function(event) {
                     (async () => {
                         try {
-                            const typedarray = new Uint8Array(event.target.result);
-                            const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                            let pdfFullText = "";
-                            for (let i = 1; i <= pdf.numPages; i++) {
-                                const page = await pdf.getPage(i);
-                                const textContent = await page.getTextContent();
-                                pdfFullText += textContent.items.map(item => item.str).join(" ") + "\n";
-                            }
+                            const typedarray = new Uint8Array(event.target.result); const pdf = await pdfjsLib.getDocument(typedarray).promise; let pdfFullText = "";
+                            for (let i = 1; i <= pdf.numPages; i++) { const page = await pdf.getPage(i); const textContent = await page.getTextContent(); pdfFullText += textContent.items.map(item => item.str).join(" ") + "\n"; }
                             if (pdfFullText.length > 40000) { showCustomAlert(`🛑 PDF Too Large. Max bound reached.`); return; }
-                            extractedFileTextContent = pdfFullText; activeFileUploaded = true;
-                            showCustomAlert(`PDF loaded successfully.`);
-                            if (activeUser) commitFileMetadataToFirestore(file.name, file.size);
+                            extractedFileTextContent = pdfFullText; activeFileUploaded = true; showCustomAlert(`PDF loaded successfully.`); if (activeUser) commitFileMetadataToFirestore(file.name, file.size);
                         } catch (err) { showCustomAlert("Error parsing PDF assets."); }
                     })();
-                };
-                reader.readAsArrayBuffer(file);
-            } 
-            else {
-                const txtReader = new FileReader();
-                txtReader.onload = function(event) {
-                    extractedFileTextContent = event.target.result; activeFileUploaded = true;
-                    showCustomAlert(`Document loaded into runtime memory.`);
-                    if (activeUser) commitFileMetadataToFirestore(file.name, file.size);
-                };
-                txtReader.readAsText(file);
+                }; reader.readAsArrayBuffer(file);
+            } else {
+                const txtReader = new FileReader(); txtReader.onload = function(event) { extractedFileTextContent = event.target.result; activeFileUploaded = true; showCustomAlert(`Document loaded into runtime memory.`); if (activeUser) commitFileMetadataToFirestore(file.name, file.size); }; txtReader.readAsText(file);
             }
         }
 
-       function loadUserFileHistoryFromFirestore(uid) {
-            const historyBox = document.getElementById('quantum-history-node');
-            if (!historyBox) return;
-            firestoreDb.collection("users").doc(uid).collection("chats_history") 
-                .orderBy("timestamp", "desc").limit(10).get()
-                .then((querySnapshot) => {
-                    historyBox.innerHTML = `<h4>Quantum History</h4>`;
-                    
-                    if (querySnapshot.empty) {
-                        historyBox.innerHTML += `<div style="color:var(--text-muted); font-size:12px; padding:10px; text-align:center; font-style:italic;">No active thread matrix found.</div>`;
-                        return;
-                    }
-                    
-                    querySnapshot.forEach((doc) => {
-                        const chatData = doc.data();
-                        const historyItemElementRow = document.createElement('div');
-                        historyItemElementRow.className = 'history-item';
-                        const shortMessage = chatData.user_payload || "Document Interaction";
-                        historyItemElementRow.innerHTML = `<i class="fa-regular fa-comment-dots" style="color:var(--neon-cyan);"></i> ${shortMessage.substring(0, 20)}...`;
-                        historyItemElementRow.onclick = () => showCustomAlert(`Old Log:\nYou: ${chatData.user_payload}\nAI: ${chatData.model_response}`);
-                        historyBox.appendChild(historyItemElementRow);
-                    });
-                }).catch((e) => { console.error("REAL FIREBASE ERROR:", e); });
+        function loadUserFileHistoryFromFirestore(uid) {
+            const historyBox = document.getElementById('quantum-history-node'); if (!historyBox) return;
+            if (typeof firestoreDb === 'undefined') return;
+            firestoreDb.collection("users").doc(uid).collection("chats_history").orderBy("timestamp", "desc").limit(10).get().then((querySnapshot) => {
+                historyBox.innerHTML = `<h4>Quantum History</h4>`;
+                if (querySnapshot.empty) { historyBox.innerHTML += `<div style="color:var(--text-muted); font-size:12px; padding:10px; text-align:center; font-style:italic;">No active thread matrix found.</div>`; return; }
+                querySnapshot.forEach((doc) => {
+                    const chatData = doc.data(); const historyItemElementRow = document.createElement('div'); historyItemElementRow.className = 'history-item';
+                    const shortMessage = chatData.user_payload || "Document Interaction"; historyItemElementRow.innerHTML = `<i class="fa-regular fa-comment-dots" style="color:var(--neon-cyan);"></i> ${shortMessage.substring(0, 20)}...`;
+                    historyItemElementRow.onclick = () => showCustomAlert(`Old Log:\nYou: ${chatData.user_payload}\nAI: ${chatData.model_response}`); historyBox.appendChild(historyItemElementRow);
+                });
+            }).catch((e) => { console.error("REAL FIREBASE ERROR:", e); });
         }
-        
-       
+
         function triggerCinematicWarpPortal() {
             triggerJarvisSoundMatrix('success'); const overlay = document.getElementById('portal-animation-overlay'); const pCanvas = document.getElementById('portal-canvas'); const pCtx = pCanvas.getContext('2d');
             overlay.style.display = 'flex'; pCanvas.width = window.innerWidth; pCanvas.height = window.innerHeight; let stars = [];
@@ -1360,77 +1101,45 @@
                 stars.forEach(s => {
                     s.z -= 14; if(s.z <= 0) { s.z = pCanvas.width; s.x = Math.random()*pCanvas.width - cx; s.y = Math.random()*pCanvas.height - cy; }
                     let k = 128.0 / s.z; let px = s.x * k + cx; let py = s.y * k + cy;
-                    if(px >= 0 && px <= pCanvas.width && py >= 0 && py <= pCanvas.height) {
-                        let size = (1 - s.z / pCanvas.width) * 5; let alpha = (1 - s.z / pCanvas.width);
-                        pCtx.beginPath(); pCtx.arc(px,py,size,0,Math.PI*2); pCtx.fillStyle = s.color + alpha + ')'; pCtx.fill();
-                    }
+                    if(px >= 0 && px <= pCanvas.width && py >= 0 && py <= pCanvas.height) { let size = (1 - s.z / pCanvas.width) * 5; let alpha = (1 - s.z / pCanvas.width); pCtx.beginPath(); pCtx.arc(px,py,size,0,Math.PI*2); pCtx.fillStyle = s.color + alpha + ')'; pCtx.fill(); }
                 });
                 if(overlay.style.display === 'flex') requestAnimationFrame(draw);
-            }
-            draw();
-            setTimeout(() => { overlay.style.transition = "opacity 0.6s ease"; overlay.style.opacity = 0; setTimeout(() => { overlay.style.display='none'; overlay.style.opacity=1; }, 600); }, 3100);
+            } draw(); setTimeout(() => { overlay.style.transition = "opacity 0.6s ease"; overlay.style.opacity = 0; setTimeout(() => { overlay.style.display='none'; overlay.style.opacity=1; }, 600); }, 3100);
         }
 
         function toggleModeDropdown(event) { event.stopPropagation(); const el = document.getElementById('mode-options-list'); el.style.display = el.style.display === 'block' ? 'none' : 'block'; }
         function selectMode(name, isLockedByDefault) {
             triggerJarvisSoundMatrix('click');
             if (!activeUserSession.loggedIn && name !== 'Pulse Stream') { showCustomAlert("Unlock the Next-Gen Cores! Sign in now."); return; }
-            if (activeUserSession.loggedIn) {
-                if (name === "Supernova Prime" && !activeUserSession.isPremium) { showPremiumAlert(); return; }
-                if (name === "Quantum Nebula" && !activeUserSession.isPremium && activeUserSession.remaining_chats <= 0) { showPremiumAlert(); return; }
-            }
-            document.getElementById('selected-mode-text').innerText = name; 
-            document.getElementById('mode-options-list').style.display = 'none';
+            if (activeUserSession.loggedIn) { if (name === "Supernova Prime" && !activeUserSession.isPremium) { showPremiumAlert(); return; } if (name === "Quantum Nebula" && !activeUserSession.isPremium && activeUserSession.remaining_chats <= 0) { showPremiumAlert(); return; } }
+            document.getElementById('selected-mode-text').innerText = name; document.getElementById('mode-options-list').style.display = 'none';
         }
         document.addEventListener('click', () => { if(document.getElementById('mode-options-list')) document.getElementById('mode-options-list').style.display = 'none'; });
 
         function initializeLiveCoreDiagnosticHudGraph() {
             const hCanvas = document.getElementById('hud-canvas-vector'); if(!hCanvas) return; const hCtx = hCanvas.getContext('2d');
-            hCanvas.width = hCanvas.parentElement.clientWidth; hCanvas.height = hCanvas.parentElement.clientHeight;
-            let pointsArr = Array(40).fill(hCanvas.height / 2);
+            hCanvas.width = hCanvas.parentElement.clientWidth; hCanvas.height = hCanvas.parentElement.clientHeight; let pointsArr = Array(40).fill(hCanvas.height / 2);
             function animateHUD() {
                 if(!document.getElementById('mainframe-modal').classList.contains('active')) { cancelAnimationFrame(hudAnimationLoopToken); return; }
                 hCtx.clearRect(0,0,hCanvas.width,hCanvas.height); hCtx.strokeStyle = 'rgba(0, 243, 255, 0.04)'; hCtx.lineWidth = 1;
                 for(let i=0; i<hCanvas.width; i+=20) { hCtx.beginPath(); hCtx.moveTo(i,0); hCtx.lineTo(i,hCanvas.height); hCtx.stroke(); }
                 pointsArr.shift(); let variance = Math.random() * 35 - 17.5; if(activeUserSession.isOwner) variance = Math.random() * 8 - 4;
                 pointsArr.push((hCanvas.height / 2) + variance + Math.sin(Date.now() / 200) * 15);
-                hCtx.beginPath(); hCtx.strokeStyle = activeUserSession.isOwner ? 'rgba(157, 0, 255, 0.85)' : 'rgba(0, 243, 255, 0.85)';
-                hCtx.lineWidth = 2; hCtx.shadowBlur = 10; hCtx.shadowColor = activeUserSession.isOwner ? '#9d00ff' : '#00f3ff';
+                hCtx.beginPath(); hCtx.strokeStyle = activeUserSession.isOwner ? 'rgba(157, 0, 255, 0.85)' : 'rgba(0, 243, 255, 0.85)'; hCtx.lineWidth = 2; hCtx.shadowBlur = 10; hCtx.shadowColor = activeUserSession.isOwner ? '#9d00ff' : '#00f3ff';
                 let sliceW = hCanvas.width / (pointsArr.length - 1);
                 for(let k=0; k<pointsArr.length; k++) { let xp = k * sliceW; let yp = pointsArr[k]; if(k === 0) hCtx.moveTo(xp, yp); else hCtx.lineTo(xp, yp); }
                 hCtx.stroke(); hCtx.shadowBlur = 0; hudAnimationLoopToken = requestAnimationFrame(animateHUD);
-            }
-            animateHUD();
+            } animateHUD();
         }
 
-     
         function openMainframeModal(section) {
-            triggerJarvisSoundMatrix('click'); const modal = document.getElementById('mainframe-modal'); const title = document.getElementById('modal-title'); const content = document.getElementById('modal-body-content');
-            if (modal) modal.classList.add('active');
+            triggerJarvisSoundMatrix('click'); const modal = document.getElementById('mainframe-modal'); const title = document.getElementById('modal-title'); const content = document.getElementById('modal-body-content'); if (modal) modal.classList.add('active');
             if (section === 'account') {
                 title.innerText = "MAINFRAME SECURITY METRICS CENTRAL";
                 if (!activeUserSession.loggedIn) {
                     content.innerHTML = `<div style='text-align:center; padding: 25px 0;'><i class='fa-solid fa-lock' style='font-size: 3rem; color: var(--neon-purple); margin-bottom:15px;'></i><p style='margin-bottom:20px; color:#9ca3af;'>Node cluster detached. Mainframe validation keys required.</p><button class='auth-btn-submit' onclick='openLoginGateway(); closeMainframeModal();'>Initialize Database Gateway</button></div>`;
                 } else {
-                    content.innerHTML = `
-                        <div style='display:flex; align-items:center; gap:20px; margin-bottom:20px; background:rgba(255,255,255,0.02); padding:14px; border-radius:16px;'>
-                            <div style='width:55px; height:55px; border-radius:50%; background:linear-gradient(135deg,#00f3ff,#9d00ff); display:flex; justify-content:center; align-items:center; font-size:1.4rem; font-weight:900; color:#fff;'>${activeUserSession.name.charAt(0).toUpperCase()}</div>
-                            <div><h4 style='color:#fff; font-family:"Space Grotesk"; font-size:1.2rem; margin-bottom:1px;'>${activeUserSession.name}</h4><p style='color:var(--neon-cyan); font-size:0.85rem; font-family:monospace;'>@${activeUserSession.username}</p></div>
-                        </div>
-                        <div class="settings-group-title">Hardware Identity Matrix Logs</div>
-                        <div class="settings-row"><span>Global Tracking User ID</span><span style="color:var(--neon-cyan); font-family:monospace; font-weight:700;">${activeUserSession.uid}</span></div>
-                        <div class="settings-row"><span>Secure Session Auth Token</span><span style="color:#fff; font-family:monospace; font-size:11px; background:rgba(255,255,255,0.05); padding:4px 8px; border-radius:6px;">${activeUserSession.token}</span></div>
-                        <div class="settings-row"><span>Network Gateway Link Address</span><span style="color:var(--text-muted); font-family:monospace;">${activeUserSession.ipAddress}</span></div>
-                        <div class="settings-group-title">Clearance Credentials & Core Allocation</div>
-                        <div class="settings-row"><span>Security Privilege Clear Rank</span><span style="color:var(--neon-purple); font-weight:700;">${activeUserSession.clearance}</span></div>
-                        <div class="settings-row"><span>Active Deployment Server Array</span><span>${activeUserSession.location}</span></div>
-                        <div class="settings-row"><span>Quantum Allocation Credits</span><span style="color:#10b981; font-family:'Orbitron'; font-weight:700;">${activeUserSession.credits}</span></div>
-                        <div class="settings-row"><span>Data Encryption Compliance</span><span style="color:#10b981; font-weight:700;"><i class="fa-solid fa-circle-check"></i> FIREBASE CLOUD SECURED</span></div>
-                        <div class="settings-row"><span>Mainframe Linked Mail Box</span><span style="color:var(--text-muted); font-size:13px;">${activeUserSession.email}</span></div>
-                        <div class="settings-group-title">Live Core Quantum Telemetry HUD Matrix</div>
-                        <div class="hud-diagnostic-graph-container"><canvas id="hud-canvas-vector"></canvas></div>
-                        <button onclick="localStorage.clear(); authEngine.signOut(); window.location.reload();" style="width:100%; margin-top:20px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 12px; border-radius: 12px; font-weight:700; cursor:pointer; font-size:12px;">TERMINATE MAINFRAME SESSION (SIGN OUT)</button>
-                    `;
+                    content.innerHTML = `<div style='display:flex; align-items:center; gap:20px; margin-bottom:20px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); padding:14px; border-radius:16px;'><div style='width:55px; height:55px; border-radius:50%; background:linear-gradient(135deg,#00f3ff,#9d00ff); display:flex; justify-content:center; align-items:center; font-size:1.4rem; font-weight:900; color:#fff;'>${activeUserSession.name.charAt(0).toUpperCase()}</div><div><h4 style='color:#fff; font-family:"Space Grotesk"; font-size:1.2rem; margin-bottom:1px;'>${activeUserSession.name}</h4><p style='color:var(--neon-cyan); font-size:0.85rem; font-family:monospace;'>@${activeUserSession.username}</p></div></div><div class="settings-group-title">Hardware Identity Matrix Logs</div><div class="settings-row"><span>Global Tracking User ID</span><span style="color:var(--neon-cyan); font-family:monospace; font-weight:700;">${activeUserSession.uid}</span></div><div class="settings-row"><span>Secure Session Auth Token</span><span style="color:#fff; font-family:monospace; font-size:11px; background:rgba(255,255,255,0.05); padding:4px 8px; border-radius:6px;">${activeUserSession.token}</span></div><div class="settings-row"><span>Network Gateway Link Address</span><span style="color:var(--text-muted); font-family:monospace;">${activeUserSession.ipAddress}</span></div><div class="settings-group-title">Clearance Credentials & Core Allocation</div><div class="settings-row"><span>Security Privilege Clear Rank</span><span style="color:var(--neon-purple); font-weight:700;">${activeUserSession.clearance}</span></div><div class="settings-row"><span>Active Deployment Server Array</span><span>${activeUserSession.location}</span></div><div class="settings-row"><span>Quantum Allocation Credits</span><span style="color:#10b981; font-family:'Orbitron'; font-weight:700;">${activeUserSession.credits}</span></div><div class="settings-row"><span>Data Encryption Compliance</span><span style="color:#10b981; font-weight:700;"><i class="fa-solid fa-circle-check"></i> FIREBASE CLOUD SECURED</span></div><div class="settings-row"><span>Mainframe Linked Mail Box</span><span style="color:var(--text-muted); font-size:13px;">${activeUserSession.email}</span></div><div class="settings-group-title">Live Core Quantum Telemetry HUD Matrix</div><div class="hud-diagnostic-graph-container"><canvas id="hud-canvas-vector"></canvas></div><button onclick="localStorage.clear(); if(typeof authEngine !== 'undefined') authEngine.signOut(); window.location.reload();" style="width:100%; margin-top:20px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 12px; border-radius: 12px; font-weight:700; cursor:pointer; font-size:12px;">TERMINATE MAINFRAME SESSION (SIGN OUT)</button>`;
                     setTimeout(initializeLiveCoreDiagnosticHudGraph, 100);
                 }
             } else if (section === 'settings') {
@@ -1438,271 +1147,112 @@
                 const sTemp = localStorage.getItem('harvion-temp') || "0.2"; const sTokens = localStorage.getItem('harvion-tokens') || "2048";
                 const sPlexus = localStorage.getItem('harvion-plexus') !== "false"; const sDensity = localStorage.getItem('harvion-density') || "comfortable";
                 const sMic = localStorage.getItem('harvion-mic') || "80"; const sAudio = localStorage.getItem('harvion-audio') !== "false"; const sTheme = localStorage.getItem('harvion-theme') || "space";
-                content.innerHTML = `
-                    <div class="settings-group-title">Account Node & Tiers (Testing Controls)</div>
-                    <div class="settings-row"><span>Toggle Simulated Premium Token</span><select class="settings-select" onchange="localStorage.setItem('harvion_premium_tier', this.value); window.location.reload();"><option value="false" ${localStorage.getItem('harvion_premium_tier')!=='true'?'selected':''}>Free Freemium Tier</option><option value="true" ${localStorage.getItem('harvion_premium_tier')==='true'?'selected':''}>Force Active Premium</option></select></div>
-                    <div class="settings-group-title">Theme Workspace Overrides</div>
-                    <div class="settings-row"><span>Workspace Matrix Accent</span><select class="settings-select" onchange="updateLiveSettings('theme', this.value)"><option value="space" ${sTheme==='space'?'selected':''}>Deep Space Blue</option><option value="void" ${sTheme==='void'?'selected':''}>Void Eclipse Black</option><option value="cyberpunk" ${sTheme==='cyberpunk'?'selected':''}>Cyberpunk Neon Glow</option></select></div>
-                    <div class="settings-row"><span>Interface Structural Density</span><select class="settings-select" onchange="updateLiveSettings('density', this.value)"><option value="comfortable" ${sDensity==='comfortable'?'selected':''}>Comfortable Grid</option><option value="compact" ${sDensity==='compact'?'selected':''}>Compact Matrix</option></select></div>
-                    <div class="settings-group-title">Core AI Logic Weights</div>
-                    <div class="settings-row"><span>Model Sampling Temperature</span><div style="display:flex; align-items:center; gap:10px;"><span id="temp-lbl" style="color:var(--neon-cyan); font-weight:700;">${sTemp}</span><input type="range" min="0.1" max="1.5" step="0.1" value="${sTemp}" class="settings-slider" oninput="updateLiveSettings('temp', this.value)"></div></div>
-                    <div class="settings-row"><span>Max Execution Token Bounds</span><div style="display:flex; align-items:center; gap:10px;"><span id="tokens-lbl" style="color:var(--neon-cyan); font-weight:700;">${sTokens}</span><input type="range" min="256" max="8192" step="128" value="${sTokens}" class="settings-slider" oninput="updateLiveSettings('tokens', this.value)"></div></div>
-                    <div class="settings-group-title">Hardware Audio & Particle Systems</div>
-                    <div class="settings-row"><span>WebGL Background Particles Plexus</span><input type="checkbox" ${sPlexus ? 'checked' : ''} class="settings-checkbox" onchange="updateLiveSettings('plexus', this.checked)"></div>
-                    <div class="settings-row"><span>Fluid Jarvis Audio Matrix Feedback</span><input type="checkbox" ${sAudio ? 'checked' : ''} class="settings-checkbox" onchange="localStorage.setItem('harvion-audio', this.checked)"></div>
-                    <div class="settings-row"><span>Speech Microphone Db Threshold</span><div style="display:flex; align-items:center; gap:10px;"><span id="mic-lbl" style="color:var(--neon-cyan); font-weight:700;">${sMic}%</span><input type="range" min="10" max="100" value="${sMic}" class="settings-slider" oninput="updateLiveSettings('mic', this.value)"></div></div>
-                    <div class="settings-group-title">Support Telemetry Pipeline Desk</div>
-                    <div class="settings-row" style="flex-direction:column; align-items:flex-start; gap:10px;"><span>Transmit Engine Bug Logs</span><textarea class="settings-textarea" id="feedback-text-area" placeholder="Type data log arrays stream here..."></textarea><button onclick="showCustomAlert('Telemetry Sync Packets complete.'); document.getElementById('feedback-text-area').value='';" style="background:var(--neon-cyan); border:none; padding:8px 16px; border-radius:8px; color:#000; font-weight:700; align-self:flex-end;">Transmit Payload</button></div>
-                    <button onclick="localStorage.clear(); showCustomAlert('Mainframe flushed.'); window.location.reload();" style="width:100%; margin-top:15px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 12px; border-radius: 12px; font-weight:700; cursor:pointer; font-size:12px;"><i class="fa-solid fa-dumpster-fire"></i> PURGE ALL MAINFRAME MEMORY CACHES</button>
-                `;
+                content.innerHTML = `<div class="settings-group-title">Account Node & Tiers (Testing Controls)</div><div class="settings-row"><span>Toggle Simulated Premium Token</span><select class="settings-select" onchange="localStorage.setItem('harvion_premium_tier', this.value); window.location.reload();"><option value="false" ${localStorage.getItem('harvion_premium_tier')!=='true'?'selected':''}>Free Freemium Tier</option><option value="true" ${localStorage.getItem('harvion_premium_tier')==='true'?'selected':''}>Force Active Premium</option></select></div><div class="settings-group-title">Theme Workspace Overrides</div><div class="settings-row"><span>Workspace Matrix Accent</span><select class="settings-select" onchange="updateLiveSettings('theme', this.value)"><option value="space" ${sTheme==='space'?'selected':''}>Deep Space Blue</option><option value="void" ${sTheme==='void'?'selected':''}>Void Eclipse Black</option><option value="cyberpunk" ${sTheme==='cyberpunk'?'selected':''}>Cyberpunk Neon Glow</option></select></div><div class="settings-row"><span>Interface Structural Density</span><select class="settings-select" onchange="updateLiveSettings('density', this.value)"><option value="comfortable" ${sDensity==='comfortable'?'selected':''}>Comfortable Grid</option><option value="compact" ${sDensity==='compact'?'selected':''}>Compact Matrix</option></select></div><div class="settings-group-title">Core AI Logic Weights</div><div class="settings-row"><span>Model Sampling Temperature</span><div style="display:flex; align-items:center; gap:10px;"><span id="temp-lbl" style="color:var(--neon-cyan); font-weight:700;">${sTemp}</span><input type="range" min="0.1" max="1.5" step="0.1" value="${sTemp}" class="settings-slider" oninput="updateLiveSettings('temp', this.value)"></div></div><div class="settings-row"><span>Max Execution Token Bounds</span><div style="display:flex; align-items:center; gap:10px;"><span id="tokens-lbl" style="color:var(--neon-cyan); font-weight:700;">${sTokens}</span><input type="range" min="256" max="8192" step="128" value="${sTokens}" class="settings-slider" oninput="updateLiveSettings('tokens', this.value)"></div></div><div class="settings-group-title">Hardware Audio & Particle Systems</div><div class="settings-row"><span>WebGL Background Particles Plexus</span><input type="checkbox" ${sPlexus ? 'checked' : ''} class="settings-checkbox" onchange="updateLiveSettings('plexus', this.checked)"></div><div class="settings-row"><span>Fluid Jarvis Audio Matrix Feedback</span><input type="checkbox" ${sAudio ? 'checked' : ''} class="settings-checkbox" onchange="localStorage.setItem('harvion-audio', this.checked)"></div><div class="settings-row"><span>Speech Microphone Db Threshold</span><div style="display:flex; align-items:center; gap:10px;"><span id="mic-lbl" style="color:var(--neon-cyan); font-weight:700;">${sMic}%</span><input type="range" min="10" max="100" value="${sMic}" class="settings-slider" oninput="updateLiveSettings('mic', this.value)"></div></div><div class="settings-group-title">Support Telemetry Pipeline Desk</div><div class="settings-row" style="flex-direction:column; align-items:flex-start; gap:10px;"><span>Transmit Engine Bug Logs</span><textarea class="settings-textarea" id="feedback-text-area" placeholder="Type data log arrays stream here..."></textarea><button onclick="showCustomAlert('Telemetry Sync Packets complete.'); document.getElementById('feedback-text-area').value='';" style="background:var(--neon-cyan); border:none; padding:8px 16px; border-radius:8px; color:#000; font-weight:700; align-self:flex-end;">Transmit Payload</button></div><button onclick="localStorage.clear(); showCustomAlert('Mainframe flushed.'); window.location.reload();" style="width:100%; margin-top:15px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 12px; border-radius: 12px; font-weight:700; cursor:pointer; font-size:12px;"><i class="fa-solid fa-dumpster-fire"></i> PURGE ALL MAINFRAME MEMORY CACHES</button>`;
             }
         }
-               function closeMainframeModal() {
-            triggerJarvisSoundMatrix('click');
-            const modal = document.getElementById('mainframe-modal');
-            if (modal) modal.classList.remove('active');
-            if (hudAnimationLoopToken) cancelAnimationFrame(hudAnimationLoopToken);
-        }
 
+        function closeMainframeModal() { triggerJarvisSoundMatrix('click'); const modal = document.getElementById('mainframe-modal'); if (modal) modal.classList.remove('active'); if (hudAnimationLoopToken) cancelAnimationFrame(hudAnimationLoopToken); }
         function applyThemeRoutine(t) { document.body.classList.remove('theme-void', 'theme-cyberpunk'); if(t==='void') document.body.classList.add('theme-void'); else if(t==='cyberpunk') document.body.classList.add('theme-cyberpunk'); }
         function updateLiveSettings(k, v) { if(k==='theme'){ localStorage.setItem('harvion-theme', v); applyThemeRoutine(v); } else if(k==='density'){ localStorage.setItem('harvion-density', v); document.getElementById('chat-box').style.padding = v==="compact"?"12px 20px":"30px"; } else if(k==='temp'){ document.getElementById('temp-lbl').innerText = v; localStorage.setItem('harvion-temp', v); } else if(k==='tokens'){ document.getElementById('tokens-lbl').innerText = v; localStorage.setItem('harvion-tokens', v); } else if(k==='plexus'){ localStorage.setItem('harvion-plexus', v); document.getElementById('interactive-canvas').style.display = v?'block':'none'; } else if(k==='mic'){ document.getElementById('mic-lbl').innerText = v+"%"; localStorage.setItem('harvion-mic', v); } }
-        
-        function sharePlatform() { 
-            if(navigator.share) { 
-                navigator.share({ title: 'Harvion AI', url: window.location.href }); 
-            } else { 
-                navigator.clipboard.writeText(window.location.href); 
-                showCustomAlert("Mainframe link parameters cloned to system stack."); 
-            } 
-        }
-        
+        function sharePlatform() { if(navigator.share) { navigator.share({ title: 'Harvion AI', url: window.location.href }); } else { navigator.clipboard.writeText(window.location.href); showCustomAlert("Mainframe link parameters cloned to system stack."); } }
         function downloadChat() { const txt = Array.from(document.querySelectorAll('.msg-bubble')).map(el => el.innerText).join('\n\n'); if(!txt) return; const blob = new Blob([txt], {type:"text/plain"}); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "harvion_chat_dump.txt"; a.click(); }
         function triggerUpload() { document.getElementById('doc-upload').click(); }
-        function startSpeech() { 
-    const Speech = window.SpeechRecognition || window.webkitSpeechRecognition; 
-    if(!Speech) return; 
-    const rec = new Speech(); 
-    rec.lang = 'hi-IN'; 
-    rec.start(); 
-    rec.onresult = (e) => { 
-        const input = document.getElementById('user-input');
-        
-        input.value = input.value.trim() ? input.value + " " + e.results[0][0].transcript : e.results[0][0].transcript; 
-    }; 
-}
+        function startSpeech() { const Speech = window.SpeechRecognition || window.webkitSpeechRecognition; if(!Speech) return; const rec = new Speech(); rec.lang = 'hi-IN'; rec.start(); rec.onresult = (e) => { const input = document.getElementById('user-input'); input.value = input.value.trim() ? input.value + " " + e.results[0][0].transcript : e.results[0][0].transcript; }; }
         function loadHistorySimulation(t) { clearChat(); setTimeout(() => { addMessage("Diagnostic network test simulation.", 'user'); addMessage("Core stabilized inference response mapped successfully under runtime variables tracking parameters layer framework.", 'ai'); }, 120); }
- 
-        authEngine.onAuthStateChanged(async (user) => {
-            const authBlock = document.getElementById('nav-auth-block');
-            const profileBlock = document.getElementById('user-profile-block');
-            
-            if (user) {
-                if (user.providerData.some(p => p.providerId === 'password') && !user.emailVerified) {
-                    activeUserSession.loggedIn = false;
-                    if(authBlock) authBlock.style.display = 'flex';
-                    if(profileBlock) profileBlock.style.display = 'none';
-                    document.getElementById('platform-title-version').innerText = "Harvion Engine v1.5";
-                    syncPlatformPremiumUIRefresh();
-                    return; 
-                }
 
-                activeUserSession.loggedIn = true;
-                activeUserSession.email = user.email || "Cellular Node Proxy";
-                activeUserSession.uid = "UID-" + user.uid.substring(0,8).toUpperCase();
-                activeUserSession.token = "TK-" + user.uid.substring(8,15).toUpperCase() + "-SLOT";
+        // AUTH ENGINE GUARD
+        if (typeof authEngine !== 'undefined') {
+            authEngine.onAuthStateChanged(async (user) => {
+                const authBlock = document.getElementById('nav-auth-block');
+                const profileBlock = document.getElementById('user-profile-block');
                 
-                try {
-                    const snap = await firestoreDb.collection("users").doc(user.uid).get();
-                    if(snap.exists) {
-                        const d = snap.data();
-                        activeUserSession.name = d.full_name || user.displayName || "Core Node Developer";
-                        activeUserSession.clearance = d.role || "Standard Beta User";
-                        activeUserSession.remaining_chats = d.remaining_chats !== undefined ? d.remaining_chats : 0;
-                    } else {
+                if (user) {
+                    if (user.providerData.some(p => p.providerId === 'password') && !user.emailVerified) {
+                        activeUserSession.loggedIn = false;
+                        if(authBlock) authBlock.style.display = 'flex';
+                        if(profileBlock) profileBlock.style.display = 'none';
+                        document.getElementById('platform-title-version').innerText = "Harvion Engine v1.5";
+                        syncPlatformPremiumUIRefresh();
+                        return; 
+                    }
+
+                    activeUserSession.loggedIn = true;
+                    activeUserSession.email = user.email || "Cellular Node Proxy";
+                    activeUserSession.uid = "UID-" + user.uid.substring(0,8).toUpperCase();
+                    activeUserSession.token = "TK-" + user.uid.substring(8,15).toUpperCase() + "-SLOT";
+                    
+                    try {
+                        const snap = await firestoreDb.collection("users").doc(user.uid).get();
+                        if(snap.exists) {
+                            const d = snap.data();
+                            activeUserSession.name = d.full_name || user.displayName || "Core Node Developer";
+                            activeUserSession.clearance = d.role || "Standard Beta User";
+                            activeUserSession.remaining_chats = d.remaining_chats !== undefined ? d.remaining_chats : 0;
+                        } else {
+                            activeUserSession.name = localStorage.getItem('harvion_temp_name') || user.displayName || "Core Node Developer";
+                            activeUserSession.clearance = localStorage.getItem('harvion_clearance') || 'Standard Beta User';
+                            activeUserSession.remaining_chats = 0;
+                        }
+                    } catch(e) {
                         activeUserSession.name = localStorage.getItem('harvion_temp_name') || user.displayName || "Core Node Developer";
                         activeUserSession.clearance = localStorage.getItem('harvion_clearance') || 'Standard Beta User';
                         activeUserSession.remaining_chats = 0;
                     }
-                } catch(e) {
-                    activeUserSession.name = localStorage.getItem('harvion_temp_name') || user.displayName || "Core Node Developer";
-                    activeUserSession.clearance = localStorage.getItem('harvion_clearance') || 'Standard Beta User';
-                    activeUserSession.remaining_chats = 0;
-                }
 
-                activeUserSession.username = activeUserSession.name.toLowerCase().replace(/\s+/g, '_') + '_' + user.uid.substring(0,3);
-                activeUserSession.ipAddress = "Dynamic Cloud Routing Node";
-                if(['owner', 'archon', 'apex', 'premium', 'apex archon core'].some(keyword => activeUserSession.clearance.toLowerCase().includes(keyword))) {
-                    activeUserSession.isOwner = true; activeUserSession.isPremium = true;
-                    activeUserSession.clearance = "Apex Archon Core (Owner)";
-                    document.getElementById('platform-title-version').innerHTML = "Harvion Engine <span style='color:var(--neon-purple); font-family:\"Orbitron\"; font-size:11px; letter-spacing:1px;'>[APEX ARCHON]</span>";
+                    activeUserSession.username = activeUserSession.name.toLowerCase().replace(/\s+/g, '_') + '_' + user.uid.substring(0,3);
+                    activeUserSession.ipAddress = "Dynamic Cloud Routing Node";
+                    
+                    if(['owner', 'archon', 'apex', 'premium', 'apex archon core'].some(keyword => activeUserSession.clearance.toLowerCase().includes(keyword))) {
+                        activeUserSession.isOwner = true; 
+                        activeUserSession.isPremium = true;
+                        activeUserSession.clearance = "Apex Archon Core (Owner)";
+                        document.getElementById('platform-title-version').innerHTML = "Harvion Engine <span style='color:var(--neon-purple); font-family:\"Orbitron\"; font-size:11px; letter-spacing:1px;'>[APEX ARCHON]</span>";
+                    } else {
+                        activeUserSession.isOwner = false;
+                        activeUserSession.isPremium = false;
+                    }
+                    
+                    activeUserSession.location = "Primary Cloud Node Location";
+                    activeUserSession.credits = activeUserSession.isPremium ? "Unlimited Credit Weights" : "5,000.00 QCR Balance";
+                    
+                    syncPlatformPremiumUIRefresh();
+                    
+                    if(authBlock) authBlock.style.display = 'none';
+                    if(profileBlock) profileBlock.style.display = 'flex';
+                    const avatarEl = document.getElementById('avatar-initial');
+                    if(avatarEl && activeUserSession.name) avatarEl.innerText = activeUserSession.name.charAt(0).toUpperCase();
+                    const navTitle = document.getElementById('nav-user-title');
+                    if(navTitle) navTitle.innerText = activeUserSession.name;
+                    const navUid = document.getElementById('nav-user-uid');
+                    if(navUid) navUid.innerText = activeUserSession.uid;
+
+                    if (typeof loadUserFileHistoryFromFirestore === 'function') {
+                        loadUserFileHistoryFromFirestore(user.uid);
+                    }
                 } else {
-                    activeUserSession.isOwner = false;
+                    activeUserSession.loggedIn = false;
                     activeUserSession.isPremium = false;
-                }
-                activeUserSession.location = "Primary Cloud Node Location";
-                activeUserSession.credits = activeUserSession.isPremium ? "Unlimited Credit Weights" : "5,000.00 QCR Balance";
-                
-                syncPlatformPremiumUIRefresh();
-                if(authBlock) authBlock.style.display = 'none';
-                if(profileBlock) profileBlock.style.display = 'flex';
-                document.getElementById('avatar-initial').innerText = activeUserSession.name.charAt(0).toUpperCase();
-                document.getElementById('nav-user-title').innerText = activeUserSession.name;
-                document.getElementById('nav-user-uid').innerText = activeUserSession.uid;
+                    activeUserSession.isOwner = false;
+                    activeUserSession.remaining_chats = 0;
+                    if(authBlock) authBlock.style.display = 'flex';
+                    if(profileBlock) profileBlock.style.display = 'none';
+                    document.getElementById('platform-title-version').innerText = "Harvion Engine v1.5";
+                    
+                    syncPlatformPremiumUIRefresh();
 
-                if (typeof loadUserFileHistoryFromFirestore === 'function') {
-                    loadUserFileHistoryFromFirestore(user.uid);
+                    const historyBox = document.getElementById('quantum-history-node');
+                    if (historyBox) {
+                        historyBox.innerHTML = `
+                            <h4>Quantum History</h4>
+                            <div style="color:var(--text-muted); font-size:12px; padding:20px 10px; text-align:center; font-style:italic; line-height:1.5;">
+                                <i class="fa-solid fa-lock" style="color:var(--neon-purple); margin-bottom:8px; display:block; font-size:16px;"></i>
+                                Sign in to preserve and access your neural thread history matrix.
+                            </div>
+                        `;
+                    }
                 }
-            } else {
-                activeUserSession.loggedIn = false;
-                activeUserSession.isPremium = false;
-                activeUserSession.isOwner = false;
-                activeUserSession.remaining_chats = 0;
-                if(authBlock) authBlock.style.display = 'flex';
-                if(profileBlock) profileBlock.style.display = 'none';
-                document.getElementById('platform-title-version').innerText = "Harvion Engine v1.5";
-                syncPlatformPremiumUIRefresh();
-
-                const historyBox = document.getElementById('quantum-history-node');
-                if (historyBox) {
-                    historyBox.innerHTML = `
-                        <h4>Quantum History</h4>
-                        <div style="color:var(--text-muted); font-size:12px; padding:20px 10px; text-align:center; font-style:italic; line-height:1.5;">
-                            <i class="fa-solid fa-lock" style="color:var(--neon-purple); margin-bottom:8px; display:block; font-size:16px;"></i>
-                            Sign in to preserve and access your neural thread history matrix.
-                        </div>
-                    `;
-                }
-            }
-        });
-
-        function syncPlatformPremiumUIRefresh() {
-            const qLbl = document.getElementById('quantum-lock-lbl');
-            const qSlot = document.getElementById('quantum-dropdown-slot');
-            const sSlot = document.getElementById('supernova-dropdown-slot');
-            
-            if (!activeUserSession.loggedIn) {
-                if(qSlot) qSlot.classList.add('locked-tier');
-                if(qLbl) qLbl.innerHTML = "<i class='fa-solid fa-lock' style='color:#6b7280;'></i> LOCKED";
-                if(sSlot) {
-                    sSlot.classList.add('locked-tier');
-                    sSlot.innerHTML = "<span>Supernova Prime</span><i class='fa-solid fa-lock' style='font-size:9px; color:#6b7280;'></i>";
-                }
-                return;
-            }
-
-            if (activeUserSession.isPremium) {
-                if(qLbl) qLbl.innerHTML = "<i class='fa-solid fa-circle-check' style='color:#10b981;'></i> UNLOCKED";
-                if(qSlot) qSlot.classList.remove('locked-tier');
-                if(sSlot) { 
-                    sSlot.classList.remove('locked-tier'); 
-                    sSlot.innerHTML = "<span>Supernova Prime</span><small style='color:var(--neon-purple); font-size:9px;'>PREMIUM</small>"; 
-                }
-            } else {
-                let qLeft = activeUserSession.remaining_chats;
-                if (qLeft <= 0) {
-                    if(qSlot) qSlot.classList.add('locked-tier');
-                    if(qLbl) qLbl.innerHTML = "<i class='fa-solid fa-lock' style='color:#6b7280;'></i> LOCKED";
-                } else {
-                    if(qSlot) qSlot.classList.remove('locked-tier');
-                    if(qLbl) qLbl.innerText = `${qLeft} CHATS`;
-                }
-                if(sSlot) {
-                    sSlot.classList.add('locked-tier');
-                    sSlot.innerHTML = "<span>Supernova Prime</span><i class='fa-solid fa-lock' style='font-size:9px; color:#6b7280;'></i>";
-                }
-            }
+            });
         }
-    </script>
-</body>
-</html>
-// 🟢 AUTH MATRIX UPDATER WITH LOGOUT STATEMENT
-        authEngine.onAuthStateChanged(async (user) => {
-            const authBlock = document.getElementById('nav-auth-block');
-            const profileBlock = document.getElementById('user-profile-block');
-            
-            if (user) {
-                if (user.providerData.some(p => p.providerId === 'password') && !user.emailVerified) {
-                    activeUserSession.loggedIn = false;
-                    if(authBlock) authBlock.style.display = 'flex';
-                    if(profileBlock) profileBlock.style.display = 'none';
-                    document.getElementById('platform-title-version').innerText = "Harvion Engine v1.5";
-                    syncPlatformPremiumUIRefresh();
-                    return; 
-                }
-
-                activeUserSession.loggedIn = true;
-                activeUserSession.email = user.email || "Cellular Node Proxy";
-                activeUserSession.uid = "UID-" + user.uid.substring(0,8).toUpperCase();
-                activeUserSession.token = "TK-" + user.uid.substring(8,15).toUpperCase() + "-SLOT";
-                
-                try {
-                    const snap = await firestoreDb.collection("users").doc(user.uid).get();
-                    if(snap.exists) {
-                        const d = snap.data();
-                        activeUserSession.name = d.full_name || user.displayName || "Core Node Developer";
-                        activeUserSession.clearance = d.role || "Standard Beta User";
-                        activeUserSession.remaining_chats = d.remaining_chats !== undefined ? d.remaining_chats : 0;
-                    } else {
-                        activeUserSession.name = localStorage.getItem('harvion_temp_name') || user.displayName || "Core Node Developer";
-                        activeUserSession.clearance = localStorage.getItem('harvion_clearance') || 'Standard Beta User';
-                        activeUserSession.remaining_chats = 0;
-                    }
-                } catch(e) {
-                    activeUserSession.name = localStorage.getItem('harvion_temp_name') || user.displayName || "Core Node Developer";
-                    activeUserSession.clearance = localStorage.getItem('harvion_clearance') || 'Standard Beta User';
-                    activeUserSession.remaining_chats = 0;
-                }
-
-                activeUserSession.username = activeUserSession.name.toLowerCase().replace(/\s+/g, '_') + '_' + user.uid.substring(0,3);
-                activeUserSession.ipAddress = "Dynamic Cloud Routing Node";
-                
-                if(['owner', 'archon', 'apex', 'premium', 'apex archon core'].some(keyword => activeUserSession.clearance.toLowerCase().includes(keyword))) {
-                    activeUserSession.isOwner = true; 
-                    activeUserSession.isPremium = true;
-                    activeUserSession.clearance = "Apex Archon Core (Owner)";
-                    document.getElementById('platform-title-version').innerHTML = "Harvion Engine <span style='color:var(--neon-purple); font-family:\"Orbitron\"; font-size:11px; letter-spacing:1px;'>[APEX ARCHON]</span>";
-                } else {
-                    activeUserSession.isOwner = false;
-                    activeUserSession.isPremium = false;
-                }
-                
-                activeUserSession.location = "Primary Cloud Node Location";
-                activeUserSession.credits = activeUserSession.isPremium ? "Unlimited Credit Weights" : "5,000.00 QCR Balance";
-                
-                syncPlatformPremiumUIRefresh();
-                
-                if(authBlock) authBlock.style.display = 'none';
-                if(profileBlock) profileBlock.style.display = 'flex';
-                document.getElementById('avatar-initial').innerText = activeUserSession.name.charAt(0).toUpperCase();
-                document.getElementById('nav-user-title').innerText = activeUserSession.name;
-                document.getElementById('nav-user-uid').innerText = activeUserSession.uid;
-
-                if (typeof loadUserFileHistoryFromFirestore === 'function') {
-                    loadUserFileHistoryFromFirestore(user.uid);
-                }
-            } else {
-                activeUserSession.loggedIn = false;
-                activeUserSession.isPremium = false;
-                activeUserSession.isOwner = false;
-                activeUserSession.remaining_chats = 0;
-                if(authBlock) authBlock.style.display = 'flex';
-                if(profileBlock) profileBlock.style.display = 'none';
-                document.getElementById('platform-title-version').innerText = "Harvion Engine v1.5";
-                
-                syncPlatformPremiumUIRefresh();
-
-                const historyBox = document.getElementById('quantum-history-node');
-                if (historyBox) {
-                    historyBox.innerHTML = `
-                        <h4>Quantum History</h4>
-                        <div style="color:var(--text-muted); font-size:12px; padding:20px 10px; text-align:center; font-style:italic; line-height:1.5;">
-                            <i class="fa-solid fa-lock" style="color:var(--neon-purple); margin-bottom:8px; display:block; font-size:16px;"></i>
-                            Sign in to preserve and access your neural thread history matrix.
-                        </div>
-                    `;
-                }
-            }
-        });
 
         function syncPlatformPremiumUIRefresh() {
             const qLbl = document.getElementById('quantum-lock-lbl');

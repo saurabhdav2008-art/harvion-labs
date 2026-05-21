@@ -1098,7 +1098,28 @@
                 querySnapshot.forEach((doc) => {
                     const chatData = doc.data(); const historyItemElementRow = document.createElement('div'); historyItemElementRow.className = 'history-item';
                     const shortMessage = chatData.user_payload || "Document Interaction"; historyItemElementRow.innerHTML = `<i class="fa-regular fa-comment-dots" style="color:var(--neon-cyan);"></i> ${shortMessage.substring(0, 20)}...`;
-                    historyItemElementRow.onclick = () => showCustomAlert(`Old Log:\nYou: ${chatData.user_payload}\nAI: ${chatData.model_response}`); historyBox.appendChild(historyItemElementRow);
+                    // NAYA GOD-LEVEL HISTORY RESTORE LOGIC
+                    historyItemElementRow.onclick = () => {
+                        triggerJarvisSoundMatrix('click');
+                        const box = document.getElementById('chat-box');
+                        if (!box) return;
+
+                        
+                        box.innerHTML = `<div id="welcome-center" style="position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; text-align: center !important; pointer-events: none !important; z-index: 0 !important; opacity: 0.12 !important; width: 100% !important; margin: 0 !important; padding: 0 !important;"><img src="logo.png" alt="Harvion Labs" style="width: 120px !important; height: 120px !important; margin-bottom: 15px !important; filter: drop-shadow(0 0 25px #00f2fe) !important; object-fit: cover !important; border-radius: 16px !important;"><h2 style="font-family: 'Space Grotesk', sans-serif !important; font-size: 32px !important; color: #fff !important; margin: 0 0 5px 0 !important; font-weight: 700 !important; letter-spacing: 1px !important;">Harvion Labs</h2><p style="font-family: 'Plus Jakarta Sans', sans-serif !important; color: #9ca3af !important; font-size: 15px !important; margin: 0 !important; letter-spacing: 0.5px !important;">Adaptive AI Ecosystem</p></div>`;
+                        
+                       
+                        if (chatData.user_payload) {
+                            addMessage(chatData.user_payload, 'user');
+                        }
+
+                        if (chatData.model_response) {
+                            addMessage(chatData.model_response, 'ai');
+                        }
+                        
+                        closeSidebarMobile();
+                    };
+
+                    historyBox.appendChild(historyItemElementRow);
                 });
             }).catch((e) => { console.error("REAL FIREBASE ERROR:", e); });
         }

@@ -1042,7 +1042,7 @@
                     streamLiveTokenAccumulator += "<br><br><em style='color:var(--text-muted); font-size:13px; display:block;'><i class='fa-solid fa-right-to-bracket'></i> Login for a better experience and unlock advanced features.</em>";
                     bubbleDiv.innerHTML = streamLiveTokenAccumulator;
                     scrollToBottom();
-                } elif (activeMode === "Quantum Nebula" && !activeUserSession.isPremium) {
+               } else if (activeMode === "Quantum Nebula" && !activeUserSession.isPremium) {
     let newChatCount = Math.max(0, activeUserSession.remaining_chats - 1);
     activeUserSession.remaining_chats = newChatCount; 
     syncPlatformPremiumUIRefresh();

@@ -36,10 +36,10 @@
             min-height: 100vh; overflow-x: hidden; position: relative;
         }
 
-        /* --- BACKGROUND CANVAS --- */
+        
         #interactive-canvas { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
         
-        /* --- 🌟 MASTER FLUID NAVBAR GRID --- */
+        
         header.top-nav {
             display: flex; justify-content: space-between; align-items: center;
             padding: 20px 40px; background: rgba(2, 2, 5, 0.75);
@@ -57,7 +57,7 @@
 
         .nav-right-tools { display: flex; align-items: center; gap: 18px; }
 
-        /* USE AI PILL BUTTON */
+        
         .hdr-use-ai {
             background: linear-gradient(135deg, #00f2fe, #4facfe); color: #000;
             padding: 10px 22px; border-radius: 30px; font-weight: 700; text-decoration: none;
@@ -65,11 +65,11 @@
         }
         .hdr-use-ai:hover { transform: translateY(-1px); box-shadow: 0 0 25px var(--neon-cyan); }
 
-        /* LOGIN FLAT LINK */
+        
         .hdr-login { color: #fff; text-decoration: none; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: 0.2s; }
         .hdr-login:hover { color: var(--neon-cyan); text-shadow: 0 0 8px var(--neon-cyan); }
 
-        /* PROFILE ROW DESIGN MATCHING CHAT ENGINE */
+       
         .user-nav-profile {
             display: none; align-items: center; gap: 10px; cursor: pointer;
             background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
@@ -83,14 +83,14 @@
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 95px; display: inline-block;
         }
 
-        /* HAMBURGER TRIGGER ICON */
+        
         .hv-mobile-toggle {
             display: none; background: transparent; border: 1px solid var(--glass-border); color: var(--neon-cyan);
             width: 38px; height: 38px; border-radius: 8px; justify-content: center; align-items: center;
             cursor: pointer; font-size: 1.1rem; box-shadow: 0 0 10px rgba(0, 243, 255, 0.1);
         }
 
-        /* --- 📱 MOBILE MENU LAYOUT CORE OVERLAYS --- */
+        
         .hv-mobile-overlay {
             position: fixed; inset: 0; background: rgba(2, 2, 6, 0.98); backdrop-filter: blur(20px);
             z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; gap: 25px;
@@ -104,7 +104,7 @@
         }
         .mobile-menu-close-btn:hover { color: var(--neon-cyan) !important; transform: scale(1.05); }
 
-        /* --- SECTION MAIN FRAMEWORK STYLES --- */
+        
         section { padding: 80px 20px; max-width: 1200px; margin: 0 auto; position: relative; }
         .hero-section { max-width: 1000px; margin: 60px auto 40px auto; text-align: center; }
         .badge-pill { display: inline-block; padding: 6px 16px; background: rgba(0,243,255,0.05); border: 1px solid rgba(0,243,255,0.15); border-radius: 30px; font-family: 'Orbitron'; font-size: 11px; letter-spacing: 2px; color: var(--neon-cyan); margin-bottom: 25px; }
@@ -118,7 +118,7 @@
         .btn-core.secondary { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #fff; }
         .btn-core.secondary:hover { border-color: var(--neon-cyan); background: rgba(0,243,255,0.02); }
 
-        /* --- FEATURES SECTION --- */
+        
         .section-title { font-family: 'Space Grotesk', sans-serif; font-size: 2.2rem; font-weight: 700; text-align: center; margin-bottom: 15px; color: #fff; }
         .section-desc { color: var(--text-muted); text-align: center; max-width: 600px; margin: 0 auto 50px auto; font-size: 1.05rem; }
         .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; }
@@ -128,14 +128,14 @@
         .feature-card h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1.35rem; color: #fff; margin-bottom: 12px; }
         .feature-card p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; }
 
-        /* --- FOUNDER MESSAGE (CEO) SECTION --- */
+        
         .ceo-section { display: flex; align-items: center; gap: 50px; background: rgba(10,10,20,0.4); border: 1px solid rgba(255,255,255,0.03); border-radius: 24px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
         .ceo-image-wrapper { width: 220px; height: 220px; flex-shrink: 0; border-radius: 50%; overflow: hidden; border: 3px solid var(--neon-purple); box-shadow: 0 0 25px rgba(157,0,255,0.3); }
         .ceo-image { width: 100%; height: 100%; object-fit: cover; }
         .ceo-content h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1.8rem; color: #fff; margin-bottom: 5px; }
         .ceo-content p { color: #d1d5db; font-size: 1.05rem; line-height: 1.7; font-style: italic; }
 
-        /* --- PRICING GRID --- */
+        
         .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; max-width: 1100px; margin: 0 auto; }
         .price-card { background: var(--glass-panel); border: 1px solid var(--glass-border); border-radius: 20px; padding: 35px 25px; text-align: center; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; min-height: 450px; }
         .price-card.premium-tier { border-color: var(--neon-purple); box-shadow: 0 0 25px rgba(157,0,255,0.15); }
@@ -146,7 +146,7 @@
         .price-features { list-style: none; text-align: left; margin-bottom: 30px; display: flex; flex-direction: column; gap: 12px; font-size: 0.95rem; color: #d1d5db; flex-grow: 1; }
         .price-features i { color: var(--neon-cyan); margin-right: 8px; }
 
-        /* --- CONTACT US FORM --- */
+        
         .contact-container { max-width: 700px; margin: 0 auto; background: var(--glass-panel); border: 1px solid var(--glass-border); padding: 40px; border-radius: 24px; box-shadow: 0 25px 50px rgba(0,0,0,0.6); }
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px; }
         .form-group { display: flex; flex-direction: column; gap: 6px; }
@@ -155,7 +155,7 @@
         .form-field:focus { border-color: var(--neon-cyan); box-shadow: 0 0 15px rgba(0,243,255,0.15); }
         .form-textarea { resize: none; min-height: 120px; }
 
-        /* --- 🌟 MODERN CYBERPUNK FOOTER MATRIX --- */
+        
         footer { background: rgba(2, 2, 5, 0.9); border-top: 1px solid rgba(255,255,255,0.05); padding: 30px 20px; margin-top: 60px; text-align: center; }
         .footer-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
         .footer-copyright { font-size: 0.9rem; color: var(--text-muted); }
@@ -163,7 +163,7 @@
         .footer-links a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: 0.2s; }
         .footer-links a:hover { color: var(--neon-cyan); text-shadow: 0 0 5px var(--neon-cyan); }
 
-        /* BACK TO TOP FLOATING CORE */
+        
         .back-to-top {
             position: fixed; bottom: 30px; right: 30px; background: rgba(0, 243, 255, 0.05); border: 1px solid var(--neon-cyan);
             color: var(--neon-cyan); width: 45px; height: 45px; border-radius: 50%; display: flex; justify-content: center;
@@ -171,7 +171,7 @@
         }
         .back-to-top:hover { background: var(--neon-cyan); color: #000; box-shadow: 0 0 25px var(--neon-cyan); transform: translateY(-3px); }
 
-        /* --- 🔮 MAINFRAME HUD MODAL STRUCTURES --- */
+       
         #mainframe-modal, #login-portal-modal {
             position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px);
             z-index: 100000; display: none; justify-content: center; align-items: center; padding: 20px;
@@ -193,14 +193,14 @@
         .hud-diagnostic-graph-container { width: 100%; height: 110px; background: rgba(0,0,0,0.4); border: 1px solid rgba(0,243,255,0.1); border-radius: 12px; margin-top: 15px; position: relative; overflow: hidden; }
         #hud-canvas-vector { width: 100%; height: 100%; display: block; }
 
-        /* AUTH FORMS SYSTEM OVERRIDES */
+        
         .auth-step { display: none; flex-direction: column; gap: 15px; }
         .auth-step.active { display: flex; }
         .auth-nav-links { display: flex; justify-content: space-between; font-size: 0.85rem; margin-top: 12px; }
         .auth-link { color: var(--neon-cyan); text-decoration: none; cursor: pointer; font-weight: 600; }
         .auth-link:hover { text-shadow: 0 0 5px var(--neon-cyan); }
 
-        /* --- 📱 SECURE MOBILE STRUCTURAL RULES (NO OVERLAPS) --- */
+       
         @media (max-width: 1024px) {
             header.top-nav {
                 padding: 12px 20px !important;
@@ -597,7 +597,7 @@
     let currentAuthWorkflowEmail = "";
     let currentAuthWorkflowPassword = "";
 
-    // ✅ MOBILE NAVIGATION STATE CONTROLLER
+    
     function toggleMobileNavigationState() {
         const mobileMenu = document.getElementById('hv-mobile-menu-layer');
         if (mobileMenu) {
@@ -610,7 +610,7 @@
         switchAuthStep('auth-login-step');
     }
 
-    // Failsafe overlay bounds gateway closer
+    
     function closeLoginPortalGateway() {
         document.getElementById('login-portal-modal').style.display = 'none';
     }
@@ -632,7 +632,7 @@
         }
     }
 
-    // ✅ AUTH SIGN-IN GATEWAY METRICS
+    
     async function executeSupabaseAuthLogin() {
         if (!document.getElementById('hv-login-agree-policy').checked) {
             showCustomAlert("Please agree to the Terms and Privacy Policy to sign in.");
@@ -662,7 +662,7 @@
             });
     }
 
-    // ✅ GMAIL SYSTEM REGISTRY PACKETS HANDLER
+    
     function executeFirebaseEmailRegister() {
         const m = document.getElementById('signup-email-input').value.trim();
         const p = document.getElementById('signup-email-pass').value;
@@ -672,7 +672,7 @@
         switchAuthStep('auth-step-profile-form'); 
     }
 
-    // ✅ SECURE PHONE SIGNUP VALIDATOR NODE
+    
     function executePhoneOtpCodeVerification() {
         const code = document.getElementById('phone-otp-input').value.trim();
         if(!code || code.length !== 6) { showCustomAlert("Verification numeric array must be 6 digits."); return; }
@@ -686,7 +686,7 @@
         }
     }
 
-    // ✅ ACCOUNT SYNC DATA ARCHITECTURE PROCESSOR
+    
     function compileCompletedUserProfileData() {
         const name = document.getElementById('reg-name').value.trim();
         if(!name) { showCustomAlert("Please fill in your name details parameters vector."); return; }
@@ -712,7 +712,7 @@
             return;
         }
 
-        // Standard Mail Engine System Provision Block
+        
         authEngine.createUserWithEmailAndPassword(emailTarget, passTarget)
             .then(async (userCredential) => {
                 const user = userCredential.user;
@@ -735,7 +735,7 @@
             });
     }
 
-    // ✅ INSTANT GOOGLE AUTH ENGINE CONNECTOR
+    
     async function executeGoogleOauthLink() {
         const loginChecked = document.getElementById('hv-login-agree-policy')?.checked;
         const signupChecked = document.getElementById('hv-agree-policy')?.checked;
@@ -765,7 +765,7 @@
             });
     }
 
-    // ✅ LIVE STATE IDENTITY PERSISTENCE ENGINE
+    
     authEngine.onAuthStateChanged(async (user) => {
         const authBlock = document.getElementById('nav-auth-block');
         const profileBlock = document.getElementById('user-profile-block');
@@ -809,7 +809,7 @@
         }
     });
 
-    // ✅ MAINFRAME RE-ORDER DIAGNOSTICS CONTROL PANEL
+    
     function openMainframeModal(section) {
         const modal = document.getElementById('mainframe-modal');
         const content = document.getElementById('modal-body-content');
@@ -873,7 +873,7 @@
         if(document.getElementById('mainframe-modal').classList.contains('active')) animateHUD();
     }
 
-    // ✅ BACKGROUND INTERACTIVE CANVAS MATRIX ENGINE
+    
     const canvas = document.getElementById('interactive-canvas'); const ctx = canvas.getContext('2d'); let width, height, points = [];
     function setupCanvas() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; points = []; for (let i = 0; i < 70; i++) { points.push({ x: Math.random() * width, y: Math.random() * height, vx: (Math.random() - 0.5) * 0.7, vy: (Math.random() - 0.5) * 0.7, r: Math.random() * 1.5 + 1 }); } }
     window.addEventListener('resize', setupCanvas); setupCanvas();
@@ -893,7 +893,7 @@
         });
     };
 
-    // ✅ SMS OTP SIGN-IN HANDLER BLOCK
+    
     function executeFirebasePhoneAuth() {
         let pNum = document.getElementById('signup-phone-input').value.trim();
         if(!pNum) { showCustomAlert("Cellular parameter mapping vacantly registered."); return; }

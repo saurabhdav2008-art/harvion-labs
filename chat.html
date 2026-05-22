@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Harvion 6.0 - Universal Core</title>
+    <title>Harvion v1.5 - Universal Core</title>
     <link rel="icon" type="image/png" href="logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;800;900&family=Outfit:wght@300;400;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -39,7 +39,7 @@
             perspective: 2000px; transition: background 0.3s ease;
         }
 
-        /* --- SPLASH SCREEN --- */
+        
         #genesis-splash {
             position: fixed; inset: 0; background: #000; z-index: 99999;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -67,13 +67,13 @@
         @keyframes typeTitle { to { width: 100%; text-align: center; } }
         #genesis-splash.exit { opacity: 0; visibility: hidden; }
 
-        /* --- BACKGROUND CANVAS --- */
+        
         #interactive-canvas { position: absolute; inset: 0; z-index: -1; pointer-events: auto; }
         .ambient-glow { position: absolute; width: 500px; height: 500px; border-radius: 50%; filter: blur(150px); z-index: 0; opacity: 0.12; pointer-events: none; }
         .glow-cyan { background: var(--neon-cyan); top: -15%; left: -15%; }
         .glow-purple { background: var(--neon-purple); bottom: -15%; right: -15%; }
 
-        /* --- 🔐 INTERACTIVE AUTH GATEWAY OVERLAY --- */
+        
         #auth-gateway-overlay {
             position: fixed; inset: 0; background: rgba(2, 2, 5, 0.95); backdrop-filter: blur(25px);
             z-index: 9999; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.4s ease;
@@ -109,7 +109,7 @@
         .auth-link { color: var(--neon-cyan); text-decoration: none; cursor: pointer; font-weight: 600; transition: 0.2s; }
         .auth-link:hover { text-shadow: 0 0 10px var(--neon-cyan); color: #fff; }
 
-        /* --- 🌌 MASTER WARP-SPEED TRANSITION PORTAL --- */
+        
         #portal-animation-overlay {
             position: fixed; inset: 0; background: #000; z-index: 10000;
             display: none; flex-direction: column; justify-content: center; align-items: center;
@@ -119,7 +119,7 @@
         .portal-status-text { font-family: 'Orbitron', sans-serif; font-size: 1.3rem; font-weight: 900; color: var(--neon-cyan); letter-spacing: 3px; text-shadow: 0 0 15px var(--neon-cyan); margin-top: 15px; }
         .portal-sub-text { font-family: 'Space Grotesk', sans-serif; font-size: 0.9rem; color: var(--text-muted); margin-top: 5px; }
 
-        /* --- 🔮 THEMED PREMIUM EXCLUSIVE DENIED OVERLAY POPUP --- */
+        
         #premium-alert-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.82); backdrop-filter: blur(20px);
             z-index: 100005; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease;
@@ -131,7 +131,7 @@
         }
         .premium-alert-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg, var(--neon-purple), #ff0055); }
 
-        /* --- APPLICATION LAYOUT FRAMEWORK --- */
+        
         #app-wrapper {
             width: 98vw; height: 96vh; max-width: 1800px; display: flex; gap: 20px; z-index: 10;
             opacity: 0; transform: rotateX(15deg) translateY(50px);
@@ -139,7 +139,7 @@
         }
         #app-wrapper.loaded { opacity: 1; transform: rotateX(0deg) translateY(0); }
 
-        /* SIDEBAR PANEL */
+        
         .sidebar {
             width: 310px; background: var(--glass-panel); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
             border: 1px solid var(--glass-border); border-radius: 24px; display: flex; flex-direction: column; padding: 25px 20px;
@@ -172,7 +172,7 @@
         .action-item { display: flex; align-items: center; gap: 12px; color: var(--text-main); padding: 10px; cursor: pointer; border-radius: 10px; transition: 0.2s; }
         .action-item:hover { background: rgba(255, 255, 255, 0.04); color: var(--neon-cyan); }
 
-        /* MAIN CHAT AREA */
+        
         .main-chat {
             flex: 1; background: var(--glass-panel); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
             border: 1px solid var(--glass-border); border-radius: 24px; display: flex; flex-direction: column; position: relative; overflow: hidden;
@@ -191,7 +191,7 @@
         .tool-icon { width: 40px; height: 40px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: center; align-items: center; color: var(--text-muted); cursor: pointer; background: transparent; transition: 0.2s; }
         .tool-icon:hover { color: var(--neon-cyan); border-color: var(--neon-cyan); }
 
-        /* AUTH PROFILE BUTTONS */
+        
         .nav-auth-container { display: flex; gap: 10px; align-items: center; border-left: 1px solid rgba(255,255,255,0.08); padding-left: 12px; }
         .auth-btn { background: transparent; border: none; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; padding: 8px 14px; border-radius: 8px; transition: 0.2s; }
         .auth-btn.signup { background: rgba(0, 243, 255, 0.1); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); }
@@ -204,7 +204,7 @@
         .user-nav-meta span { font-size: 12px; font-weight: 600; color: #fff; line-height: 1.2; }
         .user-nav-meta small { font-size: 9px; color: var(--neon-cyan); font-family: 'Orbitron', sans-serif; letter-spacing: 0.5px; }
 
-        /* Chat Layouts */
+        
         .chat-container { flex: 1; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; gap: 25px; scroll-behavior: smooth; position: relative !important; transition: padding 0.3s ease; }
         .message { display: flex; gap: 15px; max-width: 85%; animation: bubbleEntry 0.4s ease-out forwards; position: relative !important; z-index: 1 !important; }
         @keyframes bubbleEntry { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
@@ -230,7 +230,7 @@
         .msg-bubble pre code { background: transparent; padding: 0; color: #e2e8f0; }
         .user-bubble { background: rgba(0, 243, 255, 0.04); border-color: rgba(0, 243, 255, 0.15); border-top-right-radius: 4px; color: #fff; }
 
-        /* INLINE COMPACT DROPDOWN SELECTOR WITH LOCK DESIGN */
+        
         .mode-dropdown-container { position: relative; display: inline-block; }
         .mode-dropdown-trigger {
             background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted);
@@ -249,7 +249,7 @@
         .mode-option:hover { background: rgba(0, 243, 255, 0.08); color: #fff; }
         .mode-option.locked-tier { opacity: 0.45; color: #6b7280; }
 
-        /* Inputs Matrix Dock */
+        
         .input-dock { padding: 20px; display: flex; flex-direction: column; align-items: center; background: linear-gradient(transparent, rgba(0,0,0,0.6)); }
         .input-box {
             width: 100%; max-width: 950px; background: rgba(3, 3, 6, 0.85); border: 1px solid rgba(255,255,255,0.12);
@@ -270,7 +270,7 @@
         }
         .send-btn:hover { transform: scale(1.05); box-shadow: 0 0 22px var(--neon-cyan); }
 
-        /* --- CONTROL PANEL MODALS --- */
+        
         #mainframe-modal {
             position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px);
             z-index: 100000; display: none; justify-content: center; align-items: center;
@@ -303,7 +303,7 @@
         .settings-select { background: #0b0b16; border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; outline: none; cursor: pointer; }
         .settings-textarea { width: 100%; background: #0b0b16; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; padding: 10px; font-size: 0.9rem; outline: none; resize: none; min-height: 70px; margin-top: 5px; }
 
-        /* HUD Live Real-Time Canvas Render View */
+        
         .hud-diagnostic-graph-container { width: 100%; height: 110px; background: rgba(0,0,0,0.4); border: 1px solid rgba(0,243,255,0.1); border-radius: 12px; margin-top: 15px; position: relative; overflow: hidden; }
         #hud-canvas-vector { width: 100%; height: 100%; display: block; }
 
@@ -313,7 +313,7 @@
         body.theme-cyberpunk { --neon-cyan: #ff007f; --neon-purple: #00f3ff; }
         body.theme-cyberpunk .main-chat, body.theme-cyberpunk .sidebar { border-color: rgba(255, 0, 127, 0.3); box-shadow: 0 0 30px rgba(255, 0, 127, 0.15); }
 
-      /* 📱 MOBILE SIDEBAR OVERRIDES & FIXED FULL SCREEN GRID */
+      
         @media (max-width: 768px) {
             html, body {
                 height: 100% !important;
@@ -324,7 +324,7 @@
                 padding: 0 !important;
                 margin: 0 !important;
             }
-            /* 👉 Background canvas ko fixed pin kiya taaki niche space na bache */
+            
             #interactive-canvas {
                 position: fixed !important;
                 inset: 0 !important;
@@ -373,7 +373,7 @@
             .chat-container { padding: 12px !important; flex: 1 !important; }
             .msg-bubble { font-size: 0.95rem; padding: 12px 16px; }
             
-            /* TOP NAVBAR RESTORATION MATRIX FOR MOBILE DEVICES */
+            
             .top-nav { padding: 10px 12px !important; gap: 5px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; }
             .nav-tools { display: flex !important; gap: 8px !important; align-items: center !important; }
             .nav-auth-container { padding-left: 8px !important; border-left: 1px solid rgba(255,255,255,0.1) !important; }
@@ -393,7 +393,7 @@
             .user-nav-meta span { font-size: 11px !important; }
             .user-nav-meta small { display: none !important; }
             
-            /* Input field and icons styling for mobile view */
+            
             .input-dock { padding: 10px !important; width: 100% !important; }
             .input-box { border-radius: 16px !important; padding: 5px 8px !important; gap: 4px !important; width: 100% !important; }
             .input-box input[type="text"] { font-size: 0.9rem !important; padding: 8px 2px !important; }
@@ -661,7 +661,7 @@
     </div>
 
     <script>
-        // CORE VARIABLES
+        
         let globalConversationTree = [];
         let activeFileUploaded = false;
         let extractedFileTextContent = "";
@@ -676,7 +676,7 @@
         let currentImageBase64 = null;
         let currentImageMimeType = null;
 
-        // ALERTS
+        
         function showCustomAlert(msg) {
             document.getElementById('hv-alert-text').innerText = msg;
             const alertOverlay = document.getElementById('hv-custom-alert-overlay');
@@ -705,7 +705,7 @@
             if (alertModal) { alertModal.style.opacity = '0'; setTimeout(() => { alertModal.style.display = 'none'; }, 300); }
         }
 
-        // SOUND
+        
         function triggerJarvisSoundMatrix(type) {
             try {
                 const savedAudioPref = localStorage.getItem('harvion-audio');
@@ -733,7 +733,7 @@
             } catch (e) {}
         }
 
-        // WELCOME MSG
+        
         function runCentralWelcomeRefresh() {
             const box = document.getElementById('chat-box');
             if (!box) return;
@@ -750,7 +750,7 @@
 
         const isMobile = window.innerWidth <= 768;
 
-        // LOADER ENGINE (Using DOMContentLoaded to guarantee execution)
+        
         document.addEventListener('DOMContentLoaded', () => {
             if (typeof runCentralWelcomeRefresh === 'function') runCentralWelcomeRefresh();
             syncPlatformPremiumUIRefresh();
@@ -851,7 +851,7 @@
             const inputField = document.getElementById('user-input'); 
             const message = inputField.value.trim(); 
             
-            // 🛑 Agar message khaali hai, image nahi hai, aur PDF bhi nahi hai toh aage mat bado
+            
             if (message === '' && !currentImageBase64 && !activeFileUploaded) return;
             
             const activeMode = document.getElementById('selected-mode-text').innerText;
@@ -1129,7 +1129,7 @@
                 querySnapshot.forEach((doc) => {
                     const chatData = doc.data(); const historyItemElementRow = document.createElement('div'); historyItemElementRow.className = 'history-item';
                     const shortMessage = chatData.user_payload || "Document Interaction"; historyItemElementRow.innerHTML = `<i class="fa-regular fa-comment-dots" style="color:var(--neon-cyan);"></i> ${shortMessage.substring(0, 20)}...`;
-                    // NAYA GOD-LEVEL HISTORY RESTORE LOGIC
+                    
                     historyItemElementRow.onclick = () => {
                         triggerJarvisSoundMatrix('click');
                         const box = document.getElementById('chat-box');
@@ -1223,7 +1223,7 @@
         function startSpeech() { const Speech = window.SpeechRecognition || window.webkitSpeechRecognition; if(!Speech) return; const rec = new Speech(); rec.lang = 'hi-IN'; rec.start(); rec.onresult = (e) => { const input = document.getElementById('user-input'); input.value = input.value.trim() ? input.value + " " + e.results[0][0].transcript : e.results[0][0].transcript; }; }
         function loadHistorySimulation(t) { clearChat(); setTimeout(() => { addMessage("Diagnostic network test simulation.", 'user'); addMessage("Core stabilized inference response mapped successfully under runtime variables tracking parameters layer framework.", 'ai'); }, 120); }
 
-        // AUTH ENGINE GUARD
+        
         if (typeof authEngine !== 'undefined') {
             authEngine.onAuthStateChanged(async (user) => {
                 const authBlock = document.getElementById('nav-auth-block');

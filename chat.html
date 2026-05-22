@@ -219,7 +219,10 @@
         .user-avatar { background: rgba(157, 0, 255, 0.15); color: var(--neon-purple); border: 1px solid var(--neon-purple); font-size: 1rem; border-radius: 50%; }
 
         .msg-bubble { padding: 15px 20px; border-radius: 18px; font-size: 1.05rem; line-height: 1.6; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); color: #e2e8f0; word-break: break-word; white-space: pre-wrap; }
-      
+      .msg-bubble strong, .msg-bubble b {
+            color: var(--neon-cyan);
+            font-weight: 700;
+        }
         .msg-bubble table { width: 100%; border-collapse: collapse; margin: 15px 0; display: block; overflow-x: auto; white-space: nowrap; }
         .msg-bubble th, .msg-bubble td { border: 1px solid rgba(255,255,255,0.15); padding: 10px 15px; text-align: left; }
         .msg-bubble th { background: rgba(0, 243, 255, 0.1); color: var(--neon-cyan); font-weight: 700; }
@@ -1144,8 +1147,10 @@
                         }
 
                         if (chatData.model_response) {
-                            addMessage(chatData.model_response, 'ai');
-                        }
+    
+    let formattedHistoryResponse = typeof marked !== 'undefined' ? marked.parse(chatData.model_response) : chatData.model_response;
+    addMessage(formattedHistoryResponse, 'ai');
+}
                         
                         closeSidebarMobile();
                     };

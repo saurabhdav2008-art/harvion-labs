@@ -231,8 +231,18 @@
         .msg-bubble pre { background: #050508; padding: 15px; border-radius: 12px; overflow-x: auto; border: 1px solid rgba(0, 243, 255, 0.2); margin: 15px 0; }
         .msg-bubble code { font-family: 'Courier New', monospace; color: #00f3ff; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; }
         .msg-bubble pre code { background: transparent; padding: 0; color: #e2e8f0; }
-        .user-bubble { background: rgba(0, 243, 255, 0.04); border-color: rgba(0, 243, 255, 0.15); border-top-right-radius: 4px; color: #fff; }
+        
+.user-bubble { 
+    background: rgba(0, 243, 255, 0.04); 
+    border: 1px solid var(--neon-cyan) !important; 
+    border-top-right-radius: 4px; 
+    color: #fff; 
+}
 
+/* Cyberpunk Theme (Pink Border & Pink Background) */
+body.theme-cyberpunk .user-bubble {
+    background: rgba(255, 0, 127, 0.04);
+}
         
         .mode-dropdown-container { position: relative; display: inline-block; }
         .mode-dropdown-trigger {
@@ -991,7 +1001,8 @@
             const messageDiv = document.createElement('div'); 
             messageDiv.className = `message ${sender}`;
             messageDiv.innerHTML = sender === 'user' ? 
-                `<div class="msg-bubble user-bubble">${text}</div><div class="avatar user-avatar"><i class="fa-solid fa-user-shield"></i></div>` : 
+               
+                `<div class="msg-bubble user-bubble">${text}</div>` : 
                 `<div class="avatar ai-avatar"></div><div class="msg-bubble ai-bubble">${text}</div>`;
             chatBox.appendChild(messageDiv); 
             scrollToBottom();

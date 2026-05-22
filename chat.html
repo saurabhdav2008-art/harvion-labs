@@ -9,11 +9,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
-<script>
-    if (typeof pdfjsLib !== 'undefined') {
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-    }
-</script>
+    <script>
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -218,6 +219,15 @@
         .user-avatar { background: rgba(157, 0, 255, 0.15); color: var(--neon-purple); border: 1px solid var(--neon-purple); font-size: 1rem; border-radius: 50%; }
 
         .msg-bubble { padding: 15px 20px; border-radius: 18px; font-size: 1.05rem; line-height: 1.6; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); color: #e2e8f0; word-break: break-word; white-space: pre-wrap; }
+      
+        .msg-bubble table { width: 100%; border-collapse: collapse; margin: 15px 0; display: block; overflow-x: auto; white-space: nowrap; }
+        .msg-bubble th, .msg-bubble td { border: 1px solid rgba(255,255,255,0.15); padding: 10px 15px; text-align: left; }
+        .msg-bubble th { background: rgba(0, 243, 255, 0.1); color: var(--neon-cyan); font-weight: 700; }
+        .msg-bubble tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+
+        .msg-bubble pre { background: #050508; padding: 15px; border-radius: 12px; overflow-x: auto; border: 1px solid rgba(0, 243, 255, 0.2); margin: 15px 0; }
+        .msg-bubble code { font-family: 'Courier New', monospace; color: #00f3ff; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; }
+        .msg-bubble pre code { background: transparent; padding: 0; color: #e2e8f0; }
         .user-bubble { background: rgba(0, 243, 255, 0.04); border-color: rgba(0, 243, 255, 0.15); border-top-right-radius: 4px; color: #fff; }
 
         /* INLINE COMPACT DROPDOWN SELECTOR WITH LOCK DESIGN */
@@ -853,6 +863,11 @@
                 if (activeUserSession.remaining_chats <= 0) { showPremiumAlert(); return; }
             }
             triggerJarvisSoundMatrix('click'); 
+           
+            const sendBtn = document.querySelector('.send-btn');
+            inputField.disabled = true;
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
             
             
             if (message !== '') {
@@ -915,7 +930,7 @@
                 
                 const apiData = await apiResponse.json();
                 
-                streamLiveTokenAccumulator = apiData.candidates?.[0]?.content?.parts?.[0]?.text || "Core processing complete. No response generated.";
+              streamLiveTokenAccumulator = apiData.candidates?.[0]?.content?.parts?.[0]?.text || "Core processing complete. No response generated.";
                 
                 globalConversationTree.push({ role: 'model', parts: [{ text: streamLiveTokenAccumulator }] });
 
@@ -927,21 +942,24 @@
                             timestamp: new Date().toISOString()
                         }).catch(e => console.log("History persistence deferred."));
                 }
+                
+                // Yahan se 'E' hata diya gaya hai
+
+                let finalFormattedText = typeof marked !== 'undefined' ? marked.parse(streamLiveTokenAccumulator) : streamLiveTokenAccumulator;
 
                 if (!activeUserSession.loggedIn) {
-                    streamLiveTokenAccumulator += "<br><br><em style='color:var(--text-muted); font-size:13px; display:block;'><i class='fa-solid fa-right-to-bracket'></i> Login for a better experience and unlock advanced features.</em>";
-                    bubbleDiv.innerHTML = streamLiveTokenAccumulator;
+                    finalFormattedText += "<br><br><em style='color:var(--text-muted); font-size:13px; display:block;'><i class='fa-solid fa-right-to-bracket'></i> Login for a better experience and unlock advanced features.</em>";
+                    bubbleDiv.innerHTML = finalFormattedText;
                 } else if (activeMode === "Quantum Nebula" && !activeUserSession.isPremium) {
                     let newChatCount = Math.max(0, activeUserSession.remaining_chats - 1);
                     activeUserSession.remaining_chats = newChatCount; 
                     syncPlatformPremiumUIRefresh();
-                    bubbleDiv.innerHTML = streamLiveTokenAccumulator;
+                    bubbleDiv.innerHTML = finalFormattedText;
                 } else {
-                    bubbleDiv.innerHTML = streamLiveTokenAccumulator;
+                    bubbleDiv.innerHTML = finalFormattedText;
                 }
                 
                 scrollToBottom();
-                
                 
                 activeFileUploaded = false; 
                 extractedFileTextContent = "";
@@ -949,11 +967,20 @@
                 
                 triggerJarvisSoundMatrix('chime');
 
+                inputField.disabled = false;
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = `<i class="fa-solid fa-arrow-up"></i>`;
+                inputField.focus(); 
+
             } catch (error) { 
                 console.error("API Call Failed:", error);
                 bubbleDiv.innerHTML = `<span style="color:var(--neon-cyan); font-weight:600;"><i class="fa-solid fa-atom fa-spin"></i> Harvion Labs quantum nodes are experiencing high velocity data traffic. Archon core is stabilizing the link, please retry in a few seconds.</span>`; 
+                
+               
+                inputField.disabled = false;
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = `<i class="fa-solid fa-arrow-up"></i>`;
             }
-        }
         function addMessage(text, sender) {
             const chatBox = document.getElementById('chat-box'); 
             if (!chatBox) return;

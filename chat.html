@@ -327,6 +327,7 @@ body.theme-cyberpunk .user-bubble {
         body.theme-cyberpunk .main-chat, body.theme-cyberpunk .sidebar { border-color: rgba(255, 0, 127, 0.3); box-shadow: 0 0 30px rgba(255, 0, 127, 0.15); }
 
 
+
 @media (min-width: 769px) {
     html, body {
         height: 100vh !important;
@@ -355,7 +356,30 @@ body.theme-cyberpunk .user-bubble {
         min-height: 0 !important; 
     }
     
+   
+    .message.user {
+        width: auto !important;
+        max-width: 70% !important;       
+        align-self: flex-end !important;  
+        margin-left: auto !important;      
+    }
+    .message.user .user-bubble {
+        width: auto !important;
+        max-width: 100% !important;
+        display: inline-block !important;
+    }
 
+  
+    .message:not(.user) {
+        max-width: 96% !important;     
+        width: 100% !important;
+    }
+    .message:not(.user) .ai-bubble {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    
     .input-dock {
         flex-shrink: 0 !important; 
         width: 100% !important;
@@ -368,16 +392,6 @@ body.theme-cyberpunk .user-bubble {
         margin: 0 auto !important;
     }
     
-
-    .message {
-        max-width: 96% !important;     
-        width: 100% !important;
-    }
-    .msg-bubble {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-
    
     .msg-bubble pre, .msg-bubble code {
         white-space: pre-wrap !important;
@@ -385,7 +399,7 @@ body.theme-cyberpunk .user-bubble {
         max-width: 100% !important;
     }
 
- 
+    
     .msg-bubble table {
         display: block !important;
         width: 100% !important;
@@ -438,6 +452,38 @@ body.theme-cyberpunk .user-bubble {
                 display: flex !important;
                 flex-direction: column !important;
             }
+            
+         
+            .chat-container { 
+                padding: 12px !important; 
+                flex: 1 !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important; 
+            }
+            
+
+            .message {
+                max-width: 100% !important;
+                width: 100% !important;
+            }
+            .msg-bubble { 
+                font-size: 0.95rem; 
+                padding: 12px 16px; 
+                white-space: pre-wrap !important;  
+                word-break: break-word !important; 
+            }
+            
+        
+            .msg-bubble table {
+                display: block !important;
+                width: 100% !important;
+                overflow-x: auto !important;             
+                white-space: nowrap !important;
+                -webkit-overflow-scrolling: touch !important; 
+                border-collapse: collapse;
+                margin: 10px 0;
+            }
+            
             .sidebar {
                 position: fixed !important; left: -320px; top: 0; bottom: 0;
                 height: 100vh !important; height: 100dvh !important; width: 290px !important;
@@ -448,9 +494,6 @@ body.theme-cyberpunk .user-bubble {
             .sidebar.active { left: 0 !important; }
             .menu-toggle-btn { display: flex !important; }
             .splash-title { font-size: 2.2rem; letter-spacing: 6px; }
-            .chat-container { padding: 12px !important; flex: 1 !important; }
-            .msg-bubble { font-size: 0.95rem; padding: 12px 16px; }
-            
             
             .top-nav { padding: 10px 12px !important; gap: 5px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; }
             .nav-tools { display: flex !important; gap: 8px !important; align-items: center !important; }
@@ -470,7 +513,6 @@ body.theme-cyberpunk .user-bubble {
             .user-nav-avatar { width: 28px !important; height: 28px !important; font-size: 11px !important; min-width: 28px !important; }
             .user-nav-meta span { font-size: 11px !important; }
             .user-nav-meta small { display: none !important; }
-            
             
             .input-dock { padding: 10px !important; width: 100% !important; }
             .input-box { border-radius: 16px !important; padding: 5px 8px !important; gap: 4px !important; width: 100% !important; }

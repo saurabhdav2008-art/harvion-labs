@@ -406,7 +406,7 @@ body.theme-cyberpunk .user-bubble {
         overflow-x: auto !important;   
         white-space: nowrap !important;
     }
-}        @media (max-width: 768px) {
+}       @media (max-width: 768px) {
             html, body {
                 height: 100% !important;
                 width: 100% !important;
@@ -453,7 +453,7 @@ body.theme-cyberpunk .user-bubble {
                 flex-direction: column !important;
             }
             
-         
+            
             .chat-container { 
                 padding: 12px !important; 
                 flex: 1 !important;
@@ -465,19 +465,35 @@ body.theme-cyberpunk .user-bubble {
             .message {
                 max-width: 100% !important;
                 width: 100% !important;
+                min-width: 0 !important;           
             }
             .msg-bubble { 
                 font-size: 0.95rem; 
                 padding: 12px 16px; 
                 white-space: pre-wrap !important;  
                 word-break: break-word !important; 
+                min-width: 0 !important;           
             }
             
-        
+       
+            .msg-bubble pre {
+                display: block !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                overflow-x: auto !important;                  
+                white-space: pre !important;                   
+                -webkit-overflow-scrolling: touch !important; 
+                background: #050508 !important;
+            }
+            .msg-bubble pre code {
+                white-space: pre !important;
+            }
+            
+
             .msg-bubble table {
                 display: block !important;
                 width: 100% !important;
-                overflow-x: auto !important;             
+                overflow-x: auto !important;              
                 white-space: nowrap !important;
                 -webkit-overflow-scrolling: touch !important; 
                 border-collapse: collapse;

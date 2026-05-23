@@ -326,6 +326,7 @@ body.theme-cyberpunk .user-bubble {
         body.theme-cyberpunk { --neon-cyan: #ff007f; --neon-purple: #00f3ff; }
         body.theme-cyberpunk .main-chat, body.theme-cyberpunk .sidebar { border-color: rgba(255, 0, 127, 0.3); box-shadow: 0 0 30px rgba(255, 0, 127, 0.15); }
 
+
 @media (min-width: 769px) {
     html, body {
         height: 100vh !important;
@@ -350,14 +351,24 @@ body.theme-cyberpunk .user-bubble {
     .chat-container {
         flex: 1 !important;
         overflow-y: auto !important;
-        overflow-x: hidden !important; 
+        overflow-x: hidden !important;
         min-height: 0 !important; 
     }
+    
+
     .input-dock {
         flex-shrink: 0 !important; 
+        width: 100% !important;
+        display: flex !important;
+        justify-content: center !important; 
+    }
+    .input-box {
+        width: 100% !important;
+        max-width: 850px !important;        
+        margin: 0 auto !important;
     }
     
-  
+
     .message {
         max-width: 96% !important;     
         width: 100% !important;
@@ -367,22 +378,21 @@ body.theme-cyberpunk .user-bubble {
         max-width: 100% !important;
     }
 
- 
+   
     .msg-bubble pre, .msg-bubble code {
         white-space: pre-wrap !important;
         word-break: break-word !important;
         max-width: 100% !important;
     }
 
-  
+ 
     .msg-bubble table {
         display: block !important;
         width: 100% !important;
         overflow-x: auto !important;   
         white-space: nowrap !important;
     }
-}      
-        @media (max-width: 768px) {
+}        @media (max-width: 768px) {
             html, body {
                 height: 100% !important;
                 width: 100% !important;

@@ -214,7 +214,7 @@ export default async function handler(req) {
                     status: 403, headers: { 'Content-Type': 'application/json' } 
                 });
             }
-            targetSelectedModel = 'llama-3.2-11b-vision-preview'; 
+            targetSelectedModel = 'llama-3.2-90b-vision-preview'; 
             if (!isRealPremium && authenticatedUserId) {
                 remainingChats = remainingChats - 1;
                 databaseUpdateRequired = true;

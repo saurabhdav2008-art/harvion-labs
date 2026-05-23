@@ -329,7 +329,7 @@ body.theme-cyberpunk .user-bubble {
 @media (min-width: 769px) {
     html, body {
         height: 100vh !important;
-        width: 100vw !important;       
+        width: 100vw !important;
         overflow: hidden !important;
     }
     #app-wrapper {
@@ -345,7 +345,7 @@ body.theme-cyberpunk .user-bubble {
         display: flex !important;
         flex-direction: column !important;
         min-height: 0 !important; 
-        min-width: 0 !important;       
+        min-width: 0 !important;
     }
     .chat-container {
         flex: 1 !important;
@@ -357,17 +357,31 @@ body.theme-cyberpunk .user-bubble {
         flex-shrink: 0 !important; 
     }
     
-    
+  
+    .message {
+        max-width: 96% !important;     
+        width: 100% !important;
+    }
+    .msg-bubble {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+ 
     .msg-bubble pre, .msg-bubble code {
-        white-space: pre-wrap !important;  
-        word-break: break-word !important; 
+        white-space: pre-wrap !important;
+        word-break: break-word !important;
         max-width: 100% !important;
     }
+
+  
     .msg-bubble table {
-        max-width: 100% !important;
+        display: block !important;
+        width: 100% !important;
+        overflow-x: auto !important;   
+        white-space: nowrap !important;
     }
-}
-      
+}      
         @media (max-width: 768px) {
             html, body {
                 height: 100% !important;

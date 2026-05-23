@@ -208,18 +208,19 @@ export default async function handler(req) {
 
         let targetSelectedModel = 'llama-3.1-8b-instant'; 
 
-        if (hasImagePayload) {
-            if (!isRealPremium && authenticatedUserId && remainingChats <= 0) {
-                return new Response(JSON.stringify({ error: 'LIMIT_EXCEEDED: Vision Core processing requires remaining chat tokens.' }), { 
-                    status: 403, headers: { 'Content-Type': 'application/json' } 
-                });
-            }
-            targetSelectedModel = 'llama-3.2-90b-vision-preview'; 
-            if (!isRealPremium && authenticatedUserId) {
-                remainingChats = remainingChats - 1;
-                databaseUpdateRequired = true;
-            }
-        } 
+if (hasImagePayload) {
+    if (!isRealPremium && authenticatedUserId && remainingChats <= 0) {
+        return new Response(JSON.stringify({ error: 'LIMIT_EXCEEDED: Vision Core processing requires remaining chat tokens.' }), { 
+            status: 403, headers: { 'Content-Type': 'application/json' } 
+        });
+    }
+    // 🔥 MULTIMODAL UPGRADE: Llama 3.2 deprecated hone ke baad naya working model ID
+    targetSelectedModel = 'meta-llama/llama-4-scout-17b-16e-instruct'; 
+    if (!isRealPremium && authenticatedUserId) {
+        remainingChats = remainingChats - 1;
+        databaseUpdateRequired = true;
+    }
+}
         else {
             if (requestedIntent === "Supernova Prime") {
                 if (isRealPremium) {

@@ -325,7 +325,35 @@ body.theme-cyberpunk .user-bubble {
         
         body.theme-cyberpunk { --neon-cyan: #ff007f; --neon-purple: #00f3ff; }
         body.theme-cyberpunk .main-chat, body.theme-cyberpunk .sidebar { border-color: rgba(255, 0, 127, 0.3); box-shadow: 0 0 30px rgba(255, 0, 127, 0.15); }
-
+/* ===================================================
+           🖥️ LAPTOP STRICT FULL-SCREEN CONTAINMENT OVERRIDE 
+           =================================================== */
+        @media (min-width: 769px) {
+            html, body {
+                height: 100vh !important;
+                overflow: hidden !important;
+            }
+            #app-wrapper {
+                height: 96vh !important;
+                max-height: 96vh !important;
+                overflow: hidden !important;
+            }
+            .main-chat {
+                height: 100% !important;
+                overflow: hidden !important;
+                display: flex !important;
+                flex-direction: column !important;
+                min-height: 0 !important; /* 👈 Flexbox layout to expand hone se rokega */
+            }
+            .chat-container {
+                flex: 1 !important;
+                overflow-y: auto !important;
+                min-height: 0 !important; /* 👈 Sirf messages scroll honge, input dock fixed rahega */
+            }
+            .input-dock {
+                flex-shrink: 0 !important; /* 👈 Input bar apni jagah se hilega nahi */
+            }
+        }
       
         @media (max-width: 768px) {
             html, body {

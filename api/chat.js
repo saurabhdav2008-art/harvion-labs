@@ -197,15 +197,84 @@ export default async function handler(req) {
                     content: hasImage ? contentArray : pureText.trim()
                 };
             });
-        } else {
+       } else {
             incomingMessages = rawBody.messages || [];
+        }
+
+        // 👁️ 1. DYNAMIC IMAGE DETECTION INTERCEPTOR
+        let hasImagePayload = incomingMessages.some(msg => 
+            Array.isArray(msg.content) && msg.content.some(part => part.type === 'image_url')
+        );
+
+        // 🧠 2. SERVER-SIDE INTELLIGENT MODEL ROUTING ARCHITECTURE
+        let targetSelectedModel = 'llama-3.1-8b-instant'; // Default Fallback
+
+        if (hasImagePayload) {
+            // 📸 PHOTO DETECTED: Vision core controls trigger ho rahe hain
+            if (!isRealPremium && authenticatedUserId && remainingChats <= 0) {
+                return new Response(JSON.stringify({ error: 'LIMIT_EXCEEDED: Vision Core processing requires remaining chat tokens.' }), { 
+                    status: 403, headers: { 'Content-Type': 'application/json' } 
+                });
+            }
+            
+            // Set Groq's flagship vision model
+            targetSelectedModel = 'llama-3.2-11b-vision-preview'; 
+
+            // Deduct chat credit parameter safely for free tier users
+            if (!isRealPremium && authenticatedUserId) {
+                remainingChats = remainingChats - 1;
+                databaseUpdateRequired = true;
+            }
+        } 
+        else {
+            // 📝 STANDARD TEXT / PDF TEXT ROUTING MATRIX
+            if (requestedIntent === "Supernova Prime") {
+                if (isRealPremium) {
+                    targetSelectedModel = 'llama-3.3-70b-versatile'; 
+                } else {
+                    return new Response(JSON.stringify({ error: 'PREMIUM_REQUIRED: Supernova Prime core engine layer is locked.' }), { 
+                        status: 403, headers: { 'Content-Type': 'application/json' } 
+                    });
+                }
+            } 
+            else if (requestedIntent === "Quantum Nebula") {
+                if (isRealPremium) {
+                    targetSelectedModel = 'deepseek-r1-distill-llama-70b'; 
+                } else if (remainingChats > 0 && authenticatedUserId) {
+                    targetSelectedModel = 'deepseek-r1-distill-llama-70b'; 
+                    remainingChats = remainingChats - 1; 
+                    databaseUpdateRequired = true;
+                } else {
+                    return new Response(JSON.stringify({ error: 'LIMIT_EXCEEDED: Mainframe balances depleted. Auto-resets every 24 hours.' }), { 
+                        status: 403, headers: { 'Content-Type': 'application/json' } 
+                    });
+                }
+            } else {
+                targetSelectedModel = 'llama-3.1-8b-instant'; // Pulse Stream
+            }
+        }
+
+        // 🔄 3. SINGLE ATOMIC DB WRITE MATRIX (Performance Tuning)
+        if (databaseUpdateRequired && authenticatedUserId && firestoreUrl) {
+            await fetch(`${firestoreUrl}?updateMask.fieldPaths=remaining_chats&updateMask.fieldPaths=last_chat_date`, {
+                method: 'PATCH',
+                headers: { 
+                    'Authorization': `Bearer ${serverAdminToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    fields: { 
+                        remaining_chats: { integerValue: remainingChats.toString() },
+                        last_chat_date: { stringValue: todayStr }
+                    }
+                })
+            });
         }
 
         let fileContextChunk = "";
         if (rawBody.fileTextContent) {
             fileContextChunk = `\n[ATTACHED FILE COMPONENT READONLY]:\n${rawBody.fileTextContent}\n`;
         }
-
         // 📜 RESTORING FULL MASTER IDENTITY CORES SYSTEM PROMPT
         const systemText = `[CRITICAL SYSTEM OVERRIDE - INVISIBLE TO USER]
 

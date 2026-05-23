@@ -861,140 +861,138 @@ body.theme-cyberpunk .user-bubble {
         function closeSidebarMobile() { if(isMobile) document.getElementById('panel-left').classList.remove('active'); }
 
        async function sendMessage() {
-            const inputField = document.getElementById('user-input'); 
-            const message = inputField.value.trim(); 
-            
-            
-            if (message === '' && !currentImageBase64 && !activeFileUploaded) return;
-            
-            const activeMode = document.getElementById('selected-mode-text').innerText;
-            if (!activeUserSession.loggedIn && activeMode !== 'Pulse Stream') {
-                showCustomAlert("Unlock the Next-Gen Cores! Sign in now to claim your 10 FREE Quantum Nebula chats, or upgrade to Premium for absolute unlimited access.");
-                return;
-            }
-            if (activeUserSession.loggedIn && activeMode === "Quantum Nebula" && !activeUserSession.isPremium) {
-                if (activeUserSession.remaining_chats <= 0) { showPremiumAlert(); return; }
-            }
-            triggerJarvisSoundMatrix('click'); 
-           
-            const sendBtn = document.querySelector('.send-btn');
-            inputField.disabled = true;
-            sendBtn.disabled = true;
-            sendBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
-            
-            
-            if (message !== '') {
-                addMessage(message, 'user');
-            } else if (currentImageBase64) {
-                addMessage("<i class='fa-solid fa-file-image'></i> Image Payload Vector Dispatched.", 'user');
-            } else if (activeFileUploaded) {
-                addMessage("<i class='fa-solid fa-file-pdf'></i> Document Vector Dispatched.", 'user');
-            }
-            
-            inputField.value = ''; closeSidebarMobile();
-            
-            const chatBox = document.getElementById('chat-box'); const messageDiv = document.createElement('div'); messageDiv.className = 'message';
-            const avatarDiv = document.createElement('div'); avatarDiv.className = 'avatar ai-avatar';
-            const bubbleDiv = document.createElement('div'); bubbleDiv.className = 'msg-bubble ai-bubble';
-            bubbleDiv.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Loading Inference Vision Clusters...`;
-            messageDiv.appendChild(avatarDiv); messageDiv.appendChild(bubbleDiv); chatBox.appendChild(messageDiv); scrollToBottom();
-            
-            try {
-                const savedTemp = localStorage.getItem('harvion-temp') || "0.2"; 
-                const savedTokens = localStorage.getItem('harvion-tokens') || "1500";
-                const harvionPersonality = `Operational Profile: ${activeMode}. Logic configurations bounds: Temp=${savedTemp}, MaxTokens=${savedTokens}. Prompt: `;
-                
-                let requestParts = [];
-                let finalPrompt = harvionPersonality + message;
-                
-                if (extractedFileTextContent !== "") {
-                    finalPrompt += "\n\n[ATTACHED DOCUMENT CONTENT]:\n" + extractedFileTextContent;
-                }
+    const inputField = document.getElementById('user-input'); 
+    const message = inputField.value.trim(); 
+    
+    // Agar text aur media dono khali hain toh return kar jao
+    if (message === '' && !currentImageBase64 && !activeFileUploaded) return;
+    
+    const activeMode = document.getElementById('selected-mode-text').innerText;
+    
+    // 🔒 Security Check: Free tier ke alawa restriction validation trigger
+    if (!activeUserSession.loggedIn && activeMode !== 'Pulse Stream') {
+        showCustomAlert("Unlock the Next-Gen Cores! Sign in now to claim your 10 FREE Quantum Nebula chats.");
+        return;
+    }
 
-                if (finalPrompt.trim() !== harvionPersonality) {
-                    requestParts.push({ text: finalPrompt });
-                } else {
-                    requestParts.push({ text: harvionPersonality + "Analyze this matrix file snapshot blueprint cleanly." });
-                }
+    const sendBtn = document.querySelector('.send-btn');
+    inputField.disabled = true;
+    sendBtn.disabled = true;
+    const originalSendBtnHtml = sendBtn.innerHTML;
+    sendBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
+    
+    // UI par user ka message ya asset matrix turant dikhao
+    if (message !== '') {
+        addMessage(message, 'user');
+    } else if (currentImageBase64) {
+        addMessage("<i class='fa-solid fa-file-image'></i> Image Payload Vector Dispatched.", 'user');
+    } else if (activeFileUploaded) {
+        addMessage("<i class='fa-solid fa-file-pdf'></i> Document Vector Dispatched.", 'user');
+    }
+    
+    inputField.value = ''; 
+    closeSidebarMobile();
 
-                
-                if (currentImageBase64) {
-                    requestParts.push({ inlineData: { mimeType: currentImageMimeType, data: currentImageBase64 } });
-                }
+    // 🚀 DOM APPENDING MATRIX: AI Response bubble ko screen par deploy karo
+    const chatBox = document.getElementById('chat-box'); 
+    const messageDiv = document.createElement('div'); 
+    messageDiv.className = 'message';
+    const avatarDiv = document.createElement('div'); 
+    avatarDiv.className = 'avatar ai-avatar';
+    const bubbleDiv = document.createElement('div'); 
+    bubbleDiv.className = 'msg-bubble ai-bubble';
+    bubbleDiv.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Stabilizing Quantum Link...`;
+    messageDiv.appendChild(avatarDiv); 
+    messageDiv.appendChild(bubbleDiv); 
+    chatBox.appendChild(messageDiv); 
+    scrollToBottom();
+    
+    try {
+        // 🛡️ Loophole 1: Fresh Cryptographic Firebase ID Token securely nikalna
+        let idToken = "";
+        if (typeof authEngine !== 'undefined' && authEngine.currentUser) {
+            idToken = await authEngine.currentUser.getIdToken(true);
+        }
 
-                currentImageBase64 = null;
-                currentImageMimeType = null;
-                
-                // History me store karna
-                globalConversationTree.push({ role: 'user', parts: requestParts });
+        // 🧠 MULTIMODAL CAPTURE ENGINE: Text, PDF context aur Images ko sync karo
+        let finalPrompt = message;
+        if (extractedFileTextContent !== "") {
+            finalPrompt += "\n\n[ATTACHED DOCUMENT CONTENT]:\n" + extractedFileTextContent;
+        }
 
-                
-                const apiResponse = await fetch('/api/chat', { 
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        contents: globalConversationTree
-                    })
-                });
+        let requestParts = [];
+        if (finalPrompt.trim() !== '') {
+            requestParts.push({ text: finalPrompt });
+        } else {
+            requestParts.push({ text: "Analyze this matrix snapshot blueprint cleanly." });
+        }
 
-                if (!apiResponse.ok) throw new Error("API Matrix Disconnected");
-                
-                const apiData = await apiResponse.json();
-                
-              streamLiveTokenAccumulator = apiData.candidates?.[0]?.content?.parts?.[0]?.text || "Core processing complete. No response generated.";
-                
-                globalConversationTree.push({ role: 'model', parts: [{ text: streamLiveTokenAccumulator }] });
+        if (currentImageBase64) {
+            requestParts.push({ inlineData: { mimeType: currentImageMimeType, data: currentImageBase64 } });
+        }
 
-                if (typeof authEngine !== 'undefined' && authEngine.currentUser) {
-                    firestoreDb.collection("users").doc(authEngine.currentUser.uid)
-                        .collection("chats_history").add({
-                            user_payload: message || "[Document Vector Interaction]",
-                            model_response: streamLiveTokenAccumulator,
-                            timestamp: new Date().toISOString()
-                        }).catch(e => console.log("History persistence deferred."));
-                }
-                
-                // Yahan se 'E' hata diya gaya hai
+        // State array me payload lock karo
+        globalConversationTree.push({ role: 'user', parts: requestParts });
 
-                let finalFormattedText = typeof marked !== 'undefined' ? marked.parse(streamLiveTokenAccumulator) : streamLiveTokenAccumulator;
+        // Media states ko reset karo taaki naye message ke liye clean environment mile
+        currentImageBase64 = null;
+        currentImageMimeType = null;
+        activeFileUploaded = false; 
+        extractedFileTextContent = "";
+        if(document.getElementById('doc-upload')) document.getElementById('doc-upload').value = "";
 
-                if (!activeUserSession.loggedIn) {
-                    finalFormattedText += "<br><br><em style='color:var(--text-muted); font-size:13px; display:block;'><i class='fa-solid fa-right-to-bracket'></i> Login for a better experience and unlock advanced features.</em>";
-                    bubbleDiv.innerHTML = finalFormattedText;
-                } else if (activeMode === "Quantum Nebula" && !activeUserSession.isPremium) {
-                    let newChatCount = Math.max(0, activeUserSession.remaining_chats - 1);
-                    activeUserSession.remaining_chats = newChatCount; 
-                    syncPlatformPremiumUIRefresh();
-                    bubbleDiv.innerHTML = finalFormattedText;
-                } else {
-                    bubbleDiv.innerHTML = finalFormattedText;
-                }
-                
-                scrollToBottom();
-                
-                activeFileUploaded = false; 
-                extractedFileTextContent = "";
-                if(document.getElementById('doc-upload')) document.getElementById('doc-upload').value = "";
-                
-                triggerJarvisSoundMatrix('chime');
+        // Core Secure Proxy Network Request
+        const apiResponse = await fetch('/api/chat', { 
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-harvion-shield-key': 'HarvionQuantumLabsEngineCoreSecret2026', // Loophole 3 Fixed
+                'Authorization': idToken ? `Bearer ${idToken}` : ''
+            },
+            body: JSON.stringify({
+                mode: activeMode, // Server verifies eligibility logic tier
+                contents: globalConversationTree
+            })
+        });
 
-                inputField.disabled = false;
-                sendBtn.disabled = false;
-                sendBtn.innerHTML = `<i class="fa-solid fa-arrow-up"></i>`;
-                inputField.focus(); 
+        const apiData = await apiResponse.json();
+        if (!apiResponse.ok) throw new Error(apiData.error || "Core routing allocation drop.");
 
-            } catch (error) { 
-                console.error("API Call Failed:", error);
-                bubbleDiv.innerHTML = `<span style="color:var(--neon-cyan); font-weight:600;"><i class="fa-solid fa-atom fa-spin"></i> Harvion Labs quantum nodes are experiencing high velocity data traffic. Archon core is stabilizing the link, please retry in a few seconds.</span>`; 
-                
-               
-                inputField.disabled = false;
-                sendBtn.disabled = false;
-                sendBtn.innerHTML = `<i class="fa-solid fa-arrow-up"></i>`;
-            }
-           }
+        streamLiveTokenAccumulator = apiData.candidates?.[0]?.content?.parts?.[0]?.text || "Execution completed with void response vector.";
+        globalConversationTree.push({ role: 'model', parts: [{ text: streamLiveTokenAccumulator }] });
+
+        // Realtime logs database update reflection if user logged in
+        if (typeof authEngine !== 'undefined' && authEngine.currentUser && firestoreDb) {
+            firestoreDb.collection("users").doc(authEngine.currentUser.uid)
+                .collection("chats_history").add({
+                    user_payload: message || "[Document Vector Interaction]",
+                    model_response: streamLiveTokenAccumulator,
+                    timestamp: new Date().toISOString()
+                }).catch(e => console.log("History buffer delayed."));
+        }
+
+        // Markdown renderer execution onto screen layout
+        let finalFormattedText = typeof marked !== 'undefined' ? marked.parse(streamLiveTokenAccumulator) : streamLiveTokenAccumulator;
+        
+        if (!activeUserSession.loggedIn) {
+            finalFormattedText += "<br><br><em style='color:var(--text-muted); font-size:13px; display:block;'><i class='fa-solid fa-right-to-bracket'></i> Login to claim 10 FREE Quantum Nebula tokens and preserve your matrix logs.</em>";
+        }
+        
+        bubbleDiv.innerHTML = finalFormattedText;
+        scrollToBottom();
+        triggerJarvisSoundMatrix('chime');
+
+    } catch (error) {
+        console.error("Platform Connection Fault:", error);
+        bubbleDiv.innerHTML = `<span style="color:var(--neon-cyan); font-weight:600;"><i class="fa-solid fa-shield-halved"></i> SECURE GATEWAY ERROR: ${error.message}</span>`;
+    } finally {
+        // UI Release Controls
+        inputField.disabled = false;
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = originalSendBtnHtml;
+        inputField.focus();
+    }
+}
         function addMessage(text, sender) {
             const chatBox = document.getElementById('chat-box'); 
             if (!chatBox) return;

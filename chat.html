@@ -187,12 +187,12 @@
     const inputField = document.getElementById('user-input'); 
     const message = inputField.value.trim(); 
     
-    // Agar text aur media dono khali hain toh return kar jao
+
     if (message === '' && !currentImageBase64 && !activeFileUploaded) return;
     
     const activeMode = document.getElementById('selected-mode-text').innerText;
     
-    // 🔒 Security Check: Free tier ke alawa restriction validation trigger
+    
     if (!activeUserSession.loggedIn && activeMode !== 'Pulse Stream') {
         showCustomAlert("Unlock the Next-Gen Cores! Sign in now to claim your 10 FREE Quantum Nebula chats.");
         return;
@@ -204,7 +204,7 @@
     const originalSendBtnHtml = sendBtn.innerHTML;
     sendBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
     
-    // UI par user ka message ya asset matrix turant dikhao
+    
     if (message !== '') {
         addMessage(message, 'user');
     } else if (currentImageBase64) {
@@ -216,7 +216,7 @@
     inputField.value = ''; 
     closeSidebarMobile();
 
-    // 🚀 DOM APPENDING MATRIX: AI Response bubble ko screen par deploy karo
+    
     const chatBox = document.getElementById('chat-box'); 
     const messageDiv = document.createElement('div'); 
     messageDiv.className = 'message';
@@ -231,13 +231,13 @@
     scrollToBottom();
     
     try {
-        // 🛡️ Loophole 1: Fresh Cryptographic Firebase ID Token securely nikalna
+   
         let idToken = "";
         if (typeof authEngine !== 'undefined' && authEngine.currentUser) {
             idToken = await authEngine.currentUser.getIdToken(true);
         }
 
-        // 🧠 MULTIMODAL CAPTURE ENGINE: Text, PDF context aur Images ko sync karo
+       
         let finalPrompt = message;
         if (extractedFileTextContent !== "") {
             finalPrompt += "\n\n[ATTACHED DOCUMENT CONTENT]:\n" + extractedFileTextContent;
@@ -254,26 +254,25 @@
             requestParts.push({ inlineData: { mimeType: currentImageMimeType, data: currentImageBase64 } });
         }
 
-        // State array me payload lock karo
+       
         globalConversationTree.push({ role: 'user', parts: requestParts });
 
-        // Media states ko reset karo taaki naye message ke liye clean environment mile
+
         currentImageBase64 = null;
         currentImageMimeType = null;
         activeFileUploaded = false; 
         extractedFileTextContent = "";
         if(document.getElementById('doc-upload')) document.getElementById('doc-upload').value = "";
 
-        // Core Secure Proxy Network Request
         const apiResponse = await fetch('/api/chat', { 
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'x-harvion-shield-key': 'HarvionQuantumLabsEngineCoreSecret2026', // Loophole 3 Fixed
+                'x-harvion-shield-key': 'HarvionQuantumLabsEngineCoreSecret2026', 
                 'Authorization': idToken ? `Bearer ${idToken}` : ''
             },
             body: JSON.stringify({
-                mode: activeMode, // Server verifies eligibility logic tier
+                mode: activeMode, 
                 contents: globalConversationTree
             })
         });
@@ -284,7 +283,7 @@
         streamLiveTokenAccumulator = apiData.candidates?.[0]?.content?.parts?.[0]?.text || "Execution completed with void response vector.";
         globalConversationTree.push({ role: 'model', parts: [{ text: streamLiveTokenAccumulator }] });
 
-        // Realtime logs database update reflection if user logged in
+        
         if (typeof authEngine !== 'undefined' && authEngine.currentUser && firestoreDb) {
             firestoreDb.collection("users").doc(authEngine.currentUser.uid)
                 .collection("chats_history").add({
@@ -294,7 +293,6 @@
                 }).catch(e => console.log("History buffer delayed."));
         }
 
-        // Markdown renderer execution onto screen layout
         let finalFormattedText = typeof marked !== 'undefined' ? marked.parse(streamLiveTokenAccumulator) : streamLiveTokenAccumulator;
         
         if (!activeUserSession.loggedIn) {
@@ -309,7 +307,7 @@
         console.error("Platform Connection Fault:", error);
         bubbleDiv.innerHTML = `<span style="color:var(--neon-cyan); font-weight:600;"><i class="fa-solid fa-shield-halved"></i> SECURE GATEWAY ERROR: ${error.message}</span>`;
     } finally {
-        // UI Release Controls
+       
         inputField.disabled = false;
         sendBtn.disabled = false;
         sendBtn.innerHTML = originalSendBtnHtml;

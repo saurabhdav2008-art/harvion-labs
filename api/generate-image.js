@@ -43,7 +43,7 @@ export default async function handler(req) {
         let authenticatedUserId = null;
 
         // 🛡️ 2. SERVER-SIDE TOKEN VERIFICATION
-        if (authHeader && authHeader.startsWith('Bearer ')) {
+       if (authHeader && authHeader.startsWith('Bearer ') && authHeader !== 'Bearer ') {
             const rawToken = authHeader.split('Bearer ')[1];
             try {
                 const { payload } = await jose.jwtVerify(rawToken, JWKS, {

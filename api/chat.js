@@ -270,26 +270,38 @@ For every informational, academic, structural, or comparative response, you must
 ${fileContextChunk}`;
 
        // 🔥 System rule ko alag role me lock kar diya taaki leak na ho
+// 🔥 System rule ko alag role me lock kar diya taaki leak na ho
 const groqChatMessages = [
     { role: 'system', content: systemText },
     ...incomingMessages
 ];
 
-        // Groq API Caller Engine
-        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Authorization': 'Bearer ' + process.env.GEMINI_API_KEY, 
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: targetSelectedModel, 
-                messages: groqChatMessages,
-                temperature: 0.2,
-                max_tokens: 2048
-            })
-        });
+// 🧼 CONTENT SANITIZATION LOOP: Agar content array hai, toh use string banao
+const safeGroqMessages = groqChatMessages.map(msg => {
+    if (Array.isArray(msg.content)) {
+        // Saare text blocks ko nikal kar ek plain string me convert kar dega
+        return {
+            ...msg,
+            content: msg.content.map(p => p.text || (typeof p === 'string' ? p : "")).join("\n").trim()
+        };
+    }
+    return msg;
+});
 
+// Groq API Caller Engine
+const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+        'Authorization': 'Bearer ' + process.env.GEMINI_API_KEY, 
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+        model: targetSelectedModel, 
+        messages: safeGroqMessages, // 🔥 FIXED: Ab ye ekdam safe string-only array jayega
+        temperature: 0.2,
+        max_tokens: 2048
+    })
+});
         if (!response.ok) {
             const errText = await response.text();
             return new Response(JSON.stringify({ error: "Upstream AI Grid Traffic Drop.", details: errText }), { status: 500 });

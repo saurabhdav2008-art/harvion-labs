@@ -500,13 +500,15 @@ body.theme-cyberpunk .user-bubble {
                 margin: 10px 0;
             }
             
-            .sidebar {
-                position: fixed !important; left: -320px; top: 0; bottom: 0;
-                height: 100vh !important; height: 100dvh !important; width: 290px !important;
-                border-radius: 0 24px 24px 0 !important; background: rgba(5, 5, 12, 0.98) !important;
-                transition: left 0.4s cubic-bezier(0.1, 1, 0.1, 1);
-                z-index: 9999 !important;
-            }
+           .sidebar {
+    position: fixed !important; 
+    left: -320px !important; /* 🔥 FIXED: Ab ye pehle se 100% screen ke bahar chhupa rahega */
+    top: 0; bottom: 0;
+    height: 100vh !important; height: 100dvh !important; width: 290px !important;
+    border-radius: 0 24px 24px 0 !important; background: rgba(5, 5, 12, 0.98) !important;
+    transition: left 0.4s cubic-bezier(0.1, 1, 0.1, 1) !important;
+    z-index: 9999 !important;
+}
             .sidebar.active { left: 0 !important; }
             .menu-toggle-btn { display: flex !important; }
             .splash-title { font-size: 2.2rem; letter-spacing: 6px; }

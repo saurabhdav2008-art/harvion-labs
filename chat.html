@@ -1432,6 +1432,7 @@ body.theme-cyberpunk .user-bubble {
         }
 
 
+
         async function sendMessage() {
             const inputField = document.getElementById('user-input'); const message = inputField.value.trim(); 
             if (message === '' && webSelectedImages.length === 0 && !webSelectedPdf) return;
@@ -1441,12 +1442,16 @@ body.theme-cyberpunk .user-bubble {
             const sendBtn = document.querySelector('.send-btn'); inputField.disabled = true; sendBtn.disabled = true;
             const originalSendBtnHtml = sendBtn.innerHTML; sendBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
             
-            
-            let uiDisplayMsg = message;
-            if (message === '') {
-                if (webSelectedImages.length > 0) uiDisplayMsg = `<i class='fa-solid fa-images'></i> ${webSelectedImages.length} Image(s) Attached.`;
-                else if (webSelectedPdf) uiDisplayMsg = `<i class='fa-solid fa-file-pdf'></i> ${webSelectedPdf.name} Attached.`;
+         
+            let attachmentHeaderHtml = "";
+            if (webSelectedImages.length > 0) {
+                webSelectedImages.forEach(img => {
+                    attachmentHeaderHtml += `<div style="background:rgba(0, 243, 255, 0.15); border:1px solid rgba(0, 243, 255, 0.3); padding:3px 8px; border-radius:6px; font-size:11px; margin-bottom:6px; display:inline-flex; align-items:center; gap:6px; color:#fff; font-weight:600;"><i class="fa-solid fa-paperclip" style="color:var(--neon-cyan);"></i> ${img.name}</div><br>`;
+                });
+            } else if (webSelectedPdf) {
+                attachmentHeaderHtml += `<div style="background:rgba(157, 0, 255, 0.15); border:1px solid rgba(157, 0, 255, 0.3); padding:3px 8px; border-radius:6px; font-size:11px; margin-bottom:6px; display:inline-flex; align-items:center; gap:6px; color:#fff; font-weight:600;"><i class="fa-solid fa-file-pdf" style="color:var(--neon-purple);"></i> ${webSelectedPdf.name}</div><br>`;
             }
+            let uiDisplayMsg = attachmentHeaderHtml + (message !== '' ? message : "");
             addMessage(uiDisplayMsg, 'user');
             inputField.value = ''; closeSidebarMobile();
 
@@ -1492,7 +1497,7 @@ body.theme-cyberpunk .user-bubble {
                 
                 bubbleDiv.innerHTML = finalFormattedText;
                 
-              
+                
                 const safeTextStr = streamLiveTokenAccumulator.replace(/"/g, '&quot;').replace(/'/g, '\\\'').replace(/\n/g, ' ');
                 const readBtnHtml = document.createElement('div');
                 readBtnHtml.innerHTML = `<button onclick="toggleReadAloud(this, '${safeTextStr}')" style="background:rgba(255,255,255,0.03); border:1px solid rgba(0,243,255,0.2); color:#8a9ba8; padding:5px 12px; border-radius:8px; font-size:12px; margin-top:12px; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;"><i class="fa-solid fa-volume-up"></i> Read Aloud</button>`;

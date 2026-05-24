@@ -40,7 +40,7 @@ export default async function handler(req) {
 
         // 🛡️ STEP 2 — Shield Key check
         const shieldKey = req.headers.get('x-harvion-shield-key');
-        if (shieldKey !== process.env.SHIELD_KEY) {
+        if (shieldKey !== process.env.HARVION_SHIELD_KEY) {
             return new Response(JSON.stringify({
                 error: 'SECURITY_FAULT: Unauthorized.'
             }), { status: 401, headers: { 'Content-Type': 'application/json' } });

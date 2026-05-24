@@ -406,7 +406,7 @@ body.theme-cyberpunk .user-bubble {
         overflow-x: auto !important;   
         white-space: nowrap !important;
     }
-}       @media (max-width: 768px) {
+      @media (max-width: 768px) {
             html, body {
                 height: 100% !important;
                 width: 100% !important;
@@ -1437,102 +1437,124 @@ body.theme-cyberpunk .user-bubble {
 
 
         async function sendMessage() {
-            const inputField = document.getElementById('user-input'); const message = inputField.value.trim(); 
-            if (message === '' && webSelectedImages.length === 0 && !webSelectedPdf) return;
-            const activeMode = document.getElementById('selected-mode-text').innerText;
-            if (!activeUserSession.loggedIn && activeMode !== 'Pulse Stream') { showCustomAlert("Unlock the Next-Gen Cores! Sign in now."); return; }
+    const inputField = document.getElementById('user-input'); const message = inputField.value.trim(); 
+    if (message === '' && webSelectedImages.length === 0 && !webSelectedPdf) return;
+    const activeMode = document.getElementById('selected-mode-text').innerText;
+    if (!activeUserSession.loggedIn && activeMode !== 'Pulse Stream') { showCustomAlert("Unlock the Next-Gen Cores! Sign in now."); return; }
 
-            const sendBtn = document.querySelector('.send-btn'); inputField.disabled = true; sendBtn.disabled = true;
-            const originalSendBtnHtml = sendBtn.innerHTML; sendBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
+    const sendBtn = document.querySelector('.send-btn'); inputField.disabled = true; sendBtn.disabled = true;
+    const originalSendBtnHtml = sendBtn.innerHTML; sendBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
+    
+
+    let attachmentHeaderHtml = "";
+    if (webSelectedImages.length > 0) {
+        webSelectedImages.forEach(img => {
+            attachmentHeaderHtml += `<div style="background:rgba(0, 243, 255, 0.15); border:1px solid rgba(0, 243, 255, 0.3); padding:3px 8px; border-radius:6px; font-size:11px; margin-bottom:6px; display:inline-flex; align-items:center; gap:6px; color:#fff; font-weight:600;"><i class="fa-solid fa-paperclip" style="color:var(--neon-cyan);"></i> ${img.name}</div><br>`;
+        });
+    } else if (webSelectedPdf) {
+        attachmentHeaderHtml += `<div style="background:rgba(157, 0, 255, 0.15); border:1px solid rgba(157, 0, 255, 0.3); padding:3px 8px; border-radius:6px; font-size:11px; margin-bottom:6px; display:inline-flex; align-items:center; gap:6px; color:#fff; font-weight:600;"><i class="fa-solid fa-file-pdf" style="color:var(--neon-purple);"></i> ${webSelectedPdf.name}</div><br>`;
+    }
+    let uiDisplayMsg = attachmentHeaderHtml + (message !== '' ? message : "");
+    addMessage(uiDisplayMsg, 'user');
+    inputField.value = ''; closeSidebarMobile();
+
+    const chatBox = document.getElementById('chat-box'); 
+    const messageDiv = document.createElement('div'); messageDiv.className = 'message';
+    const avatarDiv = document.createElement('div'); avatarDiv.className = 'avatar ai-avatar';
+    const bubbleDiv = document.createElement('div'); bubbleDiv.className = 'msg-bubble ai-bubble';
+    bubbleDiv.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Stabilizing Quantum Link...`;
+    messageDiv.appendChild(avatarDiv); messageDiv.appendChild(bubbleDiv); chatBox.appendChild(messageDiv); scrollToBottom();
+    
+    try {
+        let idToken = ""; 
+        const activeUser = (typeof authEngine !== 'undefined') ? authEngine.currentUser : null;
+        if (activeUser) idToken = await activeUser.getIdToken(true);
+        
+ 
+        if (activeMode === 'Canvas Pro') {
+            const apiResponse = await fetch('/api/generate-image', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json', 'x-harvion-shield-key': 'HarvionQuantumLabsEngineCoreSecret2026', 'Authorization': idToken ? `Bearer ${idToken}` : '' },
+                body: JSON.stringify({ prompt: message })
+            });
+
+            const apiData = await apiResponse.json();
+            if (!apiResponse.ok) throw new Error(apiData.error || "Canvas generation failed.");
+
+            bubbleDiv.innerHTML = `
+                <div style="text-align: center;">
+                    <img src="${apiData.imageUrl}" style="width: 100%; max-width: 400px; border-radius: 12px; border: 1px solid rgba(0, 243, 255, 0.3); margin-bottom: 10px;" />
+                    <br>
+                    <a href="${apiData.imageUrl}" target="_blank" download="CanvasPro_Harvion.jpg" style="background: #00f3ff; color: #000; padding: 6px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; text-decoration: none; display: inline-block;">
+                        <i class="fa-solid fa-download"></i> Download Asset
+                    </a>
+                </div>
+            `;
             
-            // 📎 File Name Headers
-            let attachmentHeaderHtml = "";
-            if (webSelectedImages.length > 0) {
-                webSelectedImages.forEach(img => {
-                    attachmentHeaderHtml += `<div style="background:rgba(0, 243, 255, 0.15); border:1px solid rgba(0, 243, 255, 0.3); padding:3px 8px; border-radius:6px; font-size:11px; margin-bottom:6px; display:inline-flex; align-items:center; gap:6px; color:#fff; font-weight:600;"><i class="fa-solid fa-paperclip" style="color:var(--neon-cyan);"></i> ${img.name}</div><br>`;
+            if (activeUser && typeof firestoreDb !== 'undefined') {
+                await firestoreDb.collection("users").doc(activeUser.uid).collection("chats_history").add({
+                    user_payload: `🎨 [Canvas Pro Prompt]: ${message}`,
+                    model_response: `Generated Visual Asset Successfully. Reference Vector: ${apiData.imageUrl.substring(0,30)}...`,
+                    timestamp: new Date().toISOString()
                 });
-            } else if (webSelectedPdf) {
-                attachmentHeaderHtml += `<div style="background:rgba(157, 0, 255, 0.15); border:1px solid rgba(157, 0, 255, 0.3); padding:3px 8px; border-radius:6px; font-size:11px; margin-bottom:6px; display:inline-flex; align-items:center; gap:6px; color:#fff; font-weight:600;"><i class="fa-solid fa-file-pdf" style="color:var(--neon-purple);"></i> ${webSelectedPdf.name}</div><br>`;
+                loadUserFileHistoryFromFirestore(activeUser.uid);
             }
-            let uiDisplayMsg = attachmentHeaderHtml + (message !== '' ? message : "");
-            addMessage(uiDisplayMsg, 'user');
-            inputField.value = ''; closeSidebarMobile();
 
-            const chatBox = document.getElementById('chat-box'); 
-            const messageDiv = document.createElement('div'); messageDiv.className = 'message';
-            const avatarDiv = document.createElement('div'); avatarDiv.className = 'avatar ai-avatar';
-            const bubbleDiv = document.createElement('div'); bubbleDiv.className = 'msg-bubble ai-bubble';
-            bubbleDiv.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Stabilizing Quantum Link...`;
-            messageDiv.appendChild(avatarDiv); messageDiv.appendChild(bubbleDiv); chatBox.appendChild(messageDiv); scrollToBottom();
+            scrollToBottom(); triggerJarvisSoundMatrix('success');
+        } 
+ 
+        else {
+            let finalPrompt = message;
+            if (webSelectedPdf) finalPrompt += "\n\n[DOCUMENT CONTENT]:\n" + webSelectedPdf.extractedText;
+
+            let requestParts = [];
+            if (finalPrompt.trim() !== '') requestParts.push({ text: finalPrompt });
+            else requestParts.push({ text: "Analyze this image blueprint cleanly." });
+
+            webSelectedImages.forEach(img => { requestParts.push({ inlineData: { mimeType: img.mimeType, data: img.base64 } }); });
+            globalConversationTree.push({ role: 'user', parts: requestParts });
+
+            webSelectedImages = []; webSelectedPdf = null; renderAttachmentPreview();
+
+            const apiResponse = await fetch('/api/chat', { 
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'x-harvion-shield-key': 'HarvionQuantumLabsEngineCoreSecret2026', 'Authorization': idToken ? `Bearer ${idToken}` : '' },
+                body: JSON.stringify({ mode: activeMode, contents: globalConversationTree })
+            });
+
+            const apiData = await apiResponse.json();
+            if (!apiResponse.ok) throw new Error(apiData.error || "Core routing drop.");
+
+            streamLiveTokenAccumulator = apiData.candidates?.[0]?.content?.parts?.[0]?.text || "Void response vector.";
+            globalConversationTree.push({ role: 'model', parts: [{ text: streamLiveTokenAccumulator }] });
+
+            let finalFormattedText = typeof marked !== 'undefined' ? marked.parse(streamLiveTokenAccumulator) : streamLiveTokenAccumulator;
+            bubbleDiv.innerHTML = finalFormattedText;
             
-            try {
-                let idToken = ""; if (typeof authEngine !== 'undefined' && authEngine.currentUser) idToken = await authEngine.currentUser.getIdToken(true);
-                
-                // 🎨 CANVAS PRO MODE (Image Generation)
-                if (activeMode === 'Canvas Pro') {
-                    const apiResponse = await fetch('/api/generate-image', { 
-                        method: 'POST', 
-                        headers: { 'Content-Type': 'application/json', 'x-harvion-shield-key': 'HarvionQuantumLabsEngineCoreSecret2026', 'Authorization': idToken ? `Bearer ${idToken}` : '' },
-                        body: JSON.stringify({ prompt: message })
-                    });
-
-                    const apiData = await apiResponse.json();
-                    if (!apiResponse.ok) throw new Error(apiData.error || "Canvas generation failed.");
-
-                    bubbleDiv.innerHTML = `
-                        <div style="text-align: center;">
-                            <img src="${apiData.imageUrl}" style="width: 100%; max-width: 400px; border-radius: 12px; border: 1px solid rgba(0, 243, 255, 0.3); margin-bottom: 10px;" />
-                            <br>
-                            <a href="${apiData.imageUrl}" target="_blank" download="CanvasPro_Harvion.jpg" style="background: #00f3ff; color: #000; padding: 6px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; text-decoration: none; display: inline-block;">
-                                <i class="fa-solid fa-download"></i> Download Asset
-                            </a>
-                        </div>
-                    `;
-                    scrollToBottom(); triggerJarvisSoundMatrix('success');
-                } 
-                // 💬 NORMAL CHAT MODE
-                else {
-                    let finalPrompt = message;
-                    if (webSelectedPdf) finalPrompt += "\n\n[DOCUMENT CONTENT]:\n" + webSelectedPdf.extractedText;
-
-                    let requestParts = [];
-                    if (finalPrompt.trim() !== '') requestParts.push({ text: finalPrompt });
-                    else requestParts.push({ text: "Analyze this image blueprint cleanly." });
-
-                    webSelectedImages.forEach(img => { requestParts.push({ inlineData: { mimeType: img.mimeType, data: img.base64 } }); });
-                    globalConversationTree.push({ role: 'user', parts: requestParts });
-
-                    webSelectedImages = []; webSelectedPdf = null; renderAttachmentPreview();
-
-                    const apiResponse = await fetch('/api/chat', { 
-                        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-harvion-shield-key': 'HarvionQuantumLabsEngineCoreSecret2026', 'Authorization': idToken ? `Bearer ${idToken}` : '' },
-                        body: JSON.stringify({ mode: activeMode, contents: globalConversationTree })
-                    });
-
-                    const apiData = await apiResponse.json();
-                    if (!apiResponse.ok) throw new Error(apiData.error || "Core routing drop.");
-
-                    streamLiveTokenAccumulator = apiData.candidates?.[0]?.content?.parts?.[0]?.text || "Void response vector.";
-                    globalConversationTree.push({ role: 'model', parts: [{ text: streamLiveTokenAccumulator }] });
-
-                    let finalFormattedText = typeof marked !== 'undefined' ? marked.parse(streamLiveTokenAccumulator) : streamLiveTokenAccumulator;
-                    bubbleDiv.innerHTML = finalFormattedText;
-                    
-                    const safeTextStr = streamLiveTokenAccumulator.replace(/"/g, '&quot;').replace(/'/g, '\\\'').replace(/\n/g, ' ');
-                    const readBtnHtml = document.createElement('div');
-                    readBtnHtml.innerHTML = `<button onclick="toggleReadAloud(this, '${safeTextStr}')" style="background:rgba(255,255,255,0.03); border:1px solid rgba(0,243,255,0.2); color:#8a9ba8; padding:5px 12px; border-radius:8px; font-size:12px; margin-top:12px; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;"><i class="fa-solid fa-volume-up"></i> Read Aloud</button>`;
-                    bubbleDiv.appendChild(readBtnHtml);
-                    
-                    scrollToBottom(); triggerJarvisSoundMatrix('chime');
-                }
-            } catch (error) { 
-                console.error("Fault:", error); 
-                bubbleDiv.innerHTML = `<span style="color:var(--neon-cyan); font-weight:600;"><i class="fa-solid fa-shield-halved"></i> SECURE GATEWAY ERROR: ${error.message}</span>`;
-            } finally { 
-                inputField.disabled = false; sendBtn.disabled = false; sendBtn.innerHTML = originalSendBtnHtml; inputField.focus(); 
+            // 💾 Saving Text Chat Response to Firestore History
+            if (activeUser && typeof firestoreDb !== 'undefined') {
+                await firestoreDb.collection("users").doc(activeUser.uid).collection("chats_history").add({
+                    user_payload: message || "Multimodal Data Stream",
+                    model_response: streamLiveTokenAccumulator,
+                    timestamp: new Date().toISOString()
+                });
+                loadUserFileHistoryFromFirestore(activeUser.uid);
             }
+
+            const safeTextStr = streamLiveTokenAccumulator.replace(/"/g, '&quot;').replace(/'/g, '\\\'').replace(/\n/g, ' ');
+            const readBtnHtml = document.createElement('div');
+            readBtnHtml.innerHTML = `<button onclick="toggleReadAloud(this, '${safeTextStr}')" style="background:rgba(255,255,255,0.03); border:1px solid rgba(0,243,255,0.2); color:#8a9ba8; padding:5px 12px; border-radius:8px; font-size:12px; margin-top:12px; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;"><i class="fa-solid fa-volume-up"></i> Read Aloud</button>`;
+            bubbleDiv.appendChild(readBtnHtml);
+            
+            scrollToBottom(); triggerJarvisSoundMatrix('chime');
         }
-// ⌨️ MOBILE KEYBOARD INSTANT VIEWPORT AUTOFIT RESIZER (YEH ADD KARNA HAI)
+    } catch (error) { 
+        console.error("Fault:", error); 
+        bubbleDiv.innerHTML = `<span style="color:var(--neon-cyan); font-weight:600;"><i class="fa-solid fa-shield-halved"></i> SECURE GATEWAY ERROR: ${error.message}</span>`;
+    } finally { 
+        inputField.disabled = false; sendBtn.disabled = false; sendBtn.innerHTML = originalSendBtnHtml; inputField.focus(); 
+    }
+}
+
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', () => {
                 if (window.innerWidth <= 768) {

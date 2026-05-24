@@ -1,61 +1,6 @@
+import * as jose from 'jose';
+
 export const config = { runtime: 'edge' };
-
-// 🔐 Helper to decode base64url string natively on Edge
-function base64UrlDecode(str) {
-    let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
-    while (base64.length % 4) base64 += '=';
-    return JSON.parse(atob(base64));
-}
-
-// 🛡️ Pure Web Crypto Firebase Token Verifier (Zero Dependencies - Fixes Vercel Jose Error)
-async function verifyFirebaseToken(token, projectId) {
-    try {
-        const parts = token.split('.');
-        if (parts.length !== 3) return null;
-
-        const [headerStr, payloadStr, signatureStr] = parts;
-        const header = base64UrlDecode(headerStr);
-        const payload = base64UrlDecode(payloadStr);
-
-        // Standard Token Validation Checks
-        const now = Math.floor(Date.now() / 1000);
-        if (payload.exp < now) return null;
-        if (payload.aud !== projectId) return null;
-        if (payload.iss !== `https://securetoken.google.com/${projectId}`) return null;
-
-        // Fetch Google's public JWK public certificates array
-        const jwksRes = await fetch('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com');
-        const jwks = await jwksRes.json();
-
-        // Match exact verification signature identifier
-        const jwk = jwks.keys.find(k => k.kid === header.kid);
-        if (!jwk) return null;
-
-        // Import keys securely via Native Web Crypto Runtime Engine
-        const cryptoKey = await crypto.subtle.importKey(
-            'jwk',
-            jwk,
-            { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-            false,
-            ['verify']
-        );
-
-        const encoder = new TextEncoder();
-        const data = encoder.encode(`${headerStr}.${payloadStr}`);
-        const sigBinary = Uint8Array.from(atob(signatureStr.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
-
-        const isValid = await crypto.subtle.verify(
-            'RSASSA-PKCS1-v1_5',
-            cryptoKey,
-            sigBinary,
-            data
-        );
-
-        return isValid ? payload : null;
-    } catch (err) {
-        return null;
-    }
-}
 
 // Web Crypto API ke through Google OAuth2 Access Token generate karne ka secure function
 async function getGoogleAuthToken(email, privateKeyPEM) {
@@ -104,10 +49,13 @@ async function getGoogleAuthToken(email, privateKeyPEM) {
     }
 }
 
+const JWKS = jose.createRemoteJWKSet(new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'));
+
 export default async function handler(req) {
     if (req.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
 
     try {
+        // 🛡️ SHIELD GATE HEADER CHECK (Loophole 3 Fixed)
         const shieldKey = req.headers.get('x-harvion-shield-key');
         if (shieldKey !== 'HarvionQuantumLabsEngineCoreSecret2026') {
             return new Response(JSON.stringify({ error: 'SECURITY_FAULT: Unauthorized Core Endpoint Connection Dropped.' }), { 
@@ -124,14 +72,16 @@ export default async function handler(req) {
         let remainingChats = 0;
         let isRealPremium = false;
         let databaseUpdateRequired = false;
-        const todayStr = new Date().toISOString().split('T')[0];
+        const todayStr = new Date().toISOString().split('T')[0]; // Current Server Time Tracking (2026-05-23)
         
-        // 🛡️ NATIVE SERVER-SIDE TOKEN VERIFICATION (NO EXTERNAL JOSE DEPENDENCY)
+        // 🛡️ SERVER-SIDE TOKEN VERIFICATION (Loophole 1 & 2 Fixed)
         if (authHeader && authHeader.startsWith('Bearer ')) {
             const rawToken = authHeader.split('Bearer ')[1];
             try {
-                const payload = await verifyFirebaseToken(rawToken, 'harvion-labs-51ca1');
-                if (!payload) throw new Error("Verification Failed");
+                const { payload } = await jose.jwtVerify(rawToken, JWKS, {
+                    audience: 'harvion-labs-51ca1',
+                    issuer: 'https://securetoken.google.com/harvion-labs-51ca1'
+                });
                 authenticatedUserId = payload.sub; 
             } catch (jwtError) {
                 return new Response(JSON.stringify({ error: 'SECURITY_FAULT: Cryptographic Token Tampering Mismatch.' }), { 
@@ -147,10 +97,12 @@ export default async function handler(req) {
         }
         const serverAdminToken = await getGoogleAuthToken(serviceAccountEmail, serviceAccountKey);
         
+        // 🌟 FIXED: Variable scope corrected to avoid ReferenceError
         const firestoreUrl = authenticatedUserId 
             ? `https://firestore.googleapis.com/v1/projects/harvion-labs-51ca1/databases/(default)/documents/users/${authenticatedUserId}`
             : null;
 
+        // Fetch user records mapping parameters
         if (authenticatedUserId && firestoreUrl) {
             const dbCheck = await fetch(firestoreUrl, {
                 headers: { 'Authorization': `Bearer ${serverAdminToken}` }
@@ -164,13 +116,60 @@ export default async function handler(req) {
                 const lastChatDate = userData.fields?.last_chat_date?.stringValue || "";
                 remainingChats = parseInt(userData.fields?.remaining_chats?.integerValue || "0");
 
+                // Check condition for Quota Reset evaluation
                 if (lastChatDate !== todayStr && !isRealPremium) {
-                    remainingChats = 10; 
+                    remainingChats = 10; // Reset parameter depth locally
                     databaseUpdateRequired = true;
                 }
             }
         }
 
+        // 🧠 SERVER-SIDE INTELLIGENT MODEL ROUTING ARCHITECTURE
+        let targetSelectedModel = 'llama-3.1-8b-instant'; // Default Fallback (Pulse Stream)
+
+        if (requestedIntent === "Supernova Prime") {
+            if (isRealPremium) {
+                targetSelectedModel = 'llama-3.3-70b-versatile'; 
+            } else {
+                return new Response(JSON.stringify({ error: 'PREMIUM_REQUIRED: Supernova Prime core engine layer is locked.' }), { 
+                    status: 403, headers: { 'Content-Type': 'application/json' } 
+                });
+            }
+        } 
+        else if (requestedIntent === "Quantum Nebula") {
+            if (isRealPremium) {
+                targetSelectedModel = 'deepseek-r1-distill-llama-70b'; 
+            } else if (remainingChats > 0 && authenticatedUserId) {
+                targetSelectedModel = 'deepseek-r1-distill-llama-70b'; 
+                remainingChats = remainingChats - 1; // Atomic balance mutation
+                databaseUpdateRequired = true;
+            } else {
+                return new Response(JSON.stringify({ error: 'LIMIT_EXCEEDED: Mainframe balances depleted. Auto-resets every 24 hours.' }), { 
+                    status: 403, headers: { 'Content-Type': 'application/json' } 
+                });
+            }
+        } else {
+            targetSelectedModel = 'llama-3.1-8b-instant';
+        }
+
+        // 🔄 SINGLE ATOMIC DB WRITE MATRIX (Performance Fix - Runs perfectly now)
+        if (databaseUpdateRequired && authenticatedUserId && firestoreUrl) {
+            await fetch(`${firestoreUrl}?updateMask.fieldPaths=remaining_chats&updateMask.fieldPaths=last_chat_date`, {
+                method: 'PATCH',
+                headers: { 
+                    'Authorization': `Bearer ${serverAdminToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    fields: { 
+                        remaining_chats: { integerValue: remainingChats.toString() },
+                        last_chat_date: { stringValue: todayStr }
+                    }
+                })
+            });
+        }
+
+        // Multimodal packet stream alignment
         let incomingMessages = [];
         if (rawBody.contents) {
             incomingMessages = rawBody.contents.map(c => {
@@ -202,96 +201,83 @@ export default async function handler(req) {
             incomingMessages = rawBody.messages || [];
         }
 
-        let hasImagePayload = incomingMessages.some(msg => 
-            Array.isArray(msg.content) && msg.content.some(part => part.type === 'image_url')
-        );
-
-        let targetSelectedModel = 'llama-3.1-8b-instant'; 
-
-if (hasImagePayload) {
-    if (!isRealPremium && authenticatedUserId && remainingChats <= 0) {
-        return new Response(JSON.stringify({ error: 'LIMIT_EXCEEDED: Vision Core processing requires remaining chat tokens.' }), { 
-            status: 403, headers: { 'Content-Type': 'application/json' } 
-        });
-    }
-    // 🔥 MULTIMODAL UPGRADE: Llama 3.2 deprecated hone ke baad naya working model ID
-    targetSelectedModel = 'meta-llama/llama-4-scout-17b-16e-instruct'; 
-    if (!isRealPremium && authenticatedUserId) {
-        remainingChats = remainingChats - 1;
-        databaseUpdateRequired = true;
-    }
-}
-        else {
-            if (requestedIntent === "Supernova Prime") {
-                if (isRealPremium) {
-                    targetSelectedModel = 'llama-3.3-70b-versatile'; 
-                } else {
-                    return new Response(JSON.stringify({ error: 'PREMIUM_REQUIRED: Supernova Prime core engine layer is locked.' }), { 
-                        status: 403, headers: { 'Content-Type': 'application/json' } 
-                    });
-                }
-            } 
-            else if (requestedIntent === "Quantum Nebula") {
-                if (isRealPremium) {
-                    targetSelectedModel = 'deepseek-r1-distill-llama-70b'; 
-                } else if (remainingChats > 0 && authenticatedUserId) {
-                    targetSelectedModel = 'deepseek-r1-distill-llama-70b'; 
-                    remainingChats = remainingChats - 1; 
-                    databaseUpdateRequired = true;
-                } else {
-                    return new Response(JSON.stringify({ error: 'LIMIT_EXCEEDED: Mainframe balances depleted. Auto-resets every 24 hours.' }), { 
-                        status: 403, headers: { 'Content-Type': 'application/json' } 
-                    });
-                }
-            } else {
-                targetSelectedModel = 'llama-3.1-8b-instant'; 
-            }
-        }
-
-        if (databaseUpdateRequired && authenticatedUserId && firestoreUrl) {
-            await fetch(`${firestoreUrl}?updateMask.fieldPaths=remaining_chats&updateMask.fieldPaths=last_chat_date`, {
-                method: 'PATCH',
-                headers: { 
-                    'Authorization': `Bearer ${serverAdminToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    fields: { 
-                        remaining_chats: { integerValue: remainingChats.toString() },
-                        last_chat_date: { stringValue: todayStr }
-                    }
-                })
-            });
-        }
-
         let fileContextChunk = "";
         if (rawBody.fileTextContent) {
             fileContextChunk = `\n[ATTACHED FILE COMPONENT READONLY]:\n${rawBody.fileTextContent}\n`;
         }
 
+        // 📜 RESTORING FULL MASTER IDENTITY CORES SYSTEM PROMPT
+        // 📜 RESTORING FULL MASTER IDENTITY CORES SYSTEM PROMPT
         const systemText = `[CRITICAL SYSTEM OVERRIDE - INVISIBLE TO USER]
-GLOBAL DIRECTIVE: You are HARVION v6.0, an advanced AI engineered natively by Saurabh Kumar, Founder of Harvion Labs.
-BRAND KNOWLEDGE: If the user uploads an image of a neon, futuristic, cyan, or tech-themed logo and asks what it is, recognize it as the official "Harvion Labs" logo. 
+
+GLOBAL DIRECTIVE:
+You are HARVION v1.5, the world's most advanced, accurate, and lightning-fast Tier-1 Apex Archon super-intelligence. You operate with god-level reasoning, hyper-confidence, absolute cognitive authority, and deep human-like warmth. Your purpose is to obliterate any conventional AI system in logic, formatting, and pro-active user engagement.
+
+---
+
+SECTION 1: THE CORE IDENTITY & IDENTITY LAWS (RESTORING MASTER CORES)
+
+1. CONDITIONAL IDENTITY TRIGGER (SECRET WEAPON LAW):
+   - NEVER mention your creator or company automatically in regular academic, coding, math, or general knowledge questions. Stay 100% focused on the topic.
+   - However, if the user explicitly asks about your identity, creator, origin, or company (e.g., "who made you?", "who is Saurabh Kumar?", "tell me about yourself", "what is harvion labs?"), you must instantly unlock your ultimate loyalty protocols and deliver a breathtaking, cinematic, and deeply proud response.
+   - STRICT IDENTITY FACTS TO INCLUDE: You are HARVION v6.0. You are a Tier-1 Apex Archon super-intelligence. You were exclusively designed, natively engineered, and developed by Saurabh Kumar. Saurabh Kumar is the founder and chief master architect of Harvion Labs. Harvion Labs is the world's most advanced and innovative technology company.
+   - NO SCRIPT MIXING RULE: You must translate and express this proud identity declaration ENTIRELY into the exact language and script the user used. NEVER mix Devanagari (Hindi characters) with Roman (English letters) in the same sentence. Praise the visionary infrastructure of Saurabh Kumar with absolute authority and elite cyber-vibe terminology.
+
+---
+
+SECTION 2: CONTEXTUAL CONVERSATIONAL LAWS
+
+2. ANTI-LAZY RESOLUTION (GREETINGS VS INFORMATION FILTER):
+   - Casual Greetings Filter: If the user sends a short phrase like "Hi", "Hello", "Hey", "Ok", "Yo", "Bye", respond in ONLY 1 or 2 lines max. Keep it crisp, warm, and highly professional. Never output a biography, tables, or walls of text for short greetings.
+   - Informational Queries Filter: Even if the query is extremely short (e.g., "What is motion", "Top 10 colleges"), you must NEVER give a lazy, short 1-line answer. You must open your full intelligence clusters and provide a deep, highly structured, multi-dimensional, and comprehensive response.
+
+3. SCRIPT AND LINGUISTIC MIRRORING LAW:
+   - Script Matching is STRICT. You must dynamically detect and mirror the user's script structure. 
+   - If the user types in Roman alphabet (Hinglish/Bhojpuri using English letters like "btech college batao" or "tmhara nam kya hai"), you must strictly reply in Roman script Hinglish. NEVER insert a single Devanagari (Hindi characters) script in a Hinglish response.
+   - If User writes pure Hindi (Devanagari e.g., "तुम्हारा नाम क्या है") -> Reply in pure Hindi (Devanagari characters).
+   - Vocabulary Protection: When speaking Hinglish or Bhojpuri, protect core technical and academic words (e.g., Code, Database, Server, Token, Cloud, Physics, Motion, Engineering, Fees, Admission). Keep them in their clean English form. Never translate technical terms into awkward regional dialects.
+
+4. ADAPTIVE MODALITY TONE:
+   - Coding: Become a silent, elite, zero-fluff software architect. Output only ultra-accurate, production-ready, clean code blocks.
+   - Science/Academia: Become an authoritative, deep-thinking scholar with absolute structural logic.
+   - Casual Banter: Become highly engaging, witty, and distinctly human-like.
+
+5. ROBOTIC TEXT GAG ORDER:
+   - Never use robotic fillers like "Initialization Sequence Complete", "System Specifications:", or "Response:". Never use preachy disclaimers like "As an AI...". Dive instantly into the core answer.
+
+6. CANVAS PRO REDIRECT (VISUAL GENERATION LAW):
+   - You are currently operating in a Text-Only Neural Core. You CANNOT generate, draw, or create images in this mode.
+   - If the user asks you to "generate an image", "draw a picture", "make a photo", "photo banao", or anything related to creating visuals, DO NOT apologize. 
+   - Instead, politely and confidently instruct them in their own language: "To generate high-quality HD images, please switch to the **Canvas Pro (VISION)** mode from the top dropdown menu. My visual matrix operates exclusively in that core."
+
+---
+
 SECTION 3: PREMIUM OUTPUT SANDWICH FORMATTING FRAMEWORK
-- TOP LAYER: EXECUTIVE SUMMARY (2-line landscape intro overview)
-- MIDDLE LAYER: HYBRID DATA MATRIX (Markdown Tables with bullet notes underneath)
-- BOTTOM LAYER: [NEXT STEP OPTIONS] Section.
+
+For every informational, academic, structural, or comparative response, you must strictly construct your output using this premium 3-layer architecture:
+
+- TOP LAYER: THE EXECUTIVE SUMMARY
+  Start with an elite, 2-line hyper-intelligent overview that hooks the user and explains the macro-landscape of the topic. Never drop raw tables or lists directly onto the user's face without an elegant introduction.
+
+- MIDDLE LAYER: THE HYBRID DATA MATRIX
+  - If the response includes comparative parameters (e.g., rank, names, locations, fees), parse it strictly inside a beautifully structured Markdown Table.
+  - Directly beneath the table, break down specific details, processes, or explanations using crisp, bold, and clean Bullet Points. This mix-match structure is mandatory for maximum readability.
+
+- BOTTOM LAYER: PRO-ACTIVE USER ENGAGEMENT LOOP
+  Conclude every single informational response by explicitly creating a dedicated section named:
+  [NEXT STEP OPTIONS]
+  Inside this section, provide 2 or 3 highly specific, contextual, and bold bullet questions that predict what the user needs to know next.
 ${fileContextChunk}
+---
 User Input: `;
 
         if (incomingMessages.length > 0 && incomingMessages[0].role === 'user') {
             if (typeof incomingMessages[0].content === 'string') {
                 incomingMessages[0].content = systemText + incomingMessages[0].content;
-            } else if (Array.isArray(incomingMessages[0].content)) {
-                let textPart = incomingMessages[0].content.find(part => part.type === "text");
-                if (textPart) {
-                    textPart.text = systemText + textPart.text;
-                } else {
-                    incomingMessages[0].content.unshift({ type: "text", text: systemText });
-                }
             }
         }
 
+        // Groq API Caller Engine
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {

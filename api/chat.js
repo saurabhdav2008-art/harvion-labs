@@ -169,7 +169,7 @@ export default async function handler(req) {
 
         if (containsImage) {
             // 🔥 FIX 1: Agar content me photo hai, toh automatic Groq ka official Vision model select hoga
-            targetSelectedModel = 'llama-3.2-11b-vision-instruct'; 
+            targetSelectedModel = 'meta-llama/llama-4-scout-17b-16e-instruct'; 
         }
         else if (requestedIntent === "Supernova Prime") {
             if (isRealPremium) {
@@ -182,9 +182,9 @@ export default async function handler(req) {
         } 
         else if (requestedIntent === "Quantum Nebula") {
             if (isRealPremium) {
-                targetSelectedModel = 'llama-3.3-70b-versatile'; 
+                targetSelectedModel = 'openai/gpt-oss-120b'; 
             } else if (remainingChats > 0 && authenticatedUserId) {
-                targetSelectedModel = 'llama-3.3-70b-versatile'; 
+                targetSelectedModel = 'openai/gpt-oss-120b'; 
                 remainingChats = remainingChats - 1; 
                 databaseUpdateRequired = true;
             } else {

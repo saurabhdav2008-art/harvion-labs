@@ -756,9 +756,11 @@ body.theme-cyberpunk .user-bubble {
             </div>
 
             <div class="input-dock">
+                <div id="attachment-preview-dock" style="display: none; width: 100%; max-width: 850px; margin: 0 auto 8px auto; flex-direction: row; gap: 8px; overflow-x: auto; padding: 0 5px;"></div>
+                
                 <div class="input-box">
                     <button class="action-btn" onclick="triggerUpload()"><i class="fa-solid fa-paperclip"></i></button>
-                    <input type="file" id="doc-upload" style="display: none;" onchange="handleFileUpload(event)">
+                    <input type="file" id="doc-upload" style="display: none;" onchange="handleFileUpload(event)" accept="image/*,application/pdf" multiple>
                     
                     <input type="text" id="user-input" placeholder="Message Harvion..." onkeypress="handleKeyPress(event)" autocomplete="off">
                     
@@ -780,7 +782,7 @@ body.theme-cyberpunk .user-bubble {
                         </div>
                     </div>
 
-                    <button class="action-btn" onclick="startSpeech()"><i class="fa-solid fa-microphone"></i></button>
+                    <button class="action-btn" onclick="startSpeech()"><i id="mic-btn-icon" class="fa-solid fa-microphone"></i></button>
                     <button class="send-btn" onclick="sendMessage()"><i class="fa-solid fa-arrow-up"></i></button>
                 </div>
             </div>
@@ -798,8 +800,7 @@ body.theme-cyberpunk .user-bubble {
 
     <script>
         
-        let globalConversationTree = [];
-        let activeFileUploaded = false;
+      let globalConversationTree = [];
         let extractedFileTextContent = "";
         let activeRegistrationMethod = "EMAIL";
         let currentAuthWorkflowEmail = "";
@@ -809,8 +810,13 @@ body.theme-cyberpunk .user-bubble {
         let activeUserSession = { 
             loggedIn: false, name: '', username: '', email: '', dob: 'Not Registered', uid: '', token: '', ipAddress: '', clearance: '', location: '', credits: '', isPremium: false, isOwner: false, remaining_chats: 0
         };
-        let currentImageBase64 = null;
-        let currentImageMimeType = null;
+        
+
+        let webSelectedImages = [];
+        let webSelectedPdf = null;
+        let isWebListening = false;
+        let recognitionEngine = null;
+        let currentSpeechSynth = window.speechSynthesis;
 
         
         function showCustomAlert(msg) {
@@ -983,139 +989,7 @@ body.theme-cyberpunk .user-bubble {
         function toggleSidebar() { triggerJarvisSoundMatrix('click'); document.getElementById('panel-left').classList.toggle('active'); }
         function closeSidebarMobile() { if(isMobile) document.getElementById('panel-left').classList.remove('active'); }
 
-       async function sendMessage() {
-    const inputField = document.getElementById('user-input'); 
-    const message = inputField.value.trim(); 
-    
-    // Agar text aur media dono khali hain toh return kar jao
-    if (message === '' && !currentImageBase64 && !activeFileUploaded) return;
-    
-    const activeMode = document.getElementById('selected-mode-text').innerText;
-    
-    // 🔒 Security Check: Free tier ke alawa restriction validation trigger
-    if (!activeUserSession.loggedIn && activeMode !== 'Pulse Stream') {
-        showCustomAlert("Unlock the Next-Gen Cores! Sign in now to claim your 10 FREE Quantum Nebula chats.");
-        return;
-    }
 
-    const sendBtn = document.querySelector('.send-btn');
-    inputField.disabled = true;
-    sendBtn.disabled = true;
-    const originalSendBtnHtml = sendBtn.innerHTML;
-    sendBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
-    
-    // UI par user ka message ya asset matrix turant dikhao
-    if (message !== '') {
-        addMessage(message, 'user');
-    } else if (currentImageBase64) {
-        addMessage("<i class='fa-solid fa-file-image'></i> Image Payload Vector Dispatched.", 'user');
-    } else if (activeFileUploaded) {
-        addMessage("<i class='fa-solid fa-file-pdf'></i> Document Vector Dispatched.", 'user');
-    }
-    
-    inputField.value = ''; 
-    closeSidebarMobile();
-
-    // 🚀 DOM APPENDING MATRIX: AI Response bubble ko screen par deploy karo
-    const chatBox = document.getElementById('chat-box'); 
-    const messageDiv = document.createElement('div'); 
-    messageDiv.className = 'message';
-    const avatarDiv = document.createElement('div'); 
-    avatarDiv.className = 'avatar ai-avatar';
-    const bubbleDiv = document.createElement('div'); 
-    bubbleDiv.className = 'msg-bubble ai-bubble';
-    bubbleDiv.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Stabilizing Quantum Link...`;
-    messageDiv.appendChild(avatarDiv); 
-    messageDiv.appendChild(bubbleDiv); 
-    chatBox.appendChild(messageDiv); 
-    scrollToBottom();
-    
-    try {
-        // 🛡️ Loophole 1: Fresh Cryptographic Firebase ID Token securely nikalna
-        let idToken = "";
-        if (typeof authEngine !== 'undefined' && authEngine.currentUser) {
-            idToken = await authEngine.currentUser.getIdToken(true);
-        }
-
-        // 🧠 MULTIMODAL CAPTURE ENGINE: Text, PDF context aur Images ko sync karo
-        let finalPrompt = message;
-        if (extractedFileTextContent !== "") {
-            finalPrompt += "\n\n[ATTACHED DOCUMENT CONTENT]:\n" + extractedFileTextContent;
-        }
-
-        let requestParts = [];
-        if (finalPrompt.trim() !== '') {
-            requestParts.push({ text: finalPrompt });
-        } else {
-            requestParts.push({ text: "Analyze this matrix snapshot blueprint cleanly." });
-        }
-
-        if (currentImageBase64) {
-            requestParts.push({ inlineData: { mimeType: currentImageMimeType, data: currentImageBase64 } });
-        }
-
-        // State array me payload lock karo
-        globalConversationTree.push({ role: 'user', parts: requestParts });
-
-        // Media states ko reset karo taaki naye message ke liye clean environment mile
-        currentImageBase64 = null;
-        currentImageMimeType = null;
-        activeFileUploaded = false; 
-        extractedFileTextContent = "";
-        if(document.getElementById('doc-upload')) document.getElementById('doc-upload').value = "";
-
-        // Core Secure Proxy Network Request
-        const apiResponse = await fetch('/api/chat', { 
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-harvion-shield-key': 'HarvionQuantumLabsEngineCoreSecret2026', // Loophole 3 Fixed
-                'Authorization': idToken ? `Bearer ${idToken}` : ''
-            },
-            body: JSON.stringify({
-                mode: activeMode, // Server verifies eligibility logic tier
-                contents: globalConversationTree
-            })
-        });
-
-        const apiData = await apiResponse.json();
-        if (!apiResponse.ok) throw new Error(apiData.error || "Core routing allocation drop.");
-
-        streamLiveTokenAccumulator = apiData.candidates?.[0]?.content?.parts?.[0]?.text || "Execution completed with void response vector.";
-        globalConversationTree.push({ role: 'model', parts: [{ text: streamLiveTokenAccumulator }] });
-
-        // Realtime logs database update reflection if user logged in
-        if (typeof authEngine !== 'undefined' && authEngine.currentUser && firestoreDb) {
-            firestoreDb.collection("users").doc(authEngine.currentUser.uid)
-                .collection("chats_history").add({
-                    user_payload: message || "[Document Vector Interaction]",
-                    model_response: streamLiveTokenAccumulator,
-                    timestamp: new Date().toISOString()
-                }).catch(e => console.log("History buffer delayed."));
-        }
-
-        // Markdown renderer execution onto screen layout
-        let finalFormattedText = typeof marked !== 'undefined' ? marked.parse(streamLiveTokenAccumulator) : streamLiveTokenAccumulator;
-        
-        if (!activeUserSession.loggedIn) {
-            finalFormattedText += "<br><br><em style='color:var(--text-muted); font-size:13px; display:block;'><i class='fa-solid fa-right-to-bracket'></i> Login to claim 10 FREE Quantum Nebula tokens and preserve your matrix logs.</em>";
-        }
-        
-        bubbleDiv.innerHTML = finalFormattedText;
-        scrollToBottom();
-        triggerJarvisSoundMatrix('chime');
-
-    } catch (error) {
-        console.error("Platform Connection Fault:", error);
-        bubbleDiv.innerHTML = `<span style="color:var(--neon-cyan); font-weight:600;"><i class="fa-solid fa-shield-halved"></i> SECURE GATEWAY ERROR: ${error.message}</span>`;
-    } finally {
-        // UI Release Controls
-        inputField.disabled = false;
-        sendBtn.disabled = false;
-        sendBtn.innerHTML = originalSendBtnHtml;
-        inputField.focus();
-    }
-}
         function addMessage(text, sender) {
             const chatBox = document.getElementById('chat-box'); 
             if (!chatBox) return;
@@ -1233,28 +1107,7 @@ body.theme-cyberpunk .user-bubble {
             } catch (err) { showCustomAlert("Transmission Blocked by Cloud Cluster."); }
         }
 
-        async function handleFileUpload(e) {
-            const file = e.target.files[0]; if (!file) return; 
-            const activeUser = (typeof authEngine !== 'undefined') ? authEngine.currentUser : null;
-            if (file.type.startsWith('image/')) {
-                const reader = new FileReader(); reader.onload = function(event) { currentImageBase64 = event.target.result.split(',')[1]; currentImageMimeType = file.type; showCustomAlert(`Image "${file.name}" synchronized. Type vision signals and Transmit!`); if (activeUser) commitFileMetadataToFirestore(file.name, file.size); }; reader.readAsDataURL(file);
-            } else if (file.type === "application/pdf") {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    (async () => {
-                        try {
-                            const typedarray = new Uint8Array(event.target.result); const pdf = await pdfjsLib.getDocument(typedarray).promise; let pdfFullText = "";
-                            for (let i = 1; i <= pdf.numPages; i++) { const page = await pdf.getPage(i); const textContent = await page.getTextContent(); pdfFullText += textContent.items.map(item => item.str).join(" ") + "\n"; }
-                            if (pdfFullText.length > 40000) { showCustomAlert(`🛑 PDF Too Large. Max bound reached.`); return; }
-                            extractedFileTextContent = pdfFullText; activeFileUploaded = true; showCustomAlert(`PDF loaded successfully.`); if (activeUser) commitFileMetadataToFirestore(file.name, file.size);
-                        } catch (err) { showCustomAlert("Error parsing PDF assets."); }
-                    })();
-                }; reader.readAsArrayBuffer(file);
-            } else {
-                const txtReader = new FileReader(); txtReader.onload = function(event) { extractedFileTextContent = event.target.result; activeFileUploaded = true; showCustomAlert(`Document loaded into runtime memory.`); if (activeUser) commitFileMetadataToFirestore(file.name, file.size); }; txtReader.readAsText(file);
-            }
-        }
-
+        
         function loadUserFileHistoryFromFirestore(uid) {
             const historyBox = document.getElementById('quantum-history-node'); if (!historyBox) return;
             if (typeof firestoreDb === 'undefined') return;
@@ -1357,8 +1210,7 @@ body.theme-cyberpunk .user-bubble {
         function sharePlatform() { if(navigator.share) { navigator.share({ title: 'Harvion AI', url: window.location.href }); } else { navigator.clipboard.writeText(window.location.href); showCustomAlert("Mainframe link parameters cloned to system stack."); } }
         function downloadChat() { const txt = Array.from(document.querySelectorAll('.msg-bubble')).map(el => el.innerText).join('\n\n'); if(!txt) return; const blob = new Blob([txt], {type:"text/plain"}); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "harvion_chat_dump.txt"; a.click(); }
         function triggerUpload() { document.getElementById('doc-upload').click(); }
-        function startSpeech() { const Speech = window.SpeechRecognition || window.webkitSpeechRecognition; if(!Speech) return; const rec = new Speech(); rec.lang = 'hi-IN'; rec.start(); rec.onresult = (e) => { const input = document.getElementById('user-input'); input.value = input.value.trim() ? input.value + " " + e.results[0][0].transcript : e.results[0][0].transcript; }; }
-        function loadHistorySimulation(t) { clearChat(); setTimeout(() => { addMessage("Diagnostic network test simulation.", 'user'); addMessage("Core stabilized inference response mapped successfully under runtime variables tracking parameters layer framework.", 'ai'); }, 120); }
+                function loadHistorySimulation(t) { clearChat(); setTimeout(() => { addMessage("Diagnostic network test simulation.", 'user'); addMessage("Core stabilized inference response mapped successfully under runtime variables tracking parameters layer framework.", 'ai'); }, 120); }
 
         
         if (typeof authEngine !== 'undefined') {
@@ -1490,6 +1342,167 @@ body.theme-cyberpunk .user-bubble {
                     sSlot.innerHTML = "<span>Supernova Prime</span><i class='fa-solid fa-lock' style='font-size:9px; color:#6b7280;'></i>";
                 }
             }
+        }
+        function handleFileUpload(e) {
+            const files = e.target.files; if (files.length === 0) return;
+            const file = files[0];
+            const activeUser = (typeof authEngine !== 'undefined') ? authEngine.currentUser : null;
+            
+            if (webSelectedPdf) return showCustomAlert("Security Restriction: Max 3 Images OR 1 PDF allowed.");
+
+            if (file.type.startsWith('image/')) {
+                if (webSelectedImages.length >= 3) return showCustomAlert("Limit Exceeded: Max 3 images allowed.");
+                const reader = new FileReader(); 
+                reader.onload = function(event) { 
+                    webSelectedImages.push({ id: Date.now().toString(), name: file.name, base64: event.target.result.split(',')[1], mimeType: file.type });
+                    renderAttachmentPreview();
+                    if (activeUser) commitFileMetadataToFirestore(file.name, file.size);
+                }; 
+                reader.readAsDataURL(file);
+            } else if (file.type === "application/pdf") {
+                if (webSelectedImages.length > 0) return showCustomAlert("Security Restriction: Max 3 Images OR 1 PDF allowed.");
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    (async () => {
+                        try {
+                            const typedarray = new Uint8Array(event.target.result); const pdf = await pdfjsLib.getDocument(typedarray).promise; let pdfFullText = "";
+                            for (let i = 1; i <= pdf.numPages; i++) { const page = await pdf.getPage(i); const textContent = await page.getTextContent(); pdfFullText += textContent.items.map(item => item.str).join(" ") + "\n"; }
+                            if (pdfFullText.length > 40000) return showCustomAlert(`🛑 PDF Too Large. Max bound reached.`);
+                            webSelectedPdf = { name: file.name, extractedText: pdfFullText };
+                            renderAttachmentPreview();
+                            if (activeUser) commitFileMetadataToFirestore(file.name, file.size);
+                        } catch (err) { showCustomAlert("Error parsing PDF assets."); }
+                    })();
+                }; 
+                reader.readAsArrayBuffer(file);
+            }
+            e.target.value = ""; 
+        }
+
+
+        function renderAttachmentPreview() {
+            const dock = document.getElementById('attachment-preview-dock'); dock.innerHTML = '';
+            if (webSelectedImages.length === 0 && !webSelectedPdf) { dock.style.display = 'none'; return; }
+            dock.style.display = 'flex';
+            webSelectedImages.forEach(img => {
+                dock.innerHTML += `<div style="background:rgba(0,243,255,0.08); border:1px solid rgba(0,243,255,0.3); padding:4px 10px; border-radius:8px; display:flex; align-items:center; gap:6px; color:#e2e8f0; font-size:12px;"><i class="fa-solid fa-image" style="color:#00f3ff;"></i> <span style="max-width:100px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${img.name}</span> <i class="fa-solid fa-times-circle" style="color:#ff3366; cursor:pointer;" onclick="removeWebAttachment('${img.id}')"></i></div>`;
+            });
+            if (webSelectedPdf) {
+                dock.innerHTML += `<div style="background:rgba(157,0,255,0.08); border:1px solid rgba(157,0,255,0.3); padding:4px 10px; border-radius:8px; display:flex; align-items:center; gap:6px; color:#e2e8f0; font-size:12px;"><i class="fa-solid fa-file-pdf" style="color:#9d00ff;"></i> <span style="max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${webSelectedPdf.name}</span> <i class="fa-solid fa-times-circle" style="color:#ff3366; cursor:pointer;" onclick="removeWebAttachment('pdf')"></i></div>`;
+            }
+        }
+        function removeWebAttachment(id) {
+            if (id === 'pdf') { webSelectedPdf = null; } else { webSelectedImages = webSelectedImages.filter(img => img.id !== id); }
+            renderAttachmentPreview();
+        }
+
+
+        function startSpeech() { 
+            const micBtn = document.getElementById('mic-btn-icon');
+            if (isWebListening && recognitionEngine) { recognitionEngine.stop(); return; }
+            const Speech = window.SpeechRecognition || window.webkitSpeechRecognition; 
+            if(!Speech) return showCustomAlert("Browser engine mic unsupported."); 
+            
+            recognitionEngine = new Speech(); 
+            recognitionEngine.lang = 'hi-IN'; 
+            recognitionEngine.continuous = false;   
+            recognitionEngine.interimResults = true; 
+            
+            recognitionEngine.onstart = () => { isWebListening = true; micBtn.style.color = '#ff3366'; };
+            let tempInput = document.getElementById('user-input').value;
+            
+            recognitionEngine.onresult = (e) => { 
+                let currentTranscript = '';
+                for(let i=0; i<e.results.length; i++) { currentTranscript += e.results[i][0].transcript; }
+                document.getElementById('user-input').value = tempInput + (tempInput ? ' ' : '') + currentTranscript; 
+            }; 
+            recognitionEngine.onend = () => { isWebListening = false; micBtn.style.color = 'var(--text-muted)'; };
+            recognitionEngine.start(); 
+        }
+
+        
+        function toggleReadAloud(buttonElement, textToSpeak) {
+            if (currentSpeechSynth.speaking) { currentSpeechSynth.cancel(); buttonElement.innerHTML = '<i class="fa-solid fa-volume-up"></i> Read Aloud'; return; }
+            let cleanText = textToSpeak.replace(/[*#`_]/g, ''); 
+            let utterance = new SpeechSynthesisUtterance(cleanText);
+            utterance.lang = 'hi-IN'; 
+            utterance.onend = () => { buttonElement.innerHTML = '<i class="fa-solid fa-volume-up"></i> Read Aloud'; };
+            buttonElement.innerHTML = '<i class="fa-solid fa-circle-stop" style="color:#ff3366;"></i> Stop Audio';
+            currentSpeechSynth.speak(utterance);
+        }
+
+
+        async function sendMessage() {
+            const inputField = document.getElementById('user-input'); const message = inputField.value.trim(); 
+            if (message === '' && webSelectedImages.length === 0 && !webSelectedPdf) return;
+            const activeMode = document.getElementById('selected-mode-text').innerText;
+            if (!activeUserSession.loggedIn && activeMode !== 'Pulse Stream') { showCustomAlert("Unlock the Next-Gen Cores! Sign in now."); return; }
+
+            const sendBtn = document.querySelector('.send-btn'); inputField.disabled = true; sendBtn.disabled = true;
+            const originalSendBtnHtml = sendBtn.innerHTML; sendBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
+            
+            
+            let uiDisplayMsg = message;
+            if (message === '') {
+                if (webSelectedImages.length > 0) uiDisplayMsg = `<i class='fa-solid fa-images'></i> ${webSelectedImages.length} Image(s) Attached.`;
+                else if (webSelectedPdf) uiDisplayMsg = `<i class='fa-solid fa-file-pdf'></i> ${webSelectedPdf.name} Attached.`;
+            }
+            addMessage(uiDisplayMsg, 'user');
+            inputField.value = ''; closeSidebarMobile();
+
+            const chatBox = document.getElementById('chat-box'); 
+            const messageDiv = document.createElement('div'); messageDiv.className = 'message';
+            const avatarDiv = document.createElement('div'); avatarDiv.className = 'avatar ai-avatar';
+            const bubbleDiv = document.createElement('div'); bubbleDiv.className = 'msg-bubble ai-bubble';
+            bubbleDiv.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Stabilizing Quantum Link...`;
+            messageDiv.appendChild(avatarDiv); messageDiv.appendChild(bubbleDiv); chatBox.appendChild(messageDiv); scrollToBottom();
+            
+            try {
+                let idToken = ""; if (typeof authEngine !== 'undefined' && authEngine.currentUser) idToken = await authEngine.currentUser.getIdToken(true);
+                let finalPrompt = message;
+                if (webSelectedPdf) finalPrompt += "\n\n[DOCUMENT CONTENT]:\n" + webSelectedPdf.extractedText;
+
+                let requestParts = [];
+                if (finalPrompt.trim() !== '') requestParts.push({ text: finalPrompt });
+                else requestParts.push({ text: "Analyze this image blueprint cleanly." });
+
+                webSelectedImages.forEach(img => { requestParts.push({ inlineData: { mimeType: img.mimeType, data: img.base64 } }); });
+                globalConversationTree.push({ role: 'user', parts: requestParts });
+
+               
+                webSelectedImages = []; webSelectedPdf = null; renderAttachmentPreview();
+
+                const apiResponse = await fetch('/api/chat', { 
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'x-harvion-shield-key': 'HarvionQuantumLabsEngineCoreSecret2026', 'Authorization': idToken ? `Bearer ${idToken}` : '' },
+                    body: JSON.stringify({ mode: activeMode, contents: globalConversationTree })
+                });
+
+                const apiData = await apiResponse.json();
+                if (!apiResponse.ok) throw new Error(apiData.error || "Core routing drop.");
+
+                streamLiveTokenAccumulator = apiData.candidates?.[0]?.content?.parts?.[0]?.text || "Void response vector.";
+                globalConversationTree.push({ role: 'model', parts: [{ text: streamLiveTokenAccumulator }] });
+
+                if (typeof authEngine !== 'undefined' && authEngine.currentUser && firestoreDb) {
+                    firestoreDb.collection("users").doc(authEngine.currentUser.uid).collection("chats_history").add({ user_payload: message || "Media Attachment", model_response: streamLiveTokenAccumulator, timestamp: new Date().toISOString() }).catch(e => console.log("History buffer delayed."));
+                }
+
+                let finalFormattedText = typeof marked !== 'undefined' ? marked.parse(streamLiveTokenAccumulator) : streamLiveTokenAccumulator;
+                if (!activeUserSession.loggedIn) finalFormattedText += "<br><br><em style='color:var(--text-muted); font-size:13px; display:block;'><i class='fa-solid fa-right-to-bracket'></i> Login to claim 10 FREE Quantum Nebula tokens.</em>";
+                
+                bubbleDiv.innerHTML = finalFormattedText;
+                
+              
+                const safeTextStr = streamLiveTokenAccumulator.replace(/"/g, '&quot;').replace(/'/g, '\\\'').replace(/\n/g, ' ');
+                const readBtnHtml = document.createElement('div');
+                readBtnHtml.innerHTML = `<button onclick="toggleReadAloud(this, '${safeTextStr}')" style="background:rgba(255,255,255,0.03); border:1px solid rgba(0,243,255,0.2); color:#8a9ba8; padding:5px 12px; border-radius:8px; font-size:12px; margin-top:12px; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;"><i class="fa-solid fa-volume-up"></i> Read Aloud</button>`;
+                bubbleDiv.appendChild(readBtnHtml);
+                
+                scrollToBottom(); triggerJarvisSoundMatrix('chime');
+
+            } catch (error) {
+                console.error("Fault:", error); bubbleDiv.innerHTML = `<span style="color:var(--neon-cyan); font-weight:600;"><i class="fa-solid fa-shield-halved"></i> SECURE GATEWAY ERROR: ${error.message}</span>`;
+            } finally { inputField.disabled = false; sendBtn.disabled = false; sendBtn.innerHTML = originalSendBtnHtml; inputField.focus(); }
         }
     </script>
 </body>

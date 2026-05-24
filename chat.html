@@ -779,6 +779,9 @@ body.theme-cyberpunk .user-bubble {
                             <div class="mode-option locked-tier" id="supernova-dropdown-slot" onclick="selectMode('Supernova Prime', true)">
                                 <span>Supernova Prime</span><i class="fa-solid fa-lock" style="font-size:9px; color:#6b7280;"></i>
                             </div>
+<div class="mode-option" onclick="selectMode('Canvas Pro', false)">
+    <span>Canvas Pro</span><small style="color:#ff007f; font-size:9px;">VISION</small>
+</div>
                         </div>
                     </div>
 
@@ -1442,7 +1445,7 @@ body.theme-cyberpunk .user-bubble {
             const sendBtn = document.querySelector('.send-btn'); inputField.disabled = true; sendBtn.disabled = true;
             const originalSendBtnHtml = sendBtn.innerHTML; sendBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
             
-         
+            // 📎 File Name Headers
             let attachmentHeaderHtml = "";
             if (webSelectedImages.length > 0) {
                 webSelectedImages.forEach(img => {
@@ -1464,50 +1467,91 @@ body.theme-cyberpunk .user-bubble {
             
             try {
                 let idToken = ""; if (typeof authEngine !== 'undefined' && authEngine.currentUser) idToken = await authEngine.currentUser.getIdToken(true);
-                let finalPrompt = message;
-                if (webSelectedPdf) finalPrompt += "\n\n[DOCUMENT CONTENT]:\n" + webSelectedPdf.extractedText;
+                
+                // 🎨 CANVAS PRO MODE (Image Generation)
+                if (activeMode === 'Canvas Pro') {
+                    const apiResponse = await fetch('/api/generate-image', { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json', 'x-harvion-shield-key': 'HarvionQuantumLabsEngineCoreSecret2026', 'Authorization': idToken ? `Bearer ${idToken}` : '' },
+                        body: JSON.stringify({ prompt: message })
+                    });
 
-                let requestParts = [];
-                if (finalPrompt.trim() !== '') requestParts.push({ text: finalPrompt });
-                else requestParts.push({ text: "Analyze this image blueprint cleanly." });
+                    const apiData = await apiResponse.json();
+                    if (!apiResponse.ok) throw new Error(apiData.error || "Canvas generation failed.");
 
-                webSelectedImages.forEach(img => { requestParts.push({ inlineData: { mimeType: img.mimeType, data: img.base64 } }); });
-                globalConversationTree.push({ role: 'user', parts: requestParts });
+                    bubbleDiv.innerHTML = `
+                        <div style="text-align: center;">
+                            <img src="${apiData.imageUrl}" style="width: 100%; max-width: 400px; border-radius: 12px; border: 1px solid rgba(0, 243, 255, 0.3); margin-bottom: 10px;" />
+                            <br>
+                            <a href="${apiData.imageUrl}" target="_blank" download="CanvasPro_Harvion.jpg" style="background: #00f3ff; color: #000; padding: 6px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; text-decoration: none; display: inline-block;">
+                                <i class="fa-solid fa-download"></i> Download Asset
+                            </a>
+                        </div>
+                    `;
+                    scrollToBottom(); triggerJarvisSoundMatrix('success');
+                } 
+                // 💬 NORMAL CHAT MODE
+                else {
+                    let finalPrompt = message;
+                    if (webSelectedPdf) finalPrompt += "\n\n[DOCUMENT CONTENT]:\n" + webSelectedPdf.extractedText;
 
-               
-                webSelectedImages = []; webSelectedPdf = null; renderAttachmentPreview();
+                    let requestParts = [];
+                    if (finalPrompt.trim() !== '') requestParts.push({ text: finalPrompt });
+                    else requestParts.push({ text: "Analyze this image blueprint cleanly." });
 
-                const apiResponse = await fetch('/api/chat', { 
-                    method: 'POST', headers: { 'Content-Type': 'application/json', 'x-harvion-shield-key': 'HarvionQuantumLabsEngineCoreSecret2026', 'Authorization': idToken ? `Bearer ${idToken}` : '' },
-                    body: JSON.stringify({ mode: activeMode, contents: globalConversationTree })
-                });
+                    webSelectedImages.forEach(img => { requestParts.push({ inlineData: { mimeType: img.mimeType, data: img.base64 } }); });
+                    globalConversationTree.push({ role: 'user', parts: requestParts });
 
-                const apiData = await apiResponse.json();
-                if (!apiResponse.ok) throw new Error(apiData.error || "Core routing drop.");
+                    webSelectedImages = []; webSelectedPdf = null; renderAttachmentPreview();
 
-                streamLiveTokenAccumulator = apiData.candidates?.[0]?.content?.parts?.[0]?.text || "Void response vector.";
-                globalConversationTree.push({ role: 'model', parts: [{ text: streamLiveTokenAccumulator }] });
+                    const apiResponse = await fetch('/api/chat', { 
+                        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-harvion-shield-key': 'HarvionQuantumLabsEngineCoreSecret2026', 'Authorization': idToken ? `Bearer ${idToken}` : '' },
+                        body: JSON.stringify({ mode: activeMode, contents: globalConversationTree })
+                    });
 
-                if (typeof authEngine !== 'undefined' && authEngine.currentUser && firestoreDb) {
-                    firestoreDb.collection("users").doc(authEngine.currentUser.uid).collection("chats_history").add({ user_payload: message || "Media Attachment", model_response: streamLiveTokenAccumulator, timestamp: new Date().toISOString() }).catch(e => console.log("History buffer delayed."));
+                    const apiData = await apiResponse.json();
+                    if (!apiResponse.ok) throw new Error(apiData.error || "Core routing drop.");
+
+                    streamLiveTokenAccumulator = apiData.candidates?.[0]?.content?.parts?.[0]?.text || "Void response vector.";
+                    globalConversationTree.push({ role: 'model', parts: [{ text: streamLiveTokenAccumulator }] });
+
+                    let finalFormattedText = typeof marked !== 'undefined' ? marked.parse(streamLiveTokenAccumulator) : streamLiveTokenAccumulator;
+                    bubbleDiv.innerHTML = finalFormattedText;
+                    
+                    const safeTextStr = streamLiveTokenAccumulator.replace(/"/g, '&quot;').replace(/'/g, '\\\'').replace(/\n/g, ' ');
+                    const readBtnHtml = document.createElement('div');
+                    readBtnHtml.innerHTML = `<button onclick="toggleReadAloud(this, '${safeTextStr}')" style="background:rgba(255,255,255,0.03); border:1px solid rgba(0,243,255,0.2); color:#8a9ba8; padding:5px 12px; border-radius:8px; font-size:12px; margin-top:12px; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;"><i class="fa-solid fa-volume-up"></i> Read Aloud</button>`;
+                    bubbleDiv.appendChild(readBtnHtml);
+                    
+                    scrollToBottom(); triggerJarvisSoundMatrix('chime');
                 }
-
-                let finalFormattedText = typeof marked !== 'undefined' ? marked.parse(streamLiveTokenAccumulator) : streamLiveTokenAccumulator;
-                if (!activeUserSession.loggedIn) finalFormattedText += "<br><br><em style='color:var(--text-muted); font-size:13px; display:block;'><i class='fa-solid fa-right-to-bracket'></i> Login to claim 10 FREE Quantum Nebula tokens.</em>";
-                
-                bubbleDiv.innerHTML = finalFormattedText;
-                
-                
-                const safeTextStr = streamLiveTokenAccumulator.replace(/"/g, '&quot;').replace(/'/g, '\\\'').replace(/\n/g, ' ');
-                const readBtnHtml = document.createElement('div');
-                readBtnHtml.innerHTML = `<button onclick="toggleReadAloud(this, '${safeTextStr}')" style="background:rgba(255,255,255,0.03); border:1px solid rgba(0,243,255,0.2); color:#8a9ba8; padding:5px 12px; border-radius:8px; font-size:12px; margin-top:12px; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;"><i class="fa-solid fa-volume-up"></i> Read Aloud</button>`;
-                bubbleDiv.appendChild(readBtnHtml);
-                
-                scrollToBottom(); triggerJarvisSoundMatrix('chime');
-
-            } catch (error) {
-                console.error("Fault:", error); bubbleDiv.innerHTML = `<span style="color:var(--neon-cyan); font-weight:600;"><i class="fa-solid fa-shield-halved"></i> SECURE GATEWAY ERROR: ${error.message}</span>`;
-            } finally { inputField.disabled = false; sendBtn.disabled = false; sendBtn.innerHTML = originalSendBtnHtml; inputField.focus(); }
+            } catch (error) { 
+                console.error("Fault:", error); 
+                bubbleDiv.innerHTML = `<span style="color:var(--neon-cyan); font-weight:600;"><i class="fa-solid fa-shield-halved"></i> SECURE GATEWAY ERROR: ${error.message}</span>`;
+            } finally { 
+                inputField.disabled = false; sendBtn.disabled = false; sendBtn.innerHTML = originalSendBtnHtml; inputField.focus(); 
+            }
+        }
+// ⌨️ MOBILE KEYBOARD INSTANT VIEWPORT AUTOFIT RESIZER (YEH ADD KARNA HAI)
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => {
+                if (window.innerWidth <= 768) {
+                    document.getElementById('app-wrapper').style.height = window.visualViewport.height + 'px';
+                    setTimeout(scrollToBottom, 80);
+                }
+            });
+        }
+        
+        const mobileInputFieldNode = document.getElementById('user-input');
+        if (mobileInputFieldNode) {
+            mobileInputFieldNode.addEventListener('focus', () => {
+                if (window.innerWidth <= 768) {
+                    setTimeout(() => {
+                        window.scrollTo(0, document.body.scrollHeight);
+                        scrollToBottom();
+                    }, 120);
+                }
+            });
         }
     </script>
 </body>

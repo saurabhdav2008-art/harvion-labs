@@ -45,7 +45,7 @@ export default async function handler(req) {
         // 🔑 Hugging Face Key Verification
         const hfApiKey = process.env.HF_TOKEN;
         if (!hfApiKey) {
-            return new Response(JSON.stringify({ error: 'SERVER_FAULT: Hugging Face API Token Missing in .env.' }), { status: 500 });
+            return new Response(JSON.stringify({ error: 'SERVER_FAULT:  Token Missing in .env.' }), { status: 500 });
         }
 
         // 🎨 3. HUGGING FACE INFERENCE API (Flux.1 Schnell Model)
@@ -62,7 +62,7 @@ export default async function handler(req) {
 
         if (!hfResponse.ok) {
             const errText = await hfResponse.text();
-            return new Response(JSON.stringify({ error: "Upstream Hugging Face Generation Drop.", details: errText }), { status: 500 });
+            return new Response(JSON.stringify({ error: "Upstream  Generation Drop.", details: errText }), { status: 500 });
         }
 
         // 🔄 4. RAW IMAGE TO BASE64 CONVERTER (Frontend Compatibility)

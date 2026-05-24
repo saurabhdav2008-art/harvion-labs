@@ -1,5 +1,4 @@
 import * as jose from 'jose';
-import { Buffer } from 'node:buffer'; // 🚀 NATIVE ULTRA-FAST CONVERTER ADDED
 
 export const config = { runtime: 'edge' };
 
@@ -49,7 +48,7 @@ export default async function handler(req) {
             return new Response(JSON.stringify({ error: 'SERVER_FAULT: Hugging Face API Token Missing in .env.' }), { status: 500 });
         }
 
-        // 🎨 3. HUGGING FACE INFERENCE API (Flux.1 Schnell Model)
+        // 🎨 3. HUGGING FACE INFERENCE API (Flux.1 Schnell)
         const hfResponse = await fetch('https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell', {
             method: 'POST',
             headers: {
@@ -66,9 +65,17 @@ export default async function handler(req) {
             return new Response(JSON.stringify({ error: "Upstream Hugging Face Generation Drop.", details: errText }), { status: 500 });
         }
 
-        // 🔄 4. NATIVE BUFFER CONVERSION (0ms CPU Time, Crash-Proof!)
+        // 🔄 4. CHUNKED EDGE-SAFE BASE64 CONVERTER (No Node Modules Needed!)
         const arrayBuffer = await hfResponse.arrayBuffer();
-        const base64Image = Buffer.from(arrayBuffer).toString('base64');
+        const bytes = new Uint8Array(arrayBuffer);
+        let binary = '';
+        
+        const chunkSize = 8192;
+        for (let i = 0; i < bytes.length; i += chunkSize) {
+            binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+        }
+        
+        const base64Image = btoa(binary);
         const finalImageUrl = `data:image/jpeg;base64,${base64Image}`;
 
         // 🚀 Final Output to App

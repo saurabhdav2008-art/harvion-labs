@@ -169,7 +169,7 @@ export default async function handler(req) {
 
         if (containsImage) {
             // 🔥 FIX 1: Agar content me photo hai, toh automatic Groq ka official Vision model select hoga
-            targetSelectedModel = 'llama-3.2-90b-vision-preview'; 
+            targetSelectedModel = 'llama-3.2-90b-vision-instruct'; 
         }
         else if (requestedIntent === "Supernova Prime") {
             if (isRealPremium) {

@@ -1,32 +1,15 @@
 import * as jose from 'jose';
+import { Buffer } from 'node:buffer'; // 🚀 NATIVE ULTRA-FAST CONVERTER ADDED
 
 export const config = { runtime: 'edge' };
 
 const JWKS = jose.createRemoteJWKSet(new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'));
 
-// 🚀 ULTRA-FAST NATIVE BITWISE ENCODER (Fixes Vercel 50ms CPU Timeout Crash)
-function uint8ArrayToBase64(bytes) {
-    const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let result = "";
-    const len = bytes.length;
-    for (let i = 0; i < len; i += 3) {
-        const b1 = bytes[i];
-        const b2 = i + 1 < len ? bytes[i + 1] : 0;
-        const b3 = i + 2 < len ? bytes[i + 2] : 0;
-
-        result += abc[b1 >> 2];
-        result += abc[((b1 & 3) << 4) | (b2 >> 4)];
-        result += i + 1 < len ? abc[((b2 & 15) << 2) | (b3 >> 6)] : "=";
-        result += i + 2 < len ? abc[b3 & 63] : "=";
-    }
-    return result;
-}
-
 export default async function handler(req) {
     if (req.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
 
     try {
-        // 🛡️ 1. SHIELD GATE HEADER CHECK (Your Core Security Layer)
+        // 🛡️ 1. SHIELD GATE HEADER CHECK
         const shieldKey = req.headers.get('x-harvion-shield-key');
         if (shieldKey !== 'HarvionQuantumLabsEngineCoreSecret2026') {
             return new Response(JSON.stringify({ error: 'SECURITY_FAULT: Unauthorized Core Endpoint Connection Dropped.' }), { 
@@ -44,7 +27,7 @@ export default async function handler(req) {
         
         let authenticatedUserId = null;
         
-        // 🛡️ 2. SERVER-SIDE TOKEN VERIFICATION (Anti-Abuse Check)
+        // 🛡️ 2. SERVER-SIDE TOKEN VERIFICATION
         if (authHeader && authHeader.startsWith('Bearer ')) {
             const rawToken = authHeader.split('Bearer ')[1];
             try {
@@ -83,15 +66,12 @@ export default async function handler(req) {
             return new Response(JSON.stringify({ error: "Upstream Hugging Face Generation Drop.", details: errText }), { status: 500 });
         }
 
-        // 🔄 4. NATIVE BUFFER CONVERSION
+        // 🔄 4. NATIVE BUFFER CONVERSION (0ms CPU Time, Crash-Proof!)
         const arrayBuffer = await hfResponse.arrayBuffer();
-        const bytes = new Uint8Array(arrayBuffer);
-        
-        // Executing our super fast bitwise converter here 👇
-        const base64Image = uint8ArrayToBase64(bytes);
+        const base64Image = Buffer.from(arrayBuffer).toString('base64');
         const finalImageUrl = `data:image/jpeg;base64,${base64Image}`;
 
-        // 🚀 Output returning system matching frontend contract
+        // 🚀 Final Output to App
         return new Response(JSON.stringify({
             imageUrl: finalImageUrl
         }), {

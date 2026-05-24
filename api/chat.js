@@ -267,15 +267,13 @@ For every informational, academic, structural, or comparative response, you must
   Conclude every single informational response by explicitly creating a dedicated section named:
   [NEXT STEP OPTIONS]
   Inside this section, provide 2 or 3 highly specific, contextual, and bold bullet questions that predict what the user needs to know next.
-${fileContextChunk}
----
-User Input: `;
+${fileContextChunk}`;
 
-        if (incomingMessages.length > 0 && incomingMessages[0].role === 'user') {
-            if (typeof incomingMessages[0].content === 'string') {
-                incomingMessages[0].content = systemText + incomingMessages[0].content;
-            }
-        }
+       // 🔥 System rule ko alag role me lock kar diya taaki leak na ho
+const groqChatMessages = [
+    { role: 'system', content: systemText },
+    ...incomingMessages
+];
 
         // Groq API Caller Engine
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -286,7 +284,7 @@ User Input: `;
             },
             body: JSON.stringify({
                 model: targetSelectedModel, 
-                messages: incomingMessages,
+                messages: groqChatMessages,
                 temperature: 0.2,
                 max_tokens: 2048
             })

@@ -4,7 +4,6 @@ export const config = { runtime: 'edge' };
 
 const JWKS = jose.createRemoteJWKSet(new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'));
 
-// 🚀 ULTRA-FAST & STACK-SAFE BASE64 ENCODER (Fixes Vercel V8 Isolate Isolate Stack Overflow Panic)
 function uint8ArrayToBase64(bytes) {
     const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let result = "";
@@ -13,7 +12,6 @@ function uint8ArrayToBase64(bytes) {
         const b1 = bytes[i];
         const b2 = i + 1 < len ? bytes[i + 1] : 0;
         const b3 = i + 2 < len ? bytes[i + 2] : 0;
-
         result += abc[b1 >> 2];
         result += abc[((b1 & 3) << 4) | (b2 >> 4)];
         result += i + 1 < len ? abc[((b2 & 15) << 2) | (b3 >> 6)] : "=";
@@ -26,11 +24,11 @@ export default async function handler(req) {
     if (req.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
 
     try {
-        // 🛡️ 1. SHIELD GATE HEADER CHECK (Your Core Security Layer)
+        // 🛡️ 1. SHIELD GATE HEADER CHECK
         const shieldKey = req.headers.get('x-harvion-shield-key');
         if (shieldKey !== 'HarvionQuantumLabsEngineCoreSecret2026') {
-            return new Response(JSON.stringify({ error: 'SECURITY_FAULT: Unauthorized Core Endpoint Connection Dropped.' }), { 
-                status: 401, headers: { 'Content-Type': 'application/json' } 
+            return new Response(JSON.stringify({ error: 'SECURITY_FAULT: Unauthorized Core Endpoint Connection Dropped.' }), {
+                status: 401, headers: { 'Content-Type': 'application/json' }
             });
         }
 
@@ -41,10 +39,10 @@ export default async function handler(req) {
         if (!userPrompt) {
             return new Response(JSON.stringify({ error: 'Validation Error: Prompt parameter is missing.' }), { status: 400 });
         }
-        
+
         let authenticatedUserId = null;
-        
-        // 🛡️ 2. SERVER-SIDE TOKEN VERIFICATION (Anti-Abuse Check)
+
+        // 🛡️ 2. SERVER-SIDE TOKEN VERIFICATION
         if (authHeader && authHeader.startsWith('Bearer ')) {
             const rawToken = authHeader.split('Bearer ')[1];
             try {
@@ -52,55 +50,91 @@ export default async function handler(req) {
                     audience: 'harvion-labs-51ca1',
                     issuer: 'https://securetoken.google.com/harvion-labs-51ca1'
                 });
-                authenticatedUserId = payload.sub; 
+                authenticatedUserId = payload.sub;
             } catch (jwtError) {
-                return new Response(JSON.stringify({ error: 'SECURITY_FAULT: Cryptographic Token Tampering Mismatch.' }), { 
-                    status: 403, headers: { 'Content-Type': 'application/json' } 
+                return new Response(JSON.stringify({ error: 'SECURITY_FAULT: Cryptographic Token Tampering Mismatch.' }), {
+                    status: 403, headers: { 'Content-Type': 'application/json' }
                 });
             }
         }
 
-        // 🔑 Hugging Face Key Verification
+        // 🔑 Hugging Face Key Check
         const hfApiKey = process.env.HF_TOKEN;
         if (!hfApiKey) {
-            return new Response(JSON.stringify({ error: 'SERVER_FAULT: Hugging Face API Token Missing in .env.' }), { status: 500 });
+            return new Response(JSON.stringify({ error: 'SERVER_FAULT: Hugging Face API Token Missing.' }), { status: 500 });
         }
 
-        // 🎨 3. HUGGING FACE INFERENCE API (Flux.1 Schnell Model)
-        const hfResponse = await fetch('https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${hfApiKey}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ 
-                inputs: userPrompt 
-            })
-        });
+        // ✅ FIX 1: wait_for_model: true — model cold start handle karta hai
+        const hfResponse = await fetch(
+            'https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell',
+            {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${hfApiKey}`,
+                    'Content-Type': 'application/json',
+                    'X-Wait-For-Model': 'true'   // ✅ FIX: model warm hone ka wait karo
+                },
+                body: JSON.stringify({
+                    inputs: userPrompt,
+                    parameters: {
+                        num_inference_steps: 4,   // FLUX schnell ke liye optimal
+                        guidance_scale: 0.0       // schnell ko guidance nahi chahiye
+                    }
+                })
+            }
+        );
 
+        // ✅ FIX 2: Proper error response padhna
         if (!hfResponse.ok) {
             const errText = await hfResponse.text();
-            return new Response(JSON.stringify({ error: "Upstream Hugging Face Generation Drop.", details: errText }), { status: 500 });
+            let errJson = {};
+            try { errJson = JSON.parse(errText); } catch (_) {}
+
+            // Model abhi load ho raha hai
+            if (hfResponse.status === 503) {
+                return new Response(JSON.stringify({ 
+                    error: 'Model is loading, please retry in 20 seconds.',
+                    details: errJson
+                }), { status: 503, headers: { 'Content-Type': 'application/json' } });
+            }
+
+            return new Response(JSON.stringify({ 
+                error: 'Upstream HuggingFace Error.', 
+                status: hfResponse.status,
+                details: errJson 
+            }), { status: 502, headers: { 'Content-Type': 'application/json' } });
         }
 
-        // 🔄 4. STACK-SAFE LINER BUFFER CONVERSION (0ms Stack Overhead)
+        // ✅ FIX 3: Content-Type se actual format detect karo (PNG vs JPEG)
+        const contentType = hfResponse.headers.get('content-type') || 'image/png';
+
+        // ✅ FIX 4: Binary check — agar JSON aaya to error hai image nahi
+        if (contentType.includes('application/json')) {
+            const errJson = await hfResponse.json();
+            return new Response(JSON.stringify({ 
+                error: 'HuggingFace returned JSON instead of image.', 
+                details: errJson 
+            }), { status: 502, headers: { 'Content-Type': 'application/json' } });
+        }
+
         const arrayBuffer = await hfResponse.arrayBuffer();
         const bytes = new Uint8Array(arrayBuffer);
-        
-        const base64Image = uint8ArrayToBase64(bytes);
-        const finalImageUrl = `data:image/jpeg;base64,${base64Image}`;
 
-        // 🚀 Output returning system matching frontend contract
-        return new Response(JSON.stringify({
-            imageUrl: finalImageUrl
-        }), {
+        if (bytes.length === 0) {
+            return new Response(JSON.stringify({ error: 'Empty image response from model.' }), { status: 502 });
+        }
+
+        const base64Image = uint8ArrayToBase64(bytes);
+        const finalImageUrl = `data:${contentType};base64,${base64Image}`;
+
+        return new Response(JSON.stringify({ imageUrl: finalImageUrl }), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
         });
 
     } catch (error) {
-        return new Response(JSON.stringify({ error: error.message }), { 
-            status: 500, headers: { 'Content-Type': 'application/json' } 
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500, headers: { 'Content-Type': 'application/json' }
         });
     }
 }

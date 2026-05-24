@@ -1507,13 +1507,27 @@ body.theme-cyberpunk .user-bubble {
  
         if (activeMode === 'Canvas Pro') {
             const apiResponse = await fetch('/api/generate-image', { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json', 'x-harvion-shield-key': 'HarvionQuantumLabsEngineCoreSecret2026', 'Authorization': idToken ? `Bearer ${idToken}` : '' },
-                body: JSON.stringify({ prompt: message })
-            });
+    method: 'POST', 
+    headers: { 
+        'Content-Type': 'application/json', 
+        'x-harvion-shield-key': 'HarvionQuantumLabsEngineCoreSecret2026',
+        ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {})
+    },
+    body: JSON.stringify({ prompt: message })
+});
 
-            const apiData = await apiResponse.json();
-            if (!apiResponse.ok) throw new Error(apiData.error || "Canvas generation failed.");
+// Safe parsing
+let apiData;
+const resContentType = apiResponse.headers.get('content-type') || '';
+if (resContentType.includes('application/json')) {
+    apiData = await apiResponse.json();
+} else {
+    const rawText = await apiResponse.text();
+    throw new Error(`Server Error (${apiResponse.status}): ${rawText.substring(0, 150)}`);
+}
+
+if (!apiResponse.ok) throw new Error(apiData.error || `HTTP ${apiResponse.status}`);
+if (!apiData.imageUrl) throw new Error("No image returned from server.");
 
             bubbleDiv.innerHTML = `
                 <div style="text-align: center;">

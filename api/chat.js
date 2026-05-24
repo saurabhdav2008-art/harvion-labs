@@ -138,7 +138,7 @@ export default async function handler(req) {
         } 
         else if (requestedIntent === "Quantum Nebula") {
             if (isRealPremium) {
-                targetSelectedModel = 'deepseek-r1-distill-llama-70b'; 
+                targetSelectedModel = 'llama-3.3-70b-versatile'; 
             } else if (remainingChats > 0 && authenticatedUserId) {
                 targetSelectedModel = 'deepseek-r1-distill-llama-70b'; 
                 remainingChats = remainingChats - 1; // Atomic balance mutation

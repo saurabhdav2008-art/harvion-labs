@@ -26,7 +26,7 @@ export default async function handler(req) {
     try {
         // 🛡️ 1. SHIELD GATE HEADER CHECK
         const shieldKey = req.headers.get('x-harvion-shield-key');
-        if (shieldKey !== 'HarvionQuantumLabsEngineCoreSecret2026') {
+       if (shieldKey !== process.env.HARVION_SHIELD_KEY) {
             return new Response(JSON.stringify({ error: 'SECURITY_FAULT: Unauthorized Core Endpoint Connection Dropped.' }), {
                 status: 401, headers: { 'Content-Type': 'application/json' }
             });
@@ -40,10 +40,16 @@ export default async function handler(req) {
             return new Response(JSON.stringify({ error: 'Validation Error: Prompt parameter is missing.' }), { status: 400 });
         }
 
-        let authenticatedUserId = null;
+        // Login MANDATORY hai
+if (!authHeader || !authHeader.startsWith('Bearer ') || authHeader === 'Bearer ') {
+    return new Response(JSON.stringify({ error: 'Login required for Canvas Proi.' }), { 
+        status: 401, headers: { 'Content-Type': 'application/json' } 
+    });
+}
 
-        // 🛡️ 2. SERVER-SIDE TOKEN VERIFICATION
-       if (authHeader && authHeader.startsWith('Bearer ') && authHeader !== 'Bearer ') {
+let authenticatedUserId = null;
+
+if (authHeader && authHeader.startsWith('Bearer ')) {
             const rawToken = authHeader.split('Bearer ')[1];
             try {
                 const { payload } = await jose.jwtVerify(rawToken, JWKS, {

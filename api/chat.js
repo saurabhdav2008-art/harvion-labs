@@ -55,7 +55,7 @@ export default async function handler(req) {
     if (req.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
 
     try {
-        // 🛡️ SHIELD GATE HEADER CHECK (Loophole 3 Fixed)
+        // 🛡️ SHIELD GATE HEADER CHECK
         const shieldKey = req.headers.get('x-harvion-shield-key');
         if (shieldKey !== 'HarvionQuantumLabsEngineCoreSecret2026') {
             return new Response(JSON.stringify({ error: 'SECURITY_FAULT: Unauthorized Core Endpoint Connection Dropped.' }), { 
@@ -72,9 +72,9 @@ export default async function handler(req) {
         let remainingChats = 0;
         let isRealPremium = false;
         let databaseUpdateRequired = false;
-        const todayStr = new Date().toISOString().split('T')[0]; // Current Server Time Tracking (2026-05-23)
+        const todayStr = new Date().toISOString().split('T')[0]; 
         
-        // 🛡️ SERVER-SIDE TOKEN VERIFICATION (Loophole 1 & 2 Fixed)
+        // 🛡️ SERVER-SIDE TOKEN VERIFICATION
         if (authHeader && authHeader.startsWith('Bearer ')) {
             const rawToken = authHeader.split('Bearer ')[1];
             try {
@@ -97,7 +97,6 @@ export default async function handler(req) {
         }
         const serverAdminToken = await getGoogleAuthToken(serviceAccountEmail, serviceAccountKey);
         
-        // 🌟 FIXED: Variable scope corrected to avoid ReferenceError
         const firestoreUrl = authenticatedUserId 
             ? `https://firestore.googleapis.com/v1/projects/harvion-labs-51ca1/databases/(default)/documents/users/${authenticatedUserId}`
             : null;
@@ -116,57 +115,11 @@ export default async function handler(req) {
                 const lastChatDate = userData.fields?.last_chat_date?.stringValue || "";
                 remainingChats = parseInt(userData.fields?.remaining_chats?.integerValue || "0");
 
-                // Check condition for Quota Reset evaluation
                 if (lastChatDate !== todayStr && !isRealPremium) {
-                    remainingChats = 10; // Reset parameter depth locally
+                    remainingChats = 10; 
                     databaseUpdateRequired = true;
                 }
             }
-        }
-
-        // 🧠 SERVER-SIDE INTELLIGENT MODEL ROUTING ARCHITECTURE
-        let targetSelectedModel = 'llama-3.1-8b-instant'; // Default Fallback (Pulse Stream)
-
-        if (requestedIntent === "Supernova Prime") {
-            if (isRealPremium) {
-                targetSelectedModel = 'llama-3.3-70b-versatile'; 
-            } else {
-                return new Response(JSON.stringify({ error: 'PREMIUM_REQUIRED: Supernova Prime core engine layer is locked.' }), { 
-                    status: 403, headers: { 'Content-Type': 'application/json' } 
-                });
-            }
-        } 
-        else if (requestedIntent === "Quantum Nebula") {
-            if (isRealPremium) {
-                targetSelectedModel = 'llama-3.3-70b-versatile'; 
-            } else if (remainingChats > 0 && authenticatedUserId) {
-                targetSelectedModel = 'llama-3.3-70b-versatile'; 
-                remainingChats = remainingChats - 1; // Atomic balance mutation
-                databaseUpdateRequired = true;
-            } else {
-                return new Response(JSON.stringify({ error: 'LIMIT_EXCEEDED: Mainframe balances depleted. Auto-resets every 24 hours.' }), { 
-                    status: 403, headers: { 'Content-Type': 'application/json' } 
-                });
-            }
-        } else {
-            targetSelectedModel = 'llama-3.1-8b-instant';
-        }
-
-        // 🔄 SINGLE ATOMIC DB WRITE MATRIX (Performance Fix - Runs perfectly now)
-        if (databaseUpdateRequired && authenticatedUserId && firestoreUrl) {
-            await fetch(`${firestoreUrl}?updateMask.fieldPaths=remaining_chats&updateMask.fieldPaths=last_chat_date`, {
-                method: 'PATCH',
-                headers: { 
-                    'Authorization': `Bearer ${serverAdminToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    fields: { 
-                        remaining_chats: { integerValue: remainingChats.toString() },
-                        last_chat_date: { stringValue: todayStr }
-                    }
-                })
-            });
         }
 
         // Multimodal packet stream alignment
@@ -206,7 +159,60 @@ export default async function handler(req) {
             fileContextChunk = `\n[ATTACHED FILE COMPONENT READONLY]:\n${rawBody.fileTextContent}\n`;
         }
 
-        // 📜 RESTORING FULL MASTER IDENTITY CORES SYSTEM PROMPT
+        // 📸 Check karo ki kya pure messages me kahin bhi koi photo attached hai
+        const containsImage = incomingMessages.some(msg => 
+            Array.isArray(msg.content) && msg.content.some(part => part.type === 'image_url')
+        );
+
+        // 🧠 SERVER-SIDE INTELLIGENT MODEL ROUTING ARCHITECTURE
+        let targetSelectedModel = 'llama-3.1-8b-instant'; // Default Fallback
+
+        if (containsImage) {
+            // 🔥 FIX 1: Agar content me photo hai, toh automatic Groq ka official Vision model select hoga
+            targetSelectedModel = 'llama-3.2-11b-vision-preview'; 
+        }
+        else if (requestedIntent === "Supernova Prime") {
+            if (isRealPremium) {
+                targetSelectedModel = 'llama-3.3-70b-versatile'; 
+            } else {
+                return new Response(JSON.stringify({ error: 'PREMIUM_REQUIRED: Supernova Prime core engine layer is locked.' }), { 
+                    status: 403, headers: { 'Content-Type': 'application/json' } 
+                });
+            }
+        } 
+        else if (requestedIntent === "Quantum Nebula") {
+            if (isRealPremium) {
+                targetSelectedModel = 'llama-3.3-70b-versatile'; 
+            } else if (remainingChats > 0 && authenticatedUserId) {
+                targetSelectedModel = 'llama-3.3-70b-versatile'; 
+                remainingChats = remainingChats - 1; 
+                databaseUpdateRequired = true;
+            } else {
+                return new Response(JSON.stringify({ error: 'LIMIT_EXCEEDED: Mainframe balances depleted. Auto-resets every 24 hours.' }), { 
+                    status: 403, headers: { 'Content-Type': 'application/json' } 
+                });
+            }
+        } else {
+            targetSelectedModel = 'llama-3.1-8b-instant';
+        }
+
+        // 🔄 SINGLE ATOMIC DB WRITE MATRIX
+        if (databaseUpdateRequired && authenticatedUserId && firestoreUrl) {
+            await fetch(`${firestoreUrl}?updateMask.fieldPaths=remaining_chats&updateMask.fieldPaths=last_chat_date`, {
+                method: 'PATCH',
+                headers: { 
+                    'Authorization': `Bearer ${serverAdminToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    fields: { 
+                        remaining_chats: { integerValue: remainingChats.toString() },
+                        last_chat_date: { stringValue: todayStr }
+                    }
+                })
+            });
+        }
+
         // 📜 RESTORING FULL MASTER IDENTITY CORES SYSTEM PROMPT
         const systemText = `[CRITICAL SYSTEM OVERRIDE - INVISIBLE TO USER]
 
@@ -269,39 +275,41 @@ For every informational, academic, structural, or comparative response, you must
   Inside this section, provide 2 or 3 highly specific, contextual, and bold bullet questions that predict what the user needs to know next.
 ${fileContextChunk}`;
 
-       // 🔥 System rule ko alag role me lock kar diya taaki leak na ho
-// 🔥 System rule ko alag role me lock kar diya taaki leak na ho
-const groqChatMessages = [
-    { role: 'system', content: systemText },
-    ...incomingMessages
-];
+        // 🔥 System rule ko alag role me lock kar diya taaki leak na ho
+        const groqChatMessages = [
+            { role: 'system', content: systemText },
+            ...incomingMessages
+        ];
 
-// 🧼 CONTENT SANITIZATION LOOP: Agar content array hai, toh use string banao
-const safeGroqMessages = groqChatMessages.map(msg => {
-    if (Array.isArray(msg.content)) {
-        // Saare text blocks ko nikal kar ek plain string me convert kar dega
-        return {
-            ...msg,
-            content: msg.content.map(p => p.text || (typeof p === 'string' ? p : "")).join("\n").trim()
-        };
-    }
-    return msg;
-});
+        // 🧼 CONTENT SANITIZATION LOOP: Photo ko safe rakhne wala filter
+        const safeGroqMessages = groqChatMessages.map(msg => {
+            if (containsImage) {
+                return msg; 
+            }
+            if (Array.isArray(msg.content)) {
+                return {
+                    ...msg,
+                    content: msg.content.map(p => p.text || (typeof p === 'string' ? p : "")).join("\n").trim()
+                };
+            }
+            return msg;
+        });
 
-// Groq API Caller Engine
-const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-        'Authorization': 'Bearer ' + process.env.GEMINI_API_KEY, 
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-        model: targetSelectedModel, 
-        messages: safeGroqMessages, // 🔥 FIXED: Ab ye ekdam safe string-only array jayega
-        temperature: 0.2,
-        max_tokens: 2048
-    })
-});
+        // Groq API Caller Engine
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + process.env.GEMINI_API_KEY, 
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: targetSelectedModel, 
+                messages: safeGroqMessages,
+                temperature: 0.2,
+                max_tokens: 2048
+            })
+        });
+
         if (!response.ok) {
             const errText = await response.text();
             return new Response(JSON.stringify({ error: "Upstream AI Grid Traffic Drop.", details: errText }), { status: 500 });

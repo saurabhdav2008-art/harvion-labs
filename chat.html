@@ -1530,7 +1530,7 @@ body.theme-cyberpunk .user-bubble {
             let finalFormattedText = typeof marked !== 'undefined' ? marked.parse(streamLiveTokenAccumulator) : streamLiveTokenAccumulator;
             bubbleDiv.innerHTML = finalFormattedText;
             
-            // 💾 Saving Text Chat Response to Firestore History
+            
             if (activeUser && typeof firestoreDb !== 'undefined') {
                 await firestoreDb.collection("users").doc(activeUser.uid).collection("chats_history").add({
                     user_payload: message || "Multimodal Data Stream",

@@ -155,22 +155,36 @@ export default async function handler(req) {
         }
 
         // STEP 9 — Base64 convert
+        // STEP 9 — Base64 convert (Optimized for Edge)
         const arrayBuffer = await hfResponse.arrayBuffer();
-        const bytes = new Uint8Array(arrayBuffer);
-        if (bytes.length === 0) {
+        if (arrayBuffer.byteLength === 0) {
             return new Response(JSON.stringify({
                 error: 'Empty image response.'
             }), { status: 502, headers: { 'Content-Type': 'application/json' } });
         }
 
-        const base64Image = uint8ArrayToBase64(bytes);
+        let base64Image;
+        // Edge me agar Buffer available hai (Next.js me hota hai), toh wo use karo (Super Fast)
+        if (typeof Buffer !== 'undefined') {
+            base64Image = Buffer.from(arrayBuffer).toString('base64');
+        } else {
+            // Agar pure Edge environment hai toh chunking use karo (CPU bachega)
+            const bytes = new Uint8Array(arrayBuffer);
+            let binary = '';
+            const chunkSize = 8192; // Chunking to avoid Call Stack Exceeded
+            for (let i = 0; i < bytes.length; i += chunkSize) {
+                const chunk = bytes.subarray(i, i + chunkSize);
+                binary += String.fromCharCode.apply(null, chunk);
+            }
+            base64Image = btoa(binary);
+        }
+
         const finalImageUrl = `data:${contentType};base64,${base64Image}`;
 
         return new Response(JSON.stringify({ imageUrl: finalImageUrl }), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
         });
-
     } catch (error) {
         return new Response(JSON.stringify({ error: error.message }), {
             status: 500, headers: { 'Content-Type': 'application/json' }

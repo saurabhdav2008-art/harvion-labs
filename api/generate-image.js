@@ -1,114 +1,180 @@
-import * as jose from 'jose';
+import { createRemoteJWKSet, jwtVerify } from 'jose';
 
 export const config = { runtime: 'edge' };
 
-const JWKS = jose.createRemoteJWKSet(
-    new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com')
-);
+// Google OAuth2 Access Token जनरेट करने का फंक्शन (Edge-safe)
+async function getGoogleAuthToken(email, privateKeyPEM) {
+    try {
+        const cleanKey = privateKeyPEM
+            .replace(/\\n/g, '\n')
+            .replace('-----BEGIN PRIVATE KEY-----', '')
+            .replace('-----END PRIVATE KEY-----', '')
+            .replace(/\s/g, '');
 
-function uint8ArrayToBase64(bytes) {
-    const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let result = "";
-    const len = bytes.length;
-    for (let i = 0; i < len; i += 3) {
-        const b1 = bytes[i];
-        const b2 = i + 1 < len ? bytes[i + 1] : 0;
-        const b3 = i + 2 < len ? bytes[i + 2] : 0;
-        result += abc[b1 >> 2];
-        result += abc[((b1 & 3) << 4) | (b2 >> 4)];
-        result += i + 1 < len ? abc[((b2 & 15) << 2) | (b3 >> 6)] : "=";
-        result += i + 2 < len ? abc[b3 & 63] : "=";
+        const binaryKey = Uint8Array.from(atob(cleanKey), c => c.charCodeAt(0));
+        const cryptoKey = await crypto.subtle.importKey(
+            'pkcs8',
+            binaryKey,
+            { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+            false,
+            ['sign']
+        );
+
+        const header = btoa(JSON.stringify({ alg: 'RS256', typ: 'JWT' }))
+            .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+        const now = Math.floor(Date.now() / 1000);
+        const payload = btoa(JSON.stringify({
+            iss: email,
+            scope: 'https://www.googleapis.com/auth/datastore',
+            aud: 'https://oauth2.googleapis.com/token',
+            exp: now + 3600,
+            iat: now
+        })).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+
+        const message = new TextEncoder().encode(`${header}.${payload}`);
+        const signatureBuffer = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', cryptoKey, message);
+        const signature = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)))
+            .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+
+        const jwt = `${header}.${payload}.${signature}`;
+
+        const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`
+        });
+
+        const tokenData = await tokenRes.json();
+        return tokenData.access_token;
+    } catch (err) {
+        throw new Error("OAuth Token Generation Failed: " + err.message);
     }
-    return result;
 }
 
 export default async function handler(req) {
-    if (req.method !== 'POST') {
-        return new Response('Method Not Allowed', { status: 405 });
-    }
-
+    // पूरे हैंडलर को try-catch में लपेटें ताकि unexpected crash की जानकारी मिले
     try {
-        // ✅ STEP 1 — Body PEHLE padh lo (stream sirf ek baar padhti hai)
+        // ================== स्टेप 1: Shield Key चेक ==================
+        const shieldKey = req.headers.get('x-harvion-shield-key');
+        if (shieldKey !== 'HarvionQuantumLabsEngineCoreSecret2026') {
+            return new Response(JSON.stringify({ error: 'SECURITY_FAULT: Unauthorized.' }), {
+                status: 401,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
+        // ================== स्टेप 2: Body पार्स ==================
         let rawBody;
         try {
             rawBody = await req.json();
         } catch {
             return new Response(JSON.stringify({ error: 'Invalid JSON body.' }), {
-                status: 400, headers: { 'Content-Type': 'application/json' }
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
             });
         }
 
-        // 🛡️ STEP 2 — Shield Key check
-        const shieldKey = req.headers.get('x-harvion-shield-key');
-        if (shieldKey !== process.env.HARVION_SHIELD_KEY) {
-            return new Response(JSON.stringify({
-                error: 'SECURITY_FAULT: Unauthorized.'
-            }), { status: 401, headers: { 'Content-Type': 'application/json' } });
-        }
-
-        // 🛡️ STEP 3 — Login mandatory check
+        // ================== स्टेप 3: Auth Token Verify ==================
         const authHeader = req.headers.get('Authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ') || authHeader === 'Bearer ') {
-            return new Response(JSON.stringify({
-                error: 'Canvas Pro ke liye login required hai.'
-            }), { status: 401, headers: { 'Content-Type': 'application/json' } });
-        }
-
-        // 🛡️ STEP 4 — JWT Token verify
-        const rawToken = authHeader.split('Bearer ')[1];
         let authenticatedUserId = null;
-        try {
-            const { payload } = await jose.jwtVerify(rawToken, JWKS, {
-                audience: 'harvion-labs-51ca1',
-                issuer: 'https://securetoken.google.com/harvion-labs-51ca1'
+
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            const rawToken = authHeader.split('Bearer ')[1];
+            try {
+                // JWKS को हैंडलर के अंदर बनाएं (top-level पे नहीं)
+                const JWKS = createRemoteJWKSet(
+                    new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com')
+                );
+                const { payload } = await jwtVerify(rawToken, JWKS, {
+                    audience: 'harvion-labs-51ca1',
+                    issuer: 'https://securetoken.google.com/harvion-labs-51ca1'
+                });
+                authenticatedUserId = payload.sub;
+            } catch (jwtError) {
+                return new Response(JSON.stringify({ error: 'SECURITY_FAULT: Invalid token.' }), {
+                    status: 403,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
+        } else {
+            return new Response(JSON.stringify({ error: 'Canvas Pro requires login.' }), {
+                status: 401,
+                headers: { 'Content-Type': 'application/json' }
             });
-            authenticatedUserId = payload.sub;
-        } catch (jwtError) {
-            return new Response(JSON.stringify({
-                error: 'SECURITY_FAULT: Invalid token.'
-            }), { status: 403, headers: { 'Content-Type': 'application/json' } });
         }
 
-        // 🛡️ STEP 5 — Firestore se role check (REST API)
-        const firestoreUrl = `https://firestore.googleapis.com/v1/projects/harvion-labs-51ca1/databases/(default)/documents/users/${authenticatedUserId}`;
-        const firestoreRes = await fetch(firestoreUrl, {
-            headers: { 'Authorization': `Bearer ${rawToken}` }
-        });
+        // ================== स्टेप 4: Firestore से Role चेक ==================
+        const serviceAccountEmail = process.env.FIREBASE_SERVICE_ACCOUNT_EMAIL;
+        const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY;
 
-        if (!firestoreRes.ok) {
-            return new Response(JSON.stringify({
-                error: 'User data fetch failed.'
-            }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+        if (!serviceAccountEmail || !serviceAccountKey) {
+            return new Response(JSON.stringify({ error: 'Server credentials missing.' }), {
+                status: 500,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
-        const firestoreData = await firestoreRes.json();
-        const userRole = firestoreData?.fields?.role?.stringValue || '';
-        const allowedRoles = ['owner', 'premium', 'apex', 'archon'];
-        const isPremium = allowedRoles.some(r => userRole.toLowerCase().includes(r));
+        let serverAdminToken;
+        try {
+            serverAdminToken = await getGoogleAuthToken(serviceAccountEmail, serviceAccountKey);
+        } catch (tokenErr) {
+            return new Response(JSON.stringify({ error: 'Failed to generate admin token.', details: tokenErr.message }), {
+                status: 500,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
+        const encodedUserId = encodeURIComponent(authenticatedUserId);
+        const firestoreUrl = `https://firestore.googleapis.com/v1/projects/harvion-labs-51ca1/databases/(default)/documents/users/${encodedUserId}`;
+
+        let isPremium = false;
+        try {
+            const firestoreRes = await fetch(firestoreUrl, {
+                headers: { 'Authorization': `Bearer ${serverAdminToken}` }
+            });
+
+            if (firestoreRes.ok) {
+                const userData = await firestoreRes.json();
+                const userRole = (userData.fields?.role?.stringValue || '').toLowerCase();
+                const allowedRoles = ['owner', 'archon', 'apex', 'premium'];
+                isPremium = allowedRoles.some(r => userRole.includes(r));
+            } else {
+                // User document नहीं मिला, तो premium नहीं है
+                isPremium = false;
+            }
+        } catch (dbError) {
+            return new Response(JSON.stringify({ error: 'User data fetch failed.', details: dbError.message }), {
+                status: 403,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
 
         if (!isPremium) {
-            return new Response(JSON.stringify({
-                error: 'Canvas Pro sirf Premium users ke liye hai.'
-            }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+            return new Response(JSON.stringify({ error: 'Canvas Pro sirf Premium users ke liye hai.' }), {
+                status: 403,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
-        // ✅ STEP 6 — Prompt check (body upar se already pada hua hai)
+        // ================== स्टेप 5: Prompt चेक ==================
         const userPrompt = rawBody.prompt;
         if (!userPrompt || userPrompt.trim() === '') {
-            return new Response(JSON.stringify({
-                error: 'Prompt missing hai.'
-            }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+            return new Response(JSON.stringify({ error: 'Prompt missing hai.' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
-        // ✅ STEP 7 — HF Token check
+        // ================== स्टेप 6: HF Token चेक ==================
         const hfApiKey = process.env.HF_TOKEN;
         if (!hfApiKey) {
-            return new Response(JSON.stringify({
-                error: 'HF Token missing hai server pe.'
-            }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+            return new Response(JSON.stringify({ error: 'HF Token missing hai server pe.' }), {
+                status: 500,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
-        // 🎨 STEP 8 — Image generate karo
+        // ================== स्टेप 7: Hugging Face से Image Generate ==================
         const hfResponse = await fetch(
             'https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell',
             {
@@ -130,51 +196,42 @@ export default async function handler(req) {
 
         if (!hfResponse.ok) {
             const errText = await hfResponse.text();
-            let errJson = {};
-            try { errJson = JSON.parse(errText); } catch (_) {}
-            if (hfResponse.status === 503) {
-                return new Response(JSON.stringify({
-                    error: 'Model load ho raha hai, 20 second baad retry karo.',
-                    details: errJson
-                }), { status: 503, headers: { 'Content-Type': 'application/json' } });
-            }
-            return new Response(JSON.stringify({
-                error: 'HuggingFace error.',
-                details: errJson
-            }), { status: 502, headers: { 'Content-Type': 'application/json' } });
+            let errDetails = {};
+            try { errDetails = JSON.parse(errText); } catch (_) {}
+            return new Response(JSON.stringify({ error: 'HuggingFace error.', details: errDetails }), {
+                status: 502,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
-        // JSON aaya matlab error hai — image nahi
         const contentType = hfResponse.headers.get('content-type') || 'image/png';
         if (contentType.includes('application/json')) {
             const errJson = await hfResponse.json();
-            return new Response(JSON.stringify({
-                error: 'HF ne image ki jagah JSON diya.',
-                details: errJson
-            }), { status: 502, headers: { 'Content-Type': 'application/json' } });
+            return new Response(JSON.stringify({ error: 'HF returned JSON instead of image.', details: errJson }), {
+                status: 502,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
-        // STEP 9 — Base64 convert
-        // STEP 9 — Base64 convert (Optimized for Edge)
+        // ================== स्टेप 8: Base64 में बदलें (Safe Method) ==================
         const arrayBuffer = await hfResponse.arrayBuffer();
         if (arrayBuffer.byteLength === 0) {
-            return new Response(JSON.stringify({
-                error: 'Empty image response.'
-            }), { status: 502, headers: { 'Content-Type': 'application/json' } });
+            return new Response(JSON.stringify({ error: 'Empty image response.' }), {
+                status: 502,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
 
         let base64Image;
-        // Edge me agar Buffer available hai (Next.js me hota hai), toh wo use karo (Super Fast)
         if (typeof Buffer !== 'undefined') {
+            // Node.js जैसा environment (Next.js Edge में Buffer होता है)
             base64Image = Buffer.from(arrayBuffer).toString('base64');
         } else {
-            // Agar pure Edge environment hai toh chunking use karo (CPU bachega)
+            // Pure Web API – लूप से बाइनरी स्ट्रिंग बनाएं (stack overflow से बचने के लिए)
             const bytes = new Uint8Array(arrayBuffer);
             let binary = '';
-            const chunkSize = 8192; // Chunking to avoid Call Stack Exceeded
-            for (let i = 0; i < bytes.length; i += chunkSize) {
-                const chunk = bytes.subarray(i, i + chunkSize);
-                binary += String.fromCharCode.apply(null, chunk);
+            for (let i = 0; i < bytes.length; i++) {
+                binary += String.fromCharCode(bytes[i]);
             }
             base64Image = btoa(binary);
         }
@@ -185,9 +242,12 @@ export default async function handler(req) {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
         });
+
     } catch (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
-            status: 500, headers: { 'Content-Type': 'application/json' }
+        // अगर कोई अनजान एरर आए तो उसका मैसेज ज़रूर भेजें
+        return new Response(JSON.stringify({ error: 'INTERNAL_ERROR', details: error.message }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
         });
     }
 }

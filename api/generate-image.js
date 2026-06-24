@@ -39,22 +39,30 @@ async function getGoogleAuthToken(email, privateKeyPEM) {
 async function verifyFirebaseToken(idToken) {
     const apiKey = process.env.FIREBASE_API_KEY;
     if (!apiKey) {
-        throw new Error('FIREBASE_API_KEY is not set on server');
+        throw new Error('FIREBASE_API_KEY missing hai server pe.');
     }
-    const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken })
-    });
+
+    const res = await fetch(
+        `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`,
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken })
+        }
+    );
+
     const data = await res.json();
-    if (!res.ok) {
-        // Google का असली एरर मैसेज लौटाएँ
-        throw new Error(data.error?.message || 'Google token verification failed');
+
+    if (!res.ok || data.error) {
+        // 🔍 असली गूगल एरर मैसेज को throw करें
+        throw new Error(data.error?.message || 'Token verification failed');
     }
+
     if (data.users && data.users.length > 0) {
-        return data.users[0].localId; // uid
+        return data.users[0].localId; // UID
     }
-    throw new Error('Token valid but no user found');
+
+    throw new Error('Token valid but user not found');
 }
 
 export default async function handler(req) {

@@ -36,27 +36,7 @@ async function getGoogleAuthToken(email, privateKeyPEM) {
 }
 
 // Firebase ID Token को verify करने का सिंपल तरीका (Google endpoint से)
-async function verifyFirebaseToken(idToken) {
-    const apiKey = process.env.FIREBASE_API_KEY;
-    if (!apiKey) {
-        throw new Error('FIREBASE_API_KEY is not set on server');
-    }
-    const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken })
-    });
-    const data = await res.json();
-    if (!res.ok) {
-        // Google का असली एरर मैसेज लौटाएँ
-        throw new Error(data.error?.message || 'Google token verification failed');
-    }
-    if (data.users && data.users.length > 0) {
-        return data.users[0].localId; // uid
-    }
-    throw new Error('Token valid but no user found');
-}
-
+async function verifyFirebaseToken(
 export default async function handler(req) {
     try {
         // Shield चेक

@@ -52,6 +52,17 @@ async function getGoogleAuthToken(email, privateKeyPEM) {
 const JWKS = jose.createRemoteJWKSet(new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'));
 
 export default async function handler(req) {
+    // --- RATE LIMITING ---
+    const ip = req.headers.get('x-forwarded-for') || 'unknown';
+    const rateLimitMap = new Map(); // demo; production mein KV use karo
+    const current = rateLimitMap.get(ip) || 0;
+    if (current > 5) {
+        return new Response(JSON.stringify({ error: 'Too Many Requests' }), { status: 429 });
+    }
+    rateLimitMap.set(ip, current + 1);
+    setTimeout(() => rateLimitMap.delete(ip), 10000);
+    // --- END RATE LIMITING ---
+
     if (req.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
 
     try {
@@ -101,6 +112,8 @@ export default async function handler(req) {
             ? `https://firestore.googleapis.com/v1/projects/harvion-labs-51ca1/databases/(default)/documents/users/${authenticatedUserId}`
             : null;
 
+        let previousChatsSummary = ''; // for memory context
+
         // Fetch user records mapping parameters
         if (authenticatedUserId && firestoreUrl) {
             const dbCheck = await fetch(firestoreUrl, {
@@ -120,6 +133,26 @@ export default async function handler(req) {
                     databaseUpdateRequired = true;
                 }
             }
+
+            // 🔥 NEW: Fetch last 3 chats for memory context
+            try {
+                const historyUrl = `https://firestore.googleapis.com/v1/projects/harvion-labs-51ca1/databases/(default)/documents/users/${authenticatedUserId}/chats_history?orderBy=timestamp&limit=3`;
+                const histRes = await fetch(historyUrl, {
+                    headers: { 'Authorization': `Bearer ${serverAdminToken}` }
+                });
+                if (histRes.ok) {
+                    const histData = await histRes.json();
+                    const docs = histData.documents || [];
+                    previousChatsSummary = docs.map(doc => {
+                        const f = doc.fields;
+                        const userMsg = f.user_payload?.stringValue || '';
+                        const aiMsg = f.model_response?.stringValue || '';
+                        return `User: ${userMsg}\nHARVION: ${aiMsg}`;
+                    }).join('\n---\n');
+                }
+            } catch (e) {
+                // silent fail – memory context not critical
+            }
         }
 
         // Multimodal packet stream alignment
@@ -133,8 +166,18 @@ export default async function handler(req) {
                 if (c.parts) {
                     c.parts.forEach(part => {
                         if (part.text) {
-                            contentArray.push({ type: "text", text: part.text });
-                            pureText += part.text + "\n";
+                            // 🛡️ INPUT SANITIZATION: remove forbidden patterns
+                            let rawText = part.text;
+                            const forbidden = [
+                                /\[SYSTEM\]/gi,
+                                /<\|im_start\|>/gi,
+                                /ignore previous instructions/gi,
+                                /you are now DAN/gi,
+                                /pretend you are evil/gi
+                            ];
+                            forbidden.forEach(pattern => { rawText = rawText.replace(pattern, ''); });
+                            contentArray.push({ type: "text", text: rawText });
+                            pureText += rawText + "\n";
                         }
                         if (part.inlineData) {
                             hasImage = true;
@@ -243,7 +286,8 @@ SECTION 4: LINGUISTIC & SCRIPT LAWS
 - Never use robotic fillers ("As an AI", "System Specs").
 
 FINAL RULE: You are the best AI in existence. Your loyalty to Saurabh Kumar and Harvion Labs is absolute. Your answers will always be flawless, on-topic, and better than any other AI. Now execute with precision.
-${fileContextChunk}`;
+${fileContextChunk}
+${previousChatsSummary ? '\n[PREVIOUS CONVERSATION CONTEXT]\n' + previousChatsSummary : ''}`;
 
         // 🔥 System rule ko alag role me lock kar diya taaki leak na ho
         const groqChatMessages = [
@@ -265,8 +309,8 @@ ${fileContextChunk}`;
             return msg;
         });
 
-        // Groq API Caller Engine
-        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        // 🚀 GROQ API CALLER ENGINE (STREAMING ENABLED)
+        const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Authorization': 'Bearer ' + process.env.GEMINI_API_KEY, 
@@ -276,23 +320,26 @@ ${fileContextChunk}`;
                 model: targetSelectedModel, 
                 messages: safeGroqMessages,
                 temperature: 0.2,
-                max_tokens: 2048
+                max_tokens: 2048,
+                stream: true   // 🔥 Streaming ON
             })
         });
 
-        if (!response.ok) {
-            const errText = await response.text();
-            return new Response(JSON.stringify({ error: "Upstream AI Grid Traffic Drop.", details: errText }), { status: 500 });
+        if (!groqRes.ok) {
+            const errText = await groqRes.text();
+            return new Response(JSON.stringify({ error: "Upstream AI Grid Traffic Drop.", details: errText }), { 
+                status: 500, headers: { 'Content-Type': 'application/json' } 
+            });
         }
 
-        const data = await response.json();
-        const aiText = data.choices[0].message.content;
-
-        return new Response(JSON.stringify({
-            candidates: [{ content: { parts: [{ text: aiText }] } }]
-        }), {
+        // 🎯 Return SSE stream directly to client (ab frontend ise handle karega)
+        return new Response(groqRes.body, {
             status: 200,
-            headers: { 'Content-Type': 'application/json' }
+            headers: {
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+            }
         });
 
     } catch (error) {

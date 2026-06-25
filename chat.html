@@ -1548,8 +1548,7 @@ if (!apiData.imageUrl) throw new Error("No image returned from server.");
 
             scrollToBottom(); triggerJarvisSoundMatrix('success');
         } 
- 
-        else {
+         else {
             let finalPrompt = message;
             if (webSelectedPdf) finalPrompt += "\n\n[DOCUMENT CONTENT]:\n" + webSelectedPdf.extractedText;
 
@@ -1563,35 +1562,79 @@ if (!apiData.imageUrl) throw new Error("No image returned from server.");
             webSelectedImages = []; webSelectedPdf = null; renderAttachmentPreview();
 
             const apiResponse = await fetch('/api/chat', { 
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'x-harvion-shield-key': 'HarvionQuantumLabsEngineCoreSecret2026', 'Authorization': idToken ? `Bearer ${idToken}` : '' },
+                method: 'POST', 
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'x-harvion-shield-key': 'HarvionQuantumLabsEngineCoreSecret2026', 
+                    'Authorization': idToken ? `Bearer ${idToken}` : '' 
+                },
                 body: JSON.stringify({ mode: activeMode, contents: globalConversationTree })
             });
 
-            const apiData = await apiResponse.json();
-            if (!apiResponse.ok) throw new Error(apiData.error || "Core routing drop.");
+            if (!apiResponse.ok) throw new Error('Server error');
 
-            streamLiveTokenAccumulator = apiData.candidates?.[0]?.content?.parts?.[0]?.text || "Void response vector.";
-            globalConversationTree.push({ role: 'model', parts: [{ text: streamLiveTokenAccumulator }] });
+            // 📡 Streaming read start
+            const reader = apiResponse.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
 
-            let finalFormattedText = typeof marked !== 'undefined' ? marked.parse(streamLiveTokenAccumulator) : streamLiveTokenAccumulator;
-            bubbleDiv.innerHTML = finalFormattedText;
-            
-            
-            if (activeUser && typeof firestoreDb !== 'undefined') {
-                await firestoreDb.collection("users").doc(activeUser.uid).collection("chats_history").add({
-                    user_payload: message || "Multimodal Data Stream",
-                    model_response: streamLiveTokenAccumulator,
-                    timestamp: new Date().toISOString()
-                });
-                loadUserFileHistoryFromFirestore(activeUser.uid);
+            // Clear the "Stabilizing..." message and prepare for token stream
+            bubbleDiv.innerHTML = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop(); // incomplete line ko buffer mein rakhna
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        const data = line.slice(6).trim();
+                        if (data === '[DONE]') break;
+                        try {
+                            const parsed = JSON.parse(data);
+                            const token = parsed.choices?.[0]?.delta?.content || '';
+                            if (token) {
+                                // token ko bubbleDiv mein append karte jao
+                                bubbleDiv.textContent += token;
+                            }
+                        } catch(e) {
+                            // ignore parse errors
+                        }
+                    }
+                }
             }
 
-            const safeTextStr = streamLiveTokenAccumulator.replace(/"/g, '&quot;').replace(/'/g, '\\\'').replace(/\n/g, ' ');
+            // Stream khatam, ab final text le kar markdown parse karo
+            const finalText = bubbleDiv.textContent || '';
+            bubbleDiv.innerHTML = (typeof marked !== 'undefined') ? marked.parse(finalText) : finalText;
+
+            // Conversation tree mein final response save karo
+            globalConversationTree.push({ role: 'model', parts: [{ text: finalText }] });
+
+            // Firestore mein save karo (agar user logged in hai)
+            if (activeUser && typeof firestoreDb !== 'undefined') {
+                try {
+                    await firestoreDb.collection("users").doc(activeUser.uid).collection("chats_history").add({
+                        user_payload: message || "Multimodal Data Stream",
+                        model_response: finalText,
+                        timestamp: new Date().toISOString()
+                    });
+                    loadUserFileHistoryFromFirestore(activeUser.uid);
+                } catch (dbError) {
+                    console.error("Firestore save error:", dbError);
+                }
+            }
+
+            // Read Aloud button add karo
+            const safeTextStr = finalText.replace(/"/g, '&quot;').replace(/'/g, '\\\'').replace(/\n/g, ' ');
             const readBtnHtml = document.createElement('div');
             readBtnHtml.innerHTML = `<button onclick="toggleReadAloud(this, '${safeTextStr}')" style="background:rgba(255,255,255,0.03); border:1px solid rgba(0,243,255,0.2); color:#8a9ba8; padding:5px 12px; border-radius:8px; font-size:12px; margin-top:12px; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;"><i class="fa-solid fa-volume-up"></i> Read Aloud</button>`;
             bubbleDiv.appendChild(readBtnHtml);
             
-            scrollToBottom(); triggerJarvisSoundMatrix('chime');
+            scrollToBottom(); 
+            triggerJarvisSoundMatrix('chime');
         }
     } catch (error) { 
         console.error("Fault:", error); 

@@ -95,21 +95,29 @@ async function fetchLiveContext(userMessage) {
         } catch(e) {}
     }
 
-    // 6. General Web Search (SerpAPI) – optional, covers anything else
-    //    Activate only if you really need it; use responsibly.
-    if (/latest|news|who is|what is/i.test(lower)) {
-        try {
-            const searchKey = process.env.SERPAPI_API_KEY || '';
-            if (searchKey) {
-                const res = await fetch(`https://serpapi.com/search?q=${encodeURIComponent(userMessage)}&api_key=${searchKey}`);
-                const data = await res.json();
-                const snippet = data.organic_results?.[0]?.snippet || '';
-                if (snippet) {
-                    return `[WEB SEARCH RESULT]: ${snippet} (Use this as reference only).`;
-                }
+    
+if (/latest|news|who is|what is|today|current/i.test(lower)) {
+    try {
+        const serperKey = process.env.SERPER_API_KEY || '';
+        if (serperKey) {
+            const res = await fetch('https://google.serper.dev/search', {
+                method: 'POST',
+                headers: {
+                    'X-API-KEY': serperKey,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    q: userMessage
+                })
+            });
+            const data = await res.json();
+            const snippet = data.organic?.[0]?.snippet || data.knowledgeGraph?.description || '';
+            if (snippet) {
+                return `[WEB SEARCH RESULT]: ${snippet} (Use this as reference only).`;
             }
-        } catch(e) {}
-    }
+        }
+    } catch(e) {}
+}
 
     return ''; // no live data found
 }

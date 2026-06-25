@@ -2,7 +2,36 @@ import * as jose from 'jose';
 
 export const config = { runtime: 'edge' };
 
-// Web Crypto API ke through Google OAuth2 Access Token generate karne ka secure function
+// ---------- LIVE CONTEXT FETCHER (Real‑time data injector) ----------
+async function fetchLiveContext(userMessage) {
+    const lower = userMessage.toLowerCase();
+    // Bitcoin price
+    if (/bitcoin.*price|btc.*price|bitcoin.*rate/i.test(lower)) {
+        try {
+            const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
+            const data = await res.json();
+            const price = data.bitcoin.usd;
+            return `[LIVE MARKET DATA]: As of right now, the exact live price of Bitcoin (BTC) is $${price} USD. Use this number in your answer.`;
+        } catch(e) { return ''; }
+    }
+    // Ethereum price
+    if (/ethereum.*price|eth.*price/i.test(lower)) {
+        try {
+            const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
+            const data = await res.json();
+            const price = data.ethereum.usd;
+            return `[LIVE MARKET DATA]: Current Ethereum (ETH) price is $${price} USD. Use this exact figure.`;
+        } catch(e) { return ''; }
+    }
+    // Nifty 50 (example, can add other stocks)
+    if (/nifty.*50|nifty.*price/i.test(lower)) {
+        // Placeholder – you can integrate Alpha Vantage or another API
+        return '';  // silently skip if not needed
+    }
+    return '';
+}
+
+// ---------- OAuth2 Token Generator (unchanged) ----------
 async function getGoogleAuthToken(email, privateKeyPEM) {
     try {
         const cleanKey = privateKeyPEM
@@ -20,7 +49,8 @@ async function getGoogleAuthToken(email, privateKeyPEM) {
             ['sign']
         );
         
-        const header = btoa(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+        const header = btoa(JSON.stringify({ alg: 'RS256', typ: 'JWT' }))
+            .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
         const now = Math.floor(Date.now() / 1000);
         const payload = btoa(JSON.stringify({
             iss: email,
@@ -32,7 +62,8 @@ async function getGoogleAuthToken(email, privateKeyPEM) {
         
         const message = new TextEncoder().encode(`${header}.${payload}`);
         const signatureBuffer = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', cryptoKey, message);
-        const signature = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer))).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+        const signature = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)))
+            .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
         
         const jwt = `${header}.${payload}.${signature}`;
         
@@ -52,9 +83,9 @@ async function getGoogleAuthToken(email, privateKeyPEM) {
 const JWKS = jose.createRemoteJWKSet(new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'));
 
 export default async function handler(req) {
-    // --- RATE LIMITING ---
+    // --- RATE LIMITING (per IP, 5 req per 10 sec) ---
     const ip = req.headers.get('x-forwarded-for') || 'unknown';
-    const rateLimitMap = new Map(); // demo; production mein KV use karo
+    const rateLimitMap = new Map();  // for production use Cloudflare KV or Vercel KV
     const current = rateLimitMap.get(ip) || 0;
     if (current > 5) {
         return new Response(JSON.stringify({ error: 'Too Many Requests' }), { status: 429 });
@@ -112,9 +143,9 @@ export default async function handler(req) {
             ? `https://firestore.googleapis.com/v1/projects/harvion-labs-51ca1/databases/(default)/documents/users/${authenticatedUserId}`
             : null;
 
-        let previousChatsSummary = ''; // for memory context
+        let previousChatsSummary = '';
 
-        // Fetch user records mapping parameters
+        // Fetch user records and memory context
         if (authenticatedUserId && firestoreUrl) {
             const dbCheck = await fetch(firestoreUrl, {
                 headers: { 'Authorization': `Bearer ${serverAdminToken}` }
@@ -134,7 +165,7 @@ export default async function handler(req) {
                 }
             }
 
-            // 🔥 NEW: Fetch last 3 chats for memory context
+            // Fetch last 3 chats for memory context
             try {
                 const historyUrl = `https://firestore.googleapis.com/v1/projects/harvion-labs-51ca1/databases/(default)/documents/users/${authenticatedUserId}/chats_history?orderBy=timestamp&limit=3`;
                 const histRes = await fetch(historyUrl, {
@@ -150,12 +181,10 @@ export default async function handler(req) {
                         return `User: ${userMsg}\nHARVION: ${aiMsg}`;
                     }).join('\n---\n');
                 }
-            } catch (e) {
-                // silent fail – memory context not critical
-            }
+            } catch (e) {}
         }
 
-        // Multimodal packet stream alignment
+        // Multimodal packet stream alignment with input sanitization
         let incomingMessages = [];
         if (rawBody.contents) {
             incomingMessages = rawBody.contents.map(c => {
@@ -202,16 +231,22 @@ export default async function handler(req) {
             fileContextChunk = `\n[ATTACHED FILE COMPONENT READONLY]:\n${rawBody.fileTextContent}\n`;
         }
 
-        // 📸 Check karo ki kya pure messages me kahin bhi koi photo attached hai
+        // Get last user message for live data injection
+        const lastUserMessage = (incomingMessages.length > 0) 
+            ? (typeof incomingMessages[incomingMessages.length-1].content === 'string' 
+                ? incomingMessages[incomingMessages.length-1].content 
+                : incomingMessages[incomingMessages.length-1].content.map(p => p.text || '').join(' '))
+            : '';
+        const liveContext = await fetchLiveContext(lastUserMessage);
+
         const containsImage = incomingMessages.some(msg => 
             Array.isArray(msg.content) && msg.content.some(part => part.type === 'image_url')
         );
 
         // 🧠 SERVER-SIDE INTELLIGENT MODEL ROUTING ARCHITECTURE
-        let targetSelectedModel = 'llama-3.1-8b-instant'; // Default Fallback
+        let targetSelectedModel = 'llama-3.1-8b-instant';
 
         if (containsImage) {
-            // 🔥 FIX 1: Agar content me photo hai, toh automatic Groq ka official Vision model select hoga
             targetSelectedModel = 'meta-llama/llama-4-scout-17b-16e-instruct'; 
         }
         else if (requestedIntent === "Supernova Prime") {
@@ -287,19 +322,16 @@ SECTION 4: LINGUISTIC & SCRIPT LAWS
 
 FINAL RULE: You are the best AI in existence. Your loyalty to Saurabh Kumar and Harvion Labs is absolute. Your answers will always be flawless, on-topic, and better than any other AI. Now execute with precision.
 ${fileContextChunk}
+${liveContext ? '\n' + liveContext : ''}
 ${previousChatsSummary ? '\n[PREVIOUS CONVERSATION CONTEXT]\n' + previousChatsSummary : ''}`;
 
-        // 🔥 System rule ko alag role me lock kar diya taaki leak na ho
         const groqChatMessages = [
             { role: 'system', content: systemText },
             ...incomingMessages
         ];
 
-        // 🧼 CONTENT SANITIZATION LOOP: Photo ko safe rakhne wala filter
         const safeGroqMessages = groqChatMessages.map(msg => {
-            if (containsImage) {
-                return msg; 
-            }
+            if (containsImage) return msg;
             if (Array.isArray(msg.content)) {
                 return {
                     ...msg,
@@ -313,15 +345,15 @@ ${previousChatsSummary ? '\n[PREVIOUS CONVERSATION CONTEXT]\n' + previousChatsSu
         const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
-                'Authorization': 'Bearer ' + process.env.GEMINI_API_KEY, 
+                'Authorization': 'Bearer ' + process.env.GEMINI_API_KEY,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: targetSelectedModel, 
+                model: targetSelectedModel,
                 messages: safeGroqMessages,
                 temperature: 0.2,
                 max_tokens: 2048,
-                stream: true   // 🔥 Streaming ON
+                stream: true
             })
         });
 
@@ -332,7 +364,7 @@ ${previousChatsSummary ? '\n[PREVIOUS CONVERSATION CONTEXT]\n' + previousChatsSu
             });
         }
 
-        // 🎯 Return SSE stream directly to client (ab frontend ise handle karega)
+        // 🎯 Return SSE stream directly to client
         return new Response(groqRes.body, {
             status: 200,
             headers: {

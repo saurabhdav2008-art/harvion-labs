@@ -297,8 +297,8 @@ export default async function handler(req) {
 
         const containsImage = incomingMessages.some(msg => Array.isArray(msg.content) && msg.content.some(part => part.type === 'image_url'));
 
-        let targetSelectedModel = 'llama-3.1-8b-instant';
-        if (containsImage) targetSelectedModel = 'meta-llama/llama-4-scout-17b-16e-instruct';
+        let targetSelectedModel = 'openai/gpt-oss-20b';
+        if (containsImage) targetSelectedModel = 'qwen/qwen3.6-27b';
         else if (requestedIntent === "Supernova Prime") {
             if (isRealPremium) targetSelectedModel = 'llama-3.3-70b-versatile';
             else return new Response(JSON.stringify({ error: 'PREMIUM_REQUIRED' }), { status: 403, headers: { 'Content-Type': 'application/json' } });

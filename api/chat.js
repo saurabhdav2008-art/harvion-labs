@@ -373,7 +373,7 @@ ${previousChatsSummary ? '\n[PREVIOUS CONVERSATION CONTEXT]\n' + previousChatsSu
                 model: targetSelectedModel,
                 messages: safeGroqMessages,
                 temperature: 0.2,
-                max_tokens: 8192,
+                max_tokens: 4096,
                 stream: true
             })
         });

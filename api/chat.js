@@ -300,7 +300,7 @@ export default async function handler(req) {
         let targetSelectedModel = 'openai/gpt-oss-20b';
         if (containsImage) targetSelectedModel = 'qwen/qwen3.6-27b';
         else if (requestedIntent === "Supernova Prime") {
-            if (isRealPremium) targetSelectedModel = 'llama-3.3-70b-versatile';
+            if (isRealPremium) targetSelectedModel = 'openai/gpt-oss-120b';
             else return new Response(JSON.stringify({ error: 'PREMIUM_REQUIRED' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
         } else if (requestedIntent === "Quantum Nebula") {
             if (isRealPremium) targetSelectedModel = 'openai/gpt-oss-120b';

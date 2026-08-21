@@ -1,80 +1,90 @@
+import * as jose from 'jose';
+
 export const config = { runtime: 'edge' };
 
-// सर्वर का अपना Firestore एक्सेस टोकन जनरेट करने का फ़ंक्शन
+// ---------- GOOGLE OAUTH2 TOKEN GENERATOR (Firestore Admin Access) ----------
 async function getGoogleAuthToken(email, privateKeyPEM) {
-    const cleanKey = privateKeyPEM
-        .replace(/\\n/g, '\n')
-        .replace('-----BEGIN PRIVATE KEY-----', '')
-        .replace('-----END PRIVATE KEY-----', '')
-        .replace(/\s/g, '');
-    const binaryKey = Uint8Array.from(atob(cleanKey), c => c.charCodeAt(0));
-    const cryptoKey = await crypto.subtle.importKey(
-        'pkcs8', binaryKey,
-        { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-        false, ['sign']
-    );
-    const header = btoa(JSON.stringify({ alg: 'RS256', typ: 'JWT' }))
-        .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-    const now = Math.floor(Date.now() / 1000);
-    const payload = btoa(JSON.stringify({
-        iss: email,
-        scope: 'https://www.googleapis.com/auth/datastore',
-        aud: 'https://oauth2.googleapis.com/token',
-        exp: now + 3600,
-        iat: now
-    })).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-    const message = new TextEncoder().encode(`${header}.${payload}`);
-    const signatureBuffer = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', cryptoKey, message);
-    const signature = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)))
-        .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-    const jwt = `${header}.${payload}.${signature}`;
-    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`
-    });
-    const tokenData = await tokenRes.json();
-    return tokenData.access_token;
+    try {
+        const cleanKey = privateKeyPEM
+            .replace(/\\n/g, '\n')
+            .replace('-----BEGIN PRIVATE KEY-----', '')
+            .replace('-----END PRIVATE KEY-----', '')
+            .replace(/\s/g, '');
+
+        const binaryKey = Uint8Array.from(atob(cleanKey), c => c.charCodeAt(0));
+        const cryptoKey = await crypto.subtle.importKey(
+            'pkcs8',
+            binaryKey,
+            { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+            false,
+            ['sign']
+        );
+
+        const header = btoa(JSON.stringify({ alg: 'RS256', typ: 'JWT' }))
+            .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+        const now = Math.floor(Date.now() / 1000);
+        const payload = btoa(JSON.stringify({
+            iss: email,
+            scope: 'https://www.googleapis.com/auth/datastore',
+            aud: 'https://oauth2.googleapis.com/token',
+            exp: now + 3600,
+            iat: now
+        })).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+
+        const message = new TextEncoder().encode(`${header}.${payload}`);
+        const signatureBuffer = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', cryptoKey, message);
+        const signature = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)))
+            .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+
+        const jwt = `${header}.${payload}.${signature}`;
+
+        const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`
+        });
+
+        const tokenData = await tokenRes.json();
+        return tokenData.access_token;
+    } catch (err) {
+        throw new Error('OAuth Signing Error: ' + err.message);
+    }
 }
 
-// Firebase ID Token की जाँच (Google के REST API से)
-async function verifyFirebaseToken(idToken) {
-    const apiKey = process.env.FIREBASE_API_KEY;
-    if (!apiKey) throw new Error('FIREBASE_API_KEY missing on server');
+// ---------- FIREBASE ID TOKEN VERIFICATION (JOSE JWKS) ----------
+const JWKS = jose.createRemoteJWKSet(
+    new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com')
+);
 
-    const res = await fetch(
-        `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`,
-        {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idToken })
-        }
-    );
-    const data = await res.json();
-    if (!res.ok || data.error) {
-        throw new Error(data.error?.message || 'Token verification failed');
+async function verifyFirebaseToken(idToken) {
+    try {
+        const { payload } = await jose.jwtVerify(idToken, JWKS, {
+            audience: 'harvion-labs-51ca1',
+            issuer: 'https://securetoken.google.com/harvion-labs-51ca1'
+        });
+        return payload.sub; // Firebase UID
+    } catch (err) {
+        throw new Error('Invalid Firebase token');
     }
-    if (data.users && data.users.length > 0) {
-        return data.users[0].localId; // uid
-    }
-    throw new Error('Token valid but no user found');
 }
 
 export default async function handler(req) {
     try {
-        // 1. शील्ड चेक
+        // 1. SHIELD CHECK
         const shieldKey = req.headers.get('x-harvion-shield-key');
         if (shieldKey !== 'HarvionQuantumLabsEngineCoreSecret2026') {
             return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
         }
 
-        // 2. बॉडी पार्स
+        // 2. BODY PARSE
         let rawBody;
-        try { rawBody = await req.json(); } catch {
+        try {
+            rawBody = await req.json();
+        } catch {
             return new Response(JSON.stringify({ error: 'Invalid JSON' }), { status: 400 });
         }
 
-        // 3. JWT टोकन वेरिफ़िकेशन
+        // 3. JWT VERIFY
         const authHeader = req.headers.get('Authorization');
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return new Response(JSON.stringify({ error: 'Login required' }), { status: 401 });
@@ -88,12 +98,13 @@ export default async function handler(req) {
             return new Response(JSON.stringify({ error: 'Invalid token', details: e.message }), { status: 403 });
         }
 
-        // 4. Firestore से Role चेक (सर्वर एडमिन टोकन से)
+        // 4. FIRESTORE ROLE CHECK (Server Admin Token)
         const saEmail = process.env.FIREBASE_SERVICE_ACCOUNT_EMAIL;
         const saKey = process.env.FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY;
         if (!saEmail || !saKey) {
             return new Response(JSON.stringify({ error: 'Server credentials missing' }), { status: 500 });
         }
+
         const serverAdminToken = await getGoogleAuthToken(saEmail, saKey);
         const encodedUserId = encodeURIComponent(authenticatedUserId);
         const firestoreUrl = `https://firestore.googleapis.com/v1/projects/harvion-labs-51ca1/databases/(default)/documents/users/${encodedUserId}`;
@@ -102,6 +113,7 @@ export default async function handler(req) {
         const firestoreRes = await fetch(firestoreUrl, {
             headers: { 'Authorization': `Bearer ${serverAdminToken}` }
         });
+
         if (firestoreRes.ok) {
             const userData = await firestoreRes.json();
             const role = (userData.fields?.role?.stringValue || '').toLowerCase();
@@ -112,19 +124,19 @@ export default async function handler(req) {
             return new Response(JSON.stringify({ error: 'Canvas Pro only for premium users' }), { status: 403 });
         }
 
-        // 5. Prompt चेक
+        // 5. PROMPT CHECK
         const userPrompt = rawBody.prompt;
         if (!userPrompt || !userPrompt.trim()) {
             return new Response(JSON.stringify({ error: 'Prompt missing' }), { status: 400 });
         }
 
-        // 6. Hugging Face टोकन चेक
+        // 6. HF TOKEN CHECK
         const hfApiKey = process.env.HF_TOKEN;
         if (!hfApiKey) {
             return new Response(JSON.stringify({ error: 'HF token missing' }), { status: 500 });
         }
 
-        // 🎨 7. FREE मॉडल (SDXL) पर इमेज जनरेशन
+        // 7. IMAGE GENERATION (SDXL)
         const hfResponse = await fetch(
             'https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0',
             {
@@ -155,7 +167,7 @@ export default async function handler(req) {
             return new Response(JSON.stringify({ error: 'HF returned JSON', details: errJson }), { status: 502 });
         }
 
-        // 8. Base64 में बदलें
+        // 8. BASE64 CONVERSION
         const arrayBuffer = await hfResponse.arrayBuffer();
         if (arrayBuffer.byteLength === 0) {
             return new Response(JSON.stringify({ error: 'Empty image' }), { status: 502 });
@@ -171,13 +183,11 @@ export default async function handler(req) {
             base64Image = btoa(binary);
         }
 
-        return new Response(JSON.stringify({ imageUrl: `data:${contentType};base64,${base64Image}` }), {
-            status: 200
-        });
-
+        return new Response(
+            JSON.stringify({ imageUrl: `data:${contentType};base64,${base64Image}` }),
+            { status: 200 }
+        );
     } catch (error) {
-        return new Response(JSON.stringify({ error: 'INTERNAL_ERROR', details: error.message }), {
-            status: 500
-        });
+        return new Response(JSON.stringify({ error: 'INTERNAL_ERROR', details: error.message }), { status: 500 });
     }
 }
